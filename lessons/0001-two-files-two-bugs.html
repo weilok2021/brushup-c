@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 · Two Files, Two Bugs</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+
+<header>
+  <p class="kicker">Lesson 1 · C fundamentals for CS107</p>
+  <h1>Two Files, Two Bugs</h1>
+  <p class="subtitle">A header that promises, a source file that delivers, a client that only sees the promise. Then break it on purpose and read what the sanitizer says.</p>
+  <div class="meta">
+    <span>About 20 minutes</span>
+    <span>Where: WSL, <code>exercises/01-build-loop/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/build-loop.html">Cheat sheet</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> A two-file C program written from memory, with a header that hides the implementation, and two memory-bug reports read well enough to fix the bug from the report alone.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>This is the only tooling in the whole course. CS107 teaches it in week 1, so you do not need to remember any of it. Put this file, named <code>Makefile</code>, in the exercise folder. Then <code>make</code> builds, <code>./sum</code> runs, <code>make check</code> runs the program under valgrind to look for leaks, and <code>make clean</code> removes the binaries. The <span class="tab">⇥</span> marks must be real tab characters.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c vec.c
+
+sum: $(SRC) vec.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o sum $(SRC)
+
+# valgrind cannot run a sanitized binary, so it gets a plain one
+sum-plain: $(SRC) vec.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o sum-plain $(SRC)
+
+.PHONY: check clean
+check: sum-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./sum-plain
+clean:
+<span class="tab">⇥</span>rm -f sum sum-plain</code></pre>
+    <p>What the flags do lives in the <a href="../reference/build-loop.html">cheat sheet</a>, for the day you are curious. The one effect that matters now: <code>./sum</code> stops loudly on an out-of-bounds or use-after-free the moment it happens, and <code>make check</code> reports anything you forgot to free.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The header is the promise</h2>
+  <p>The CS107 prerequisite asks for “data abstraction” and “well-decomposed, readable code”<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/syllabus.html">*</a>. In C the smallest unit of both is a module in two files: a header that states what the module offers, and a <code>.c</code> file that implements it. Any client includes the header and never looks inside the <code>.c</code>. Every stack, list, tree and map in this course is shipped this way.</p>
+  <p class="filename">vec.h</p>
+  <pre><code>#ifndef VEC_H
+#define VEC_H
+
+#include &lt;stddef.h&gt;   /* size_t */
+
+/* Sum of the first n elements of a. a must point to at least n ints. */
+int vec_sum(const int *a, size_t n);
+
+#endif</code></pre>
+  <p>Three things in those lines are worth owning, because you will write them hundreds of times.</p>
+  <p><strong>The prototype is the contract.</strong> Beej: function prototypes go in the <code>.h</code>, definitions go in the <code>.c</code>, and “any file that wants that <code>add()</code> functionality can just <code>#include "bar.h"</code> to get it”<a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">*</a>. The comment above it is part of the contract: what the function does, and what the caller must guarantee.</p>
+  <p><strong><code>const int *a</code> is a promise about writing.</strong> It says: through <code>a</code>, this function will only read. The caller may pass a perfectly ordinary <code>int</code> array; the <code>const</code> binds the function, not the caller<a href="https://en.cppreference.com/w/c/language/const">*</a>. Make every read-only pointer parameter <code>const</code>; it documents intent and the compiler enforces it.<span class="sn-ref"></span><span class="sidenote">Read pointer declarations right to left: <code>const int *a</code> is “<code>a</code> is a pointer to a <code>const int</code>”. The pointer itself can still be moved; it is the ints that are read-only through it.</span></p>
+  <p><strong><code>size_t</code> is the type for counts and sizes.</strong> It is unsigned and as wide as a pointer, which is what <code>malloc</code>, <code>strlen</code> and <code>sizeof</code> all speak. Using <code>int</code> for a length gets you a warning today and a sign bug later. It lives in <code>&lt;stddef.h&gt;</code>.</p>
+  <p>The <code>#ifndef</code> / <code>#define</code> / <code>#endif</code> wrapper is an <em>include guard</em>. Beej: “The stuff that we're about to do is so common that you should just automatically do it every time you make a header file!”<a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">*</a> It makes a second <code>#include</code> of the same header expand to nothing, so nothing is declared twice.<span class="sn-ref"></span><span class="sidenote">Name the guard after the file in capitals, <code>VEC_H</code>. Never start it with an underscore; those names belong to the compiler and library.</span></p>
+  <p>Two rules on the other side: the first line of <code>vec.c</code> is <code>#include "vec.h"</code>, so the compiler checks your definition against your own promise. And <code>main.c</code> includes <code>vec.h</code>, never <code>vec.c</code>.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <p>Write <code>vec.c</code> and <code>main.c</code> without looking anything up. If you stall, that is useful information for both of us: ask in the chat. Tick each step as you go.</p>
+  <ol class="steps" id="steps">
+    <li><p>In a WSL shell, create the exercise folder and enter it:</p>
+      <pre><code>cd /mnt/c/Users/weilok.chia/Desktop/personal/brushup-c
+mkdir -p exercises/01-build-loop &amp;&amp; cd exercises/01-build-loop</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>vec.h</code> exactly as shown above, and paste the <code>Makefile</code> from the setup box.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>vec.c</code>: include the header, then define <code>vec_sum</code>. A running total, a <code>for</code> loop whose counter is a <code>size_t</code>, return the total.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>: allocate four <code>int</code>s on the heap with <code>malloc</code>, fill them with 1, 2, 3, 4, print <code>vec_sum</code> of them with <code>printf</code>, free the array, return 0.<span class="sn-ref"></span><span class="sidenote">Idiom worth keeping: <code>int *a = malloc(4 * sizeof *a);</code>. Sizing from the pointer keeps the line right if the type changes. Real code checks the result for <code>NULL</code>; for four ints you may skip it.</span></p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p><code>make</code>, then <code>./sum</code>. The bar: no warnings at all, output <code>10</code>. A warning you cannot read, paste into the chat as-is.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it, on purpose, twice.</strong> First, in <code>vec.c</code>, change <code>&lt;</code> to <code>&lt;=</code> in the loop condition. <code>make</code>, run <code>./sum</code>, read the report against the guide below, fix it. Second, delete the <code>free</code> line in <code>main.c</code>. This time run <code>make check</code>; the leak shows up there, not in <code>./sum</code>. Read, fix.</p>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><code>make clean</code>, then tell me in the chat: <em>lesson 1 done</em>. I will build it from my side and read your two files against the <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/styleguide.html">CS107 style guide</a>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the report</h2>
+  <p>This is the skill, not the tool. Off-by-one, use-after-free and leaks are exactly the bugs linked lists and trees produce, and the report is how you will find yours in every later lesson. It looks like a wall of hex; three lines carry the meaning. Here is the shape your first planted bug produces, abridged, with addresses that will differ on your machine.</p>
+  <pre><code>==87849==ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x502000000020 ...
+READ of size 4 at 0x502000000020 thread T0
+    #0 0x5f30d5e65374 in <strong>vec_sum vec.c:5</strong>
+    #1 0x5f30d5e654f3 in main main.c:11
+    ...
+0x502000000020 is located <strong>0 bytes after 16-byte region</strong> [0x502000000010,0x502000000020)
+allocated by thread T0 here:
+    #0 ... in malloc ...
+    #1 ... in main main.c:7</code></pre>
+  <table>
+    <tr><th>Line</th><th>Read it as</th></tr>
+    <tr><td>The <code>ERROR</code> line</td><td>The <em>kind</em> of bug. <code>heap-buffer-overflow</code>: an index ran off the end of a <code>malloc</code>'d block.</td></tr>
+    <tr><td>Frame <code>#0</code> of the first stack</td><td>Where the bad access happened: function, file, line. Frame <code>#1</code> is who called it.</td></tr>
+    <tr><td>“located 0 bytes after 16-byte region”</td><td>How far past the block, and how big the block was. 16 bytes is four <code>int</code>s. Zero bytes after it means you read exactly one element too far: the classic <code>&lt;=</code>.</td></tr>
+    <tr><td>“allocated by … here”</td><td>The second stack is the <code>malloc</code> that created the block, so you can pair the access with its allocation.</td></tr>
+  </table>
+  <p>The second planted bug is a leak, and leaks are reported by a different tool. <code>make check</code> runs your program under valgrind, the checker CS107 itself uses<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/valgrind.html">*</a>, and at exit it prints:</p>
+  <pre><code>==112784== <strong>16 bytes in 1 blocks are definitely lost</strong> in loss record 1 of 1
+==112784==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==112784==    by 0x10917E: <strong>main (main.c:6)</strong>
+...
+==112784==    definitely lost: 16 bytes in 1 blocks</code></pre>
+  <p>Same discipline: kind (“definitely lost”), size, and the line that allocated the block nobody freed. When everything is freed the summary reads “All heap blocks were freed -- no leaks are possible”.<span class="sn-ref"></span><span class="sidenote">Why not the sanitizer for leaks too? It does try, but at exit it counts a block as “still reachable” if any copy of its address is lying around in stack memory, and an unoptimised build leaves stale copies behind in dead frames. That is why the first attempt at this bug was silent. Valgrind tracks reachability more carefully and calls the block lost.</span> The <a href="../reference/build-loop.html">cheat sheet</a> lists the other headings you will meet later.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>From memory, before you look anything up. Click an answer; the explanation appears at once.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary source:</strong> Beej's Guide to C Programming, <a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">chapter 17, Multifile Projects</a>. Ten minutes, on today's header and include-guard rules.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Anything in a warning or a sanitizer report you cannot read, paste into the chat as-is. Anything in this lesson that felt like a rule without a reason, ask why.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="../reference/build-loop.html">Reference: build-loop cheat sheet</a></span>
+    <span>Next: Lesson 2, structs and pointers (issued after this one is checked)</span>
+  </div>
+</footer>
+
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0001-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){
+      li.classList.toggle('done',cb.checked);
+      saved[cb.dataset.step]=cb.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}
+    });
+  });
+
+  var QUIZ=[
+    {q:"A prototype for a function that two .c files share belongs in…",
+     opts:["the header file","the main file","the source file","the make file"],a:0,
+     why:"The header is the promise. Each .c file that wants the function includes it, and the compiler checks every caller against the same prototype. Beej §17.1."},
+    {q:"In int vec_sum(const int *a, size_t n), what does const promise?",
+     opts:["the function will not modify elements","the caller must pass a constant","the array lives in read-only memory","the pointer itself can never change"],a:0,
+     why:"const int *a is a pointer to const int: through a, the elements are read-only. The caller may pass an ordinary array, and a itself can still be reassigned (that would be int *const a)."},
+    {q:"make check printed “16 bytes in 1 blocks are definitely lost”, pointing at main.c:6. What happened?",
+     opts:["some malloc had no matching free","an array index went past bounds","a pointer was used after free","the program read some uninitialized memory"],a:0,
+     why:"“Definitely lost” is valgrind's name for a heap block that was never freed and that nothing points to any more; the line shown is the malloc that created it. Out-of-bounds reads and use-after-free are caught by the sanitizer during the run instead."},
+    {q:"The #ifndef VEC_H … #define VEC_H … #endif wrapper exists to…",
+     opts:["stop double inclusion of the header","make the header compile much faster","hide the implementation from the client","tell the linker where definitions live"],a:0,
+     why:"An include guard makes a second #include of the same header expand to nothing, so no prototype or struct is declared twice in one file. Beej §17.2."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){
+      var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];
+      b.addEventListener('click',function(){
+        if(box.classList.contains('locked'))return;
+        box.classList.add('locked');answered++;
+        if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}
+        else{b.classList.add('wrong');
+          opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});
+          why.textContent='Not quite. '+item.why;}
+        if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Anything you missed, reread that paragraph once, then move on; the exercise is what makes it stick.';}
+      });
+      opts.appendChild(b);
+    });
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;
+    box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

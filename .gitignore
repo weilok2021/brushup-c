@@ -1,0 +1,32 @@
+# C build artifacts
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.out
+a.out
+build/
+bin/
+
+# Debugger / sanitizer output
+core
+core.*
+vgcore.*
+*.dSYM/
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Exercises: track only sources, headers, Makefiles and notes; ignore any binary, whatever its name
+exercises/**
+!exercises/**/
+!exercises/**/*.c
+!exercises/**/*.h
+!exercises/**/Makefile
+!exercises/**/*.md

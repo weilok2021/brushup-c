@@ -1,0 +1,3 @@
+# Everything in this repo is edited on Windows and built in WSL. Force LF so
+# Makefiles and shell scripts do not break on .
+* text=auto eol=lf

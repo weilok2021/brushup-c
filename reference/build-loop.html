@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · The Build Loop</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · C fundamentals for CS107</p>
+  <h1>The Build Loop</h1>
+  <p class="subtitle">Compile flags, the header split, a minimal Makefile, and how to read what the tools say back. Lookup only, nothing here is to be memorised. Paired with <a href="../lessons/0001-two-files-two-bugs.html">Lesson 1</a>.</p>
+
+  <h2>The loop</h2>
+  <p>Edit → <code>make</code> → <code>./prog</code> → <code>make check</code> → read the report → fix. A warning is a failed build. A sanitizer or valgrind report is a failed run, even if the output looked right. Two checkers because they cover different bugs: the sanitizer catches out-of-bounds and use-after-free the instant they happen; valgrind catches leaks at exit.</p>
+  <pre><code>gcc -std=gnu11 -Wall -Wextra -g -fsanitize=address,undefined -o prog main.c module.c   # ./prog
+gcc -std=gnu11 -Wall -Wextra -g -o prog-plain main.c module.c                           # valgrind --leak-check=full ./prog-plain</code></pre>
+  <table>
+    <tr><th>Flag</th><th>Purpose</th></tr>
+    <tr><td><code>-std=gnu11</code></td><td>C11 plus POSIX library (<code>strdup</code>, <code>getline</code>). Plain <code>c11</code> hides those.</td></tr>
+    <tr><td><code>-Wall -Wextra</code></td><td>The bug-catching warnings. <a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html">gcc docs</a></td></tr>
+    <tr><td><code>-g</code></td><td>Debug info: reports and gdb show <code>file:line</code>.</td></tr>
+    <tr><td><code>-fsanitize=address,undefined</code></td><td>AddressSanitizer (out-of-bounds, use-after-free, double free) + UndefinedBehaviorSanitizer (overflow, bad shifts, null deref). <a href="https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html">gcc docs</a>. Its built-in leak check is unreliable at <code>-O0</code>: stale pointer copies in dead stack frames make a leaked block look reachable. Use valgrind for leaks.</td></tr>
+    <tr><td><code>-O0</code> (default)</td><td>No optimisation while learning: line numbers stay honest.</td></tr>
+  </table>
+
+  <h2>The header split</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">module.h — the promise</p>
+      <pre><code>#ifndef MODULE_H
+#define MODULE_H
+
+#include &lt;stddef.h&gt;
+
+/* One-line contract per function. */
+int module_fn(const int *a, size_t n);
+
+#endif</code></pre>
+    </div>
+    <div>
+      <p class="filename">module.c — the implementation</p>
+      <pre><code>#include "module.h"   /* first line: check
+                         definitions against
+                         your own prototypes */
+
+int module_fn(const int *a, size_t n) {
+    /* ... */
+}</code></pre>
+      <p class="filename">main.c — the client</p>
+      <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "module.h"   /* never module.c */</code></pre>
+    </div>
+  </div>
+  <p>Guard name = file name in capitals, no leading underscore. Prototypes and shared <code>struct</code> declarations go in the header; everything else stays in the <code>.c</code>. Source: <a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">Beej ch. 17</a>.</p>
+
+  <h2>Minimal Makefile</h2>
+  <p class="filename">Makefile &nbsp;·&nbsp; <span class="tab">⇥</span> = one real tab character</p>
+  <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c module.c
+
+prog: $(SRC) module.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o prog $(SRC)
+
+# valgrind cannot run a sanitized binary, so it gets a plain one
+prog-plain: $(SRC) module.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o prog-plain $(SRC)
+
+.PHONY: check clean
+check: prog-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./prog-plain
+clean:
+<span class="tab">⇥</span>rm -f prog prog-plain</code></pre>
+  <table>
+    <tr><th>Piece</th><th>Meaning</th></tr>
+    <tr><td><code>target: prerequisites</code></td><td>Rebuild <code>target</code> when any prerequisite is newer. Put headers in the list.</td></tr>
+    <tr><td>recipe line</td><td>Must start with a tab. Spaces → <code>*** missing separator</code>. <a href="https://www.gnu.org/software/make/manual/make.html#Rule-Syntax">GNU make §4.2</a></td></tr>
+    <tr><td><code>.PHONY</code></td><td>These targets are commands, not files.</td></tr>
+    <tr><td><code>make</code> / <code>make check</code> / <code>make clean</code></td><td>Build the sanitized binary / build a plain one and run it under valgrind / remove both.</td></tr>
+    <tr><td><code>make -n</code> / <code>make -B</code></td><td>Show what would run / force a full rebuild.</td></tr>
+  </table>
+
+  <h2>Reading a sanitizer or valgrind report</h2>
+  <p>Look at three things: the <strong>kind</strong> on the <code>ERROR</code> line, <strong>frame #0</strong> of the first stack (file:line of the bad access), and the <strong>region</strong> sentence or the <strong>allocation stack</strong> that says which block. Valgrind's leak report has the same three: “definitely lost”, the byte count, and the <code>by … main (main.c:6)</code> line under the <code>malloc</code>.</p>
+  <table>
+    <tr><th>Heading</th><th>Meaning</th><th>Usual cause</th></tr>
+    <tr><td><code>heap-buffer-overflow</code></td><td>Read/write past a <code>malloc</code>'d block.</td><td><code>&lt;=</code> for <code>&lt;</code>; off-by-one on size; forgot the NUL byte in a string.</td></tr>
+    <tr><td><code>stack-buffer-overflow</code></td><td>Same, for a local array.</td><td>Index equal to the array length.</td></tr>
+    <tr><td><code>heap-use-after-free</code></td><td>Touched a block after <code>free</code>.</td><td>Freed a node, then read <code>node-&gt;next</code>.</td></tr>
+    <tr><td><code>attempting double-free</code></td><td>Same pointer freed twice.</td><td>Two owners both freeing; loop frees then cleanup frees again.</td></tr>
+    <tr><td><code>definitely lost</code> (valgrind, via <code>make check</code>)</td><td>At exit: a block never freed that nothing points to, with the allocating stack. “All heap blocks were freed -- no leaks are possible” is the clean result.</td><td>Missing <code>free</code>; early <code>return</code> skipping cleanup; pointer overwritten before the free.</td></tr>
+    <tr><td><code>still reachable</code> (valgrind)</td><td>Never freed, but a pointer to it still exists at exit.</td><td>Usually a global or a static kept alive to the end. Free it anyway in this course.</td></tr>
+    <tr><td><code>runtime error: signed integer overflow</code> (UBSan)</td><td>Arithmetic left the range of the type.</td><td><code>int</code> where <code>long</code> or <code>size_t</code> was needed.</td></tr>
+    <tr><td><code>SEGV on unknown address 0x000…</code></td><td>Dereferenced NULL or garbage.</td><td>Unchecked <code>malloc</code>; uninitialised pointer; wrong level of <code>*</code>.</td></tr>
+  </table>
+
+  <h2>Warnings you will meet</h2>
+  <table>
+    <tr><th>Warning text (abridged)</th><th>What it is telling you</th></tr>
+    <tr><td><code>'x' is used uninitialized</code></td><td>Read before any assignment. Initialise at declaration.</td></tr>
+    <tr><td><code>suggest parentheses around assignment used as truth value</code></td><td>You wrote <code>if (a = b)</code>. Almost always meant <code>==</code>.</td></tr>
+    <tr><td><code>implicit declaration of function 'f'</code></td><td>No prototype in scope: missing <code>#include</code> or missing header entry.</td></tr>
+    <tr><td><code>unused variable 'x'</code> / <code>unused parameter 'p'</code></td><td>Dead code or a forgotten step. Remove it or use it.</td></tr>
+    <tr><td><code>control reaches end of non-void function</code></td><td>A path with no <code>return</code>.</td></tr>
+    <tr><td><code>comparison of integer expressions of different signedness</code></td><td><code>int i</code> compared with <code>size_t n</code>. Make the counter <code>size_t</code>.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/syllabus.html">CS107 syllabus</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/valgrind.html">CS107 Valgrind Guide</a> · <a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">Beej ch. 17</a> · <a href="https://www.gnu.org/software/make/manual/make.html">GNU Make manual</a> · <a href="https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html">gcc Instrumentation Options</a></p>
+</article>
+</body>
+</html>
