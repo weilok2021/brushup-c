@@ -8,6 +8,8 @@
 - Only the most relevant C fundamentals. No full language tour. (2026-09-05)
 - Scaffold: follow the boot.dev DSA course order, re-implemented in C; pull the C prerequisites from boot.dev Memory Management in C. Both trimmed against the CS107 prerequisite statement.
 - Has C fundamentals but has not used them for a while. Depth unverified; calibrate with a short diagnostic in lesson 1.
+- Explanations in direct sentences: subject, verb, object, one idea each. Show a worked numeric example before naming a type or a term. (2026-09-05: the lesson 2 paragraph on pointer subtraction and `ptrdiff_t` was unreadable to the user; rewritten with a diagram and short sentences.)
+- Prefers pointer declarations in the `int* p` style because the pointer is visually prominent. Accept this in exercises; remind only when multiple declarators would make the syntax misleading. (2026-09-07)
 
 ## Environment
 - Windows 11 host, Git Bash + PowerShell. No native gcc, clang, MSVC, make.
@@ -35,6 +37,8 @@ Optional 13. Trie (array of 26 child pointers), only if time allows.
 
 ## Working notes
 - 2026-09-05: repo initialised on `main`, C `.gitignore` added, workspace scaffolded. MISSION time budget still TBC.
+- 2026-09-05 (lesson 2 session): cppreference moved from `/w/c/...` to `/c/...` (old links redirect). Its pages return 403 to the WebFetch tool; `curl -L` with a browser user agent works. Beej split-HTML filenames for the lesson 2-4 chapters: `pointers.html` (5), `arrays.html` (6), `structs.html` (8), `pointers2.html` (11), `manual-memory-allocation.html` (12), `pointers-iii-pointers-to-pointers-and-more.html` (23).
+- This session ran inside WSL directly (gcc, make, valgrind on PATH), so no `wsl -d Ubuntu` wrapper was needed; `powershell.exe Start-Process` still opens files on the Windows side.
 
 ## Working arrangement (agreed 2026-09-05)
 - Conversation happens in the Windows Claude Code session; the user writes and compiles code in WSL Ubuntu.
@@ -48,7 +52,10 @@ Optional 13. Trie (array of 26 child pointers), only if time allows.
 - Every lesson ships with a reference sheet in `reference/`; lessons link to it, and it is what the user revisits.
 
 ## Lessons issued
-- 0001 Two Files, Two Bugs (2026-09-05; trimmed same day at the user's request, tooling teaching removed, file renamed from 0001-the-build-loop.html). Exercise `exercises/01-build-loop/`: vec.h/vec.c/main.c/Makefile, sum of four heap ints = 10; two planted bugs (off-by-one, missing free). Status: COMPLETED 2026-09-05. Built and reviewed from here: warning-free, output 10, valgrind clean. Learning record 0002 written; GLOSSARY.md started. Next: issue lesson 2 (structs and pointers), brisk pace per LR 0002.
+- 0001 Two Files, Two Bugs (2026-09-05; trimmed same day at the user's request, tooling teaching removed, file renamed from 0001-the-build-loop.html). Exercise `exercises/01-build-loop/`: vec.h/vec.c/main.c/Makefile, sum of four heap ints = 10; two planted bugs (off-by-one, missing free). Status: COMPLETED 2026-09-05. Built and reviewed from here: warning-free, output 10, valgrind clean. Learning record 0002 written; GLOSSARY.md started.
+
+- 0002 Structs by Pointer (issued 2026-09-05; completed 2026-09-07). `lessons/0002-structs-by-pointer.html` + `reference/structs-and-pointers.html`. Exercise `exercises/02-rects/`: three struct functions, heap array, pointer walk, pointer subtraction with `ptrdiff_t`/`%td`, and exact output `largest: 3 x 3 at (12, 10), index 2`. User reports completing the planted `sizeof` and `.`/`->` bug experiments. Final build was warning-free under ASan/UBSan and Valgrind reported no errors or leaks. Learning record 0003 written. Next: lesson 3, stack vs heap.
 
 ## Findings
 - 2026-09-05, LeakSanitizer misses leaks at -O0. User's lesson-1 program with `free` removed ran silent under `-fsanitize=address`; valgrind reported 16 bytes definitely lost. Cause verified: stale copies of the pointer in dead stack frames are picked up by LSan's exit-time stack scan, so the block counts as reachable. Reported correctly at -O1 or after scrubbing the stack. Decision: ASan stays for overflow/UAF (immediate, precise); leaks are checked with valgrind via a `make check` target on a plain build. Makefile template updated in lesson 1, reference sheet and the user's exercise folder.
+- 2026-09-05, `malloc(n * sizeof ptr)` (pointer instead of pointee) is silent under `-Wall -Wextra` with gcc 13; only the run catches it, and only when the block is then overrun. Chosen as lesson 2's first planted bug for that reason. `struct rect` was given four ints (16 bytes) so the bug is visible; a two-int struct is 8 bytes, the same as a pointer, and the bug would have been silent at runtime too.

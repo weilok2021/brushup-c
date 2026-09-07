@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 · Structs by Pointer</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+
+<header>
+  <p class="kicker">Lesson 2 · C fundamentals for CS107</p>
+  <h1>Structs by Pointer</h1>
+  <p class="subtitle">Dot on the thing, arrow on the pointer, and a loop that walks an array by moving the pointer until it meets the end.</p>
+  <div class="meta">
+    <span>About 20 minutes</span>
+    <span>Where: WSL, <code>exercises/02-rects/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/structs-and-pointers.html">Cheat sheet</a> · <a href="0001-two-files-two-bugs.html">Lesson 1</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> A struct declared once in a header, three functions that reach into it through a pointer (two that only read, one that writes), a loop written with <code>p &lt; end</code> instead of <code>i &lt; n</code>, and two more bug reports read well enough to fix from the report alone: one from the sanitizer, one from the compiler.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Lesson 1's <code>Makefile</code> with two names changed: the sources and the binary. Put it in the exercise folder. <code>make</code> builds <code>./rects</code>, <code>make check</code> runs it under valgrind, <code>make clean</code> removes the binaries. The <span class="tab">⇥</span> marks must be real tab characters.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c rect.c
+
+rects: $(SRC) rect.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o rects $(SRC)
+
+# valgrind cannot run a sanitized binary, so it gets a plain one
+rects-plain: $(SRC) rect.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o rects-plain $(SRC)
+
+.PHONY: check clean
+check: rects-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./rects-plain
+clean:
+<span class="tab">⇥</span>rm -f rects rects-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>The struct goes in the header</h2>
+  <p>A struct is a type you declare, and both files need the same declaration, so it lives in the header next to the prototypes. This is the whole header for today; you will write the other two files from memory.</p>
+  <p class="filename">rect.h</p>
+  <pre><code>#ifndef RECT_H
+#define RECT_H
+
+#include &lt;stddef.h&gt;   /* size_t */
+
+/* An axis-aligned rectangle: bottom-left corner and size, in whole units. */
+struct rect {
+    int x, y;
+    int w, h;
+};
+
+/* Area of r. */
+int rect_area(const struct rect *r);
+
+/* Move r by dx, dy, in place. */
+void rect_move(struct rect *r, int dx, int dy);
+
+/* The rectangle with the largest area among the n at rs. n must be at least 1.
+   Returns a pointer into the caller's array, not a copy. */
+const struct rect *rect_largest(const struct rect *rs, size_t n);
+
+#endif</code></pre>
+  <p>The type's full name is the two words <code>struct rect</code>; <code>rect</code> on its own is only the tag and names nothing.<span class="sn-ref"></span><span class="sidenote">A <code>typedef</code> can shorten the two words to one. This course holds off until lesson 7, where <code>typedef struct stack stack;</code> in a header is what makes an opaque type: clients see the name and never the members.</span> On a struct value you reach a member with a dot, <code>s.w</code>, the operator Beej says C's descendants “stole” from it<a href="https://beej.us/guide/bgc/html/split/structs.html#declaring-a-struct">*</a>.</p>
+  <p><strong>Arrow on a pointer.</strong> Every function above takes a <em>pointer</em> to a rect, and through a pointer the member is <code>r-&gt;w</code>. It is exactly <code>(*r).w</code>, dereference then dot, with the parentheses folded into one operator<a href="https://en.cppreference.com/c/language/operator_member_access">*</a>. Beej: “The arrow operator helps refer to fields in pointers to <code>struct</code>s”<a href="https://beej.us/guide/bgc/html/split/structs.html#the-arrow-operator">*</a>. The rule is small enough to say in a breath: dot on a struct, arrow on a pointer to one. Get it wrong and the build stops; gcc 13 even names the fix.</p>
+  <p><strong>Why a pointer at all.</strong> Beej gives two cases for passing a pointer to a struct instead of the struct: “You need the function to be able to make changes to the <code>struct</code> that was passed in, and have those changes show in the caller”, and the struct “is somewhat large and it's more expensive to copy that onto the stack than it is to just copy a pointer”<a href="https://beej.us/guide/bgc/html/split/structs.html#passing-structs-to-functions">*</a>. This course adds a third: from lesson 7 on, every stack, list and tree is a struct that lives on the heap and is only ever touched through a pointer. So <code>rect_move</code> takes <code>struct rect *</code> because it writes, and <code>rect_area</code> takes <code>const struct rect *</code> because it only reads. Same <code>const</code> promise as lesson 1, now made about a struct.<span class="sn-ref"></span><span class="sidenote">To hand a function the address of one element of an array, write <code>&amp;rs[i]</code>. It is the same pointer as <code>rs + i</code>; the second spelling is explained below. Beej's chapter 5 covers the <code>&amp;</code> and <code>*</code> operators if you want the slow version<a href="https://beej.us/guide/bgc/html/split/pointers.html#ptpass">*</a>.</span></p>
+  <p><strong>Returning a pointer into the caller's array.</strong> <code>rect_largest</code> hands back an address inside <code>rs</code>, not a copy. Two consequences the comment in the header states: the caller must never <code>free</code> that result on its own, and must not use it after freeing <code>rs</code>. Every <em>find</em> and <em>search</em> in lessons 8 to 10 has this shape.</p>
+</section>
+
+<section>
+  <h2>An array becomes a pointer the moment you pass it</h2>
+  <p>The precise rule: an expression of array type, “when used in any context other than as the operand of the address-of operator [or] as the operand of <code>sizeof</code> … undergoes an implicit conversion to the pointer to its first element”<a href="https://en.cppreference.com/c/language/array#Array_to_pointer_conversion">*</a>. Beej's version: “Just referring to the array name in isolation is the same as getting a pointer to the first element of the array!”<a href="https://beej.us/guide/bgc/html/split/arrays.html#arrays-and-pointers">*</a> So inside <code>rect_largest</code>, <code>rs</code> is a pointer and nothing else, and the length has to travel separately, which you already did in lesson 1 with <code>size_t n</code>.</p>
+  <p>The two exceptions in that rule are exactly where people get bitten, so here is what <code>sizeof</code> measures, as printed on this machine (64-bit WSL, gcc 13):</p>
+  <table>
+    <tr><th>Expression</th><th>Bytes</th><th>Because</th></tr>
+    <tr><td><code>sizeof(struct rect)</code></td><td>16</td><td>Four <code>int</code>s of four bytes. Parentheses are required around a type name.<span class="sn-ref"></span><span class="sidenote">Add a fifth member <code>char tag;</code> and the answer becomes 20, not 17: the compiler pads the struct so that an array of them keeps every <code>int</code> aligned<a href="https://en.cppreference.com/c/language/sizeof">*</a>. CS107 teaches the rule in its memory weeks. For now, never compute a struct's size by hand; ask <code>sizeof</code>.</span></td></tr>
+    <tr><td><code>sizeof corners</code>, where <code>struct rect corners[4];</code> is a local array</td><td>64</td><td>The whole array, 4 × 16. This is the <code>sizeof</code> exception to decay.</td></tr>
+    <tr><td><code>sizeof rs</code>, where <code>struct rect *rs</code></td><td>8</td><td>A pointer, whatever it points at. Also what a function parameter measures, since parameters are pointers.</td></tr>
+    <tr><td><code>sizeof *rs</code></td><td>16</td><td>The thing it points at. No parentheses needed around an expression<a href="https://en.cppreference.com/c/language/sizeof">*</a>.</td></tr>
+    <tr><td><code>sizeof corners / sizeof corners[0]</code></td><td>4</td><td>The element count, but only in the scope that declared the array.</td></tr>
+  </table>
+  <p>Two habits fall out of the table. First, <strong>size what you point at</strong>: <code>malloc(N * sizeof *rs)</code>, never <code>sizeof rs</code>. The wrong one is legal C, compiles without a word, and is today's first planted bug. Second, the element-count trick is local. Beej: “This trick only works in the scope in which the array was defined. If you pass the array to a function, it doesn't work”<a href="https://beej.us/guide/bgc/html/split/arrays.html#getting-the-length-of-an-array">*</a>; on a pointer it “would simply divide the number of bytes in a pointer type by the number of bytes in the pointed type”<a href="https://en.cppreference.com/c/language/sizeof">*</a>, which for a rect is 8 ÷ 16, that is, zero.</p>
+</section>
+
+<section>
+  <h2>Walk the array by moving the pointer</h2>
+  <p>You know the index loop. Today's loop has no index at all:</p>
+  <pre><code>const struct rect *end = rs + n;                 /* one past the last rect */
+for (const struct rect *p = rs; p &lt; end; p++) {
+    /* p-&gt;w, p-&gt;h ... */
+}</code></pre>
+  <p><strong><code>p + 1</code> is the next rect, not the next byte.</strong> Beej, on an <code>int</code> pointer: “C knows that <code>p</code> is a pointer to an <code>int</code>. So it knows the <code>sizeof</code> an <code>int</code> and it knows to skip that many bytes to get to the next <code>int</code> after the first one!”<a href="https://beej.us/guide/bgc/html/split/pointers2.html#adding-to-pointers">*</a> For a rect pointer, <code>p++</code> moves 16 bytes. Indexing is the same arithmetic in different clothes: “<code>a[b] == *(a + b)</code>”, and the two “can be used interchangeably”<a href="https://beej.us/guide/bgc/html/split/pointers2.html#arraypointerequiv">*</a>. That is why <code>&amp;rs[i]</code> and <code>rs + i</code> are one pointer.</p>
+  <p><strong><code>end</code> is a pointer to a rect that does not exist.</strong> Computing it and comparing against it is defined; pointer arithmetic is “defined only if both the original pointer and the result pointer are pointing at elements of the same array or one past the end of that array”<a href="https://en.cppreference.com/c/language/operator_arithmetic#Pointer_arithmetic">*</a>. Reading <code>end-&gt;w</code> is not, and the sanitizer will show you what that looks like if you take the optional step below.<span class="sn-ref"></span><span class="sidenote">The same rule outlaws <code>p - 1</code> when <code>p</code> is the first element: there is no “one before the beginning”. Walk forwards.</span></p>
+  <p><strong>Subtract two addresses to get an index back.</strong> <code>rect_largest</code> returns an address. The output line wants a position. Subtraction turns one into the other.</p>
+  <pre><code>rs        rs+1      rs+2      rs+3      rs+4       addresses, 16 bytes apart
++---------+---------+---------+---------+---------+
+| rect 0  | rect 1  | rect 2  | rect 3  | rect 4  |
++---------+---------+---------+---------+---------+
+                    ^
+                    big</code></pre>
+  <p><code>rs + 2</code> is the address of rect 2. <code>big</code> holds that address. So <code>big - rs</code> is 2. C does not give you the byte distance, 32. It divides by the size of a rect and gives you the number of rects between the two addresses<a href="https://en.cppreference.com/c/language/operator_arithmetic#Pointer_arithmetic">*</a>. That number is the index. It is <code>rs + 2</code> run backwards.</p>
+  <p>The result is an integer with its own type name, <code>ptrdiff_t</code>. It is the signed cousin of <code>size_t</code>. <code>printf</code> needs the matching letter for it, the way it needs <code>%zu</code> for <code>size_t</code>. Write <code>%td</code>.</p>
+  <p>Why learn this when <code>i &lt; n</code> works? Because a linked list has no <code>i</code>. From lesson 8 on, the only way to walk anything is to move a pointer until it hits a stop value. Learn the shape here, on an array, where you can still check it against the index version.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <p>Write <code>rect.c</code> and <code>main.c</code> without looking anything up, including this page once you have started. If you stall, that is useful information for both of us: ask in the chat. Tick each step as you go.</p>
+  <ol class="steps" id="steps">
+    <li><p>In a WSL shell, create the exercise folder and enter it:</p>
+      <pre><code>cd /mnt/c/Users/weilok.chia/Desktop/personal/brushup-c
+mkdir -p exercises/02-rects &amp;&amp; cd exercises/02-rects</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>rect.h</code> exactly as shown above, and paste the <code>Makefile</code> from the setup box.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>rect.c</code>: include the header, then the three functions. <code>rect_area</code> returns width times height, read through the pointer. <code>rect_move</code> adds <code>dx</code> and <code>dy</code> to the corner, through the pointer. <code>rect_largest</code> sets <code>end</code>, walks <code>p</code> from <code>rs</code> to <code>end</code>, keeps a <code>best</code> pointer, and returns it. No index variable anywhere in this file.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Give the count five a name. Allocate that many rects on the heap, sized from the pointer. Fill rect <code>i</code> with <code>x = i</code>, <code>y = 0</code>, <code>w = i + 1</code>, <code>h = N - i</code>; a plain index loop is right for this. Move every rect by <code>(10, 10)</code> with <code>rect_move(&amp;rs[i], 10, 10)</code>. Ask for the largest, and print exactly one line, using the arrow for its members and <code>big - rs</code> for the index:</p>
+      <pre><code>largest: 3 x 3 at (12, 10), index 2</code></pre>
+      <p>Then free the array and return 0.<span class="sn-ref"></span><span class="sidenote">Areas are 5, 8, 9, 8, 5, so the middle rect wins; it started at <code>(2, 0)</code> and moved to <code>(12, 10)</code>. If your line differs, one of the three functions, or the <code>&amp;</code>, is wrong; the report will not help you here, so reason from the numbers.</span></p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p><code>make</code>, then <code>./rects</code>. The bar: no warnings at all, that exact line. Then <code>make check</code>: “All heap blocks were freed”. A warning you cannot read, paste into the chat as-is.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it, on purpose, twice.</strong> First, in <code>main.c</code>, change <code>sizeof *rs</code> to <code>sizeof rs</code>. <code>make</code>, run <code>./rects</code>. It compiles without a word; the run is where it fails. Read the report against the guide below, fix it. Second, in <code>rect.c</code>, change one <code>r-&gt;w</code> to <code>r.w</code>. <code>make</code>. This one never runs at all: read the compiler's message, fix.</p>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><em>Two more minutes, optional.</em> In <code>rect_largest</code>, change <code>p &lt; end</code> to <code>p &lt;= end</code>. <code>make</code>, <code>./rects</code>. Read the report, then say to yourself why it reports “8 bytes after” rather than “0 bytes after”. Fix.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+    <li><p><code>make clean</code>, then tell me in the chat: <em>lesson 2 done</em>. I will build it from my side and read your two files against the <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/styleguide.html">CS107 style guide</a>.</p>
+      <label class="check"><input type="checkbox" data-step="8"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the report</h2>
+  <p>Same three lines as lesson 1: the kind, frame <code>#0</code>, and the region sentence. Here is the shape the first planted bug produces, abridged; your addresses and line numbers will differ.</p>
+  <pre><code>==117889==ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x504000000038 ...
+<strong>WRITE of size 4</strong> at 0x504000000038 thread T0
+    #0 0x5fa906939580 in <strong>main main.c:12</strong>
+    ...
+0x504000000038 is located <strong>0 bytes after 40-byte region</strong> [0x504000000010,0x504000000038)
+allocated by thread T0 here:
+    #0 ... in malloc ...
+    #1 ... in main main.c:8</code></pre>
+  <table>
+    <tr><th>Line</th><th>Read it as</th></tr>
+    <tr><td><code>WRITE of size 4</code></td><td>A four-byte store went out of bounds: one <code>int</code> member. Lesson 1's was a <code>READ</code>; the fill loop makes this one a write.</td></tr>
+    <tr><td><code>main main.c:12</code></td><td>The line in the fill loop that stored it. Not the bug, just where it surfaced.</td></tr>
+    <tr><td>“0 bytes after 40-byte region”</td><td>The whole diagnosis is in the number. Five rects need 80 bytes. Forty is 5 × 8: five <em>pointers</em>' worth. Something measured the pointer instead of the rect. The first store to spill is rect 2's third member, at byte 40.</td></tr>
+    <tr><td>“allocated by … main.c:8”</td><td>The <code>malloc</code> to fix.</td></tr>
+  </table>
+  <p>Note what did not happen: no warning. <code>sizeof rs</code> is a perfectly legal 8, and gcc cannot know you meant the rect. Only the run catches it, and only because the block was too small for the loop that followed. That is why the habit is <code>sizeof *rs</code>, not the checker.</p>
+  <p>The second planted bug never reaches the sanitizer. The compiler stops the build and, since gcc 13, names the fix:</p>
+  <pre><code>rect.c: In function ‘rect_area’:
+rect.c:4:13: <strong>error: ‘r’ is a pointer; did you mean to use ‘-&gt;’?</strong>
+    4 |     return r.w * r.h;
+      |             ^
+      |             -&gt;
+rect.c:5:1: warning: control reaches end of non-void function [-Wreturn-type]</code></pre>
+  <p>Read the first <code>error</code> and stop there. The warnings after it are consequences of the compiler giving up on that line, and vanish once it is fixed. Fix, rebuild, read again from the top. The <a href="../reference/structs-and-pointers.html">cheat sheet</a> lists the other messages this material produces, including the one for an arrow on a struct.</p>
+  <p>If you took the optional step, the report changes shape in two ways worth noticing:</p>
+  <pre><code><strong>READ of size 4</strong> at 0x5070000000e8 thread T0
+    #0 ... in <strong>rect_area rect.c:4</strong>
+    #1 ... in <strong>rect_largest rect.c:16</strong>
+    #2 ... in main main.c:18
+0x5070000000e8 is located <strong>8 bytes after 80-byte region</strong></code></pre>
+  <p>Frame <code>#0</code> is where the read happened and frame <code>#1</code> is who handed it the bad pointer: the loop, which let <code>p</code> reach <code>end</code> and then called <code>rect_area(end)</code>. The region is 80 bytes, so the allocation is right this time. And “8 bytes after” because <code>rect_area</code> read <code>end-&gt;w</code>, and <code>w</code> sits 8 bytes into a rect, after <code>x</code> and <code>y</code>. The sixth rect does not exist; the pointer to it is legal right up until you look through it.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>From memory, before you look anything up. Click an answer; the explanation appears at once.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary source:</strong> Beej's Guide to C Programming, <a href="https://beej.us/guide/bgc/html/split/structs.html">chapter 8, Structs</a> (sections 8.3 and 8.4) and <a href="https://beej.us/guide/bgc/html/split/pointers2.html">chapter 11, Pointers II: Arithmetic</a> (sections 11.1 and 11.2). Fifteen minutes, on today's arrow and pointer-walk rules. Skip 11.3 on <code>void</code> pointers; CS107 teaches that itself.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Anything in a warning or a sanitizer report you cannot read, paste into the chat as-is. Anything in this lesson that felt like a rule without a reason, ask why.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="../reference/structs-and-pointers.html">Reference: structs and pointers cheat sheet</a></span>
+    <span>Next: Lesson 3, stack vs heap (issued after this one is checked)</span>
+  </div>
+</footer>
+
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0002-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){
+      li.classList.toggle('done',cb.checked);
+      saved[cb.dataset.step]=cb.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}
+    });
+  });
+
+  var QUIZ=[
+    {q:"r is a struct rect *. Which expression reads its width?",
+     opts:["r->w","r.w","*r.w","&r.w"],a:0,
+     why:"Dot on a struct, arrow on a pointer to one. r->w is (*r).w with the parentheses folded in. *r.w parses as *(r.w), and the compiler rejects r.w because r is a pointer. Beej §8.4."},
+    {q:"main declares struct rect corners[4] and calls rect_largest(corners, 4). Inside the function, sizeof rs is…",
+     opts:["8, the size of one pointer","64, the size of the array","16, the size of one rect","4, the count of the elements"],a:0,
+     why:"The array decayed to a pointer at the call, so rs is a struct rect * and sizeof measures the pointer: 8 bytes on this machine. Only in main, where corners is still an array, does sizeof corners give 64. Beej §6.6.2."},
+    {q:"In for (p = rs; p < end; p++), each p++ moves p forward by how many bytes?",
+     opts:["16, the size of a rect","4, the size of an int","8, the size of a pointer","1, the size of a byte"],a:0,
+     why:"Pointer arithmetic counts in elements: p + 1 is the next rect, and the compiler multiplies by sizeof *p, which is 16, to get there. Beej §11.1.1."},
+    {q:"end is rs + n. Which use of end is allowed?",
+     opts:["comparing p against it in loops","reading end->w as a sentinel value","writing end->x to grow the array","passing end to free the block"],a:0,
+     why:"A pointer one past the last element may be formed and compared, and that is all. Reading or writing through it is undefined, and the sanitizer reports it 8 bytes after the region. free takes only the pointer malloc returned. cppreference, pointer arithmetic."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){
+      var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];
+      b.addEventListener('click',function(){
+        if(box.classList.contains('locked'))return;
+        box.classList.add('locked');answered++;
+        if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}
+        else{b.classList.add('wrong');
+          opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});
+          why.textContent='Not quite. '+item.why;}
+        if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Anything you missed, reread that paragraph once, then move on; the exercise is what makes it stick.';}
+      });
+      opts.appendChild(b);
+    });
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;
+    box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Structs and Pointers</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · C fundamentals for CS107</p>
+  <h1>Structs and Pointers</h1>
+  <p class="subtitle">Declaring a struct, dot versus arrow, what happens to an array at a function call, what <code>sizeof</code> measures, and the pointer-walk idiom. Lookup only, nothing here is to be memorised. Paired with <a href="../lessons/0002-structs-by-pointer.html">Lesson 2</a>.</p>
+
+  <h2>Declaring and using a struct</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">in the header, next to the prototypes</p>
+      <pre><code>struct rect {          /* type name: "struct rect" */
+    int x, y;          /* members */
+    int w, h;
+};</code></pre>
+      <p class="filename">later, when a type must hide its members (lesson 7)</p>
+      <pre><code>typedef struct stack stack;   /* header: name only  */
+struct stack { ... };         /* .c file: members   */</code></pre>
+    </div>
+    <div>
+      <p class="filename">values</p>
+      <pre><code>struct rect a = {1, 2, 3, 4};      /* positional     */
+struct rect b = {.w = 3, .h = 4};  /* designated, C99;
+                                      rest are zero   */
+struct rect c = a;                 /* copies all four */
+a.x = 7;                           /* c.x is still 1  */
+struct rect grid[3];               /* grid[1].w       */
+if (a == b) ...                    /* not allowed:
+                                      compare members */</code></pre>
+    </div>
+  </div>
+  <p>Source: <a href="https://beej.us/guide/bgc/html/split/structs.html">Beej ch. 8</a>, §8.1 declaring, §8.2 initialisers, §8.5 copying, §8.6 comparing.</p>
+
+  <h2>Reaching a member</h2>
+  <table>
+    <tr><th>Write</th><th>Meaning</th></tr>
+    <tr><td><code>s.w</code></td><td>Member <code>w</code> of the struct <code>s</code>.</td></tr>
+    <tr><td><code>p-&gt;w</code></td><td>Member <code>w</code> of the struct <code>p</code> points at. Identical to <code>(*p).w</code>. <a href="https://en.cppreference.com/c/language/operator_member_access">cppreference</a></td></tr>
+    <tr><td><code>&amp;s</code></td><td>The address of <code>s</code>: a <code>struct rect *</code>.</td></tr>
+    <tr><td><code>*p</code></td><td>The whole struct <code>p</code> points at. <code>struct rect copy = *p;</code> copies it.</td></tr>
+    <tr><td><code>&amp;rs[i]</code> &nbsp;=&nbsp; <code>rs + i</code></td><td>The address of element <code>i</code>. Two spellings, one pointer.</td></tr>
+    <tr><td><code>&amp;s.x</code></td><td>The address of one member: an <code>int *</code>, not a <code>struct rect *</code>.</td></tr>
+  </table>
+  <div class="rule">Dot on a struct, arrow on a pointer to one. Both mistakes are compile errors; see the table at the end.</div>
+
+  <h2>Passing and returning</h2>
+  <table>
+    <tr><th>Prototype</th><th>Effect</th></tr>
+    <tr><td><code>void f(struct rect r)</code></td><td>By value. <code>f</code> works on a copy; its changes stay inside <code>f</code>.</td></tr>
+    <tr><td><code>int f(const struct rect *r)</code></td><td>Read-only through <code>r</code>. Caller passes <code>&amp;s</code>, <code>rs + i</code> or <code>&amp;rs[i]</code>.</td></tr>
+    <tr><td><code>void f(struct rect *r)</code></td><td><code>f</code> may write through <code>r</code>; the caller sees the changes.</td></tr>
+    <tr><td><code>const struct rect *find(const struct rect *rs, size_t n)</code></td><td>Returns an address inside the caller's array. Valid until that array is freed. Never <code>free</code> the result.</td></tr>
+    <tr><td><code>struct rect rect_make(int x, int y)</code></td><td>Returning by value is fine for small structs.</td></tr>
+  </table>
+  <p>When to pass a pointer, per <a href="https://beej.us/guide/bgc/html/split/structs.html#passing-structs-to-functions">Beej §8.3</a>: the function must change the caller's struct, or the struct is large enough that copying it costs more than copying a pointer. In this course, also: every ADT from lesson 7 on lives on the heap and is only reached through a pointer.</p>
+
+  <h2>An array at a function call</h2>
+  <p>An array expression, except as the operand of <code>sizeof</code> or <code>&amp;</code>, “undergoes an implicit conversion to the pointer to its first element” (<a href="https://en.cppreference.com/c/language/array#Array_to_pointer_conversion">cppreference</a>). Consequences:</p>
+  <table>
+    <tr><th>Fact</th><th>So</th></tr>
+    <tr><td>Inside the function the parameter is a pointer.</td><td>Pass the length separately, as <code>size_t n</code>. <a href="https://beej.us/guide/bgc/html/split/arrays.html#passing1darrays">Beej §6.6.2</a></td></tr>
+    <tr><td><code>void f(struct rect rs[])</code> means <code>void f(struct rect *rs)</code>.</td><td>The brackets are decoration. Write the pointer form so nobody is fooled.</td></tr>
+    <tr><td><code>sizeof rs / sizeof rs[0]</code> on a parameter is 8 ÷ 16 = 0.</td><td>The element-count trick works only in the scope that declared the array. <a href="https://beej.us/guide/bgc/html/split/arrays.html#getting-the-length-of-an-array">Beej §6.2</a></td></tr>
+  </table>
+
+  <h2>What <code>sizeof</code> measures</h2>
+  <p>Measured on WSL Ubuntu, gcc 13, 64-bit, with <code>struct rect corners[4];</code> and <code>struct rect *p = corners;</code>.</p>
+  <table>
+    <tr><th>Expression</th><th>Bytes</th><th>Why</th></tr>
+    <tr><td><code>sizeof(struct rect)</code></td><td>16</td><td>Four <code>int</code>s. Parentheses are required around a type name.</td></tr>
+    <tr><td><code>sizeof corners</code></td><td>64</td><td>The whole local array, 4 × 16.</td></tr>
+    <tr><td><code>sizeof p</code></td><td>8</td><td>A pointer, whatever it points at. Same for any function parameter.</td></tr>
+    <tr><td><code>sizeof *p</code></td><td>16</td><td>What it points at. No parentheses needed around an expression.</td></tr>
+    <tr><td><code>sizeof corners / sizeof corners[0]</code></td><td>4</td><td>Element count, in the declaring scope only.</td></tr>
+    <tr><td><code>sizeof(struct rect)</code> after adding <code>char tag;</code></td><td>20</td><td>Not 17: padding keeps every <code>int</code> aligned in an array of them. CS107 teaches the rule.</td></tr>
+  </table>
+  <div class="rule">Size what you point at: <code>malloc(n * sizeof *p)</code>. <code>sizeof p</code> is legal, silent under <code>-Wall -Wextra</code>, and wrong.</div>
+  <p>Result type is <code>size_t</code>; a struct's size includes “internal and trailing padding”. <a href="https://en.cppreference.com/c/language/sizeof">cppreference</a></p>
+
+  <h2>Pointer arithmetic</h2>
+  <table>
+    <tr><th>Write</th><th>Meaning</th></tr>
+    <tr><td><code>p + i</code></td><td>The element <code>i</code> places after <code>p</code>. Counts elements, not bytes: the compiler multiplies by <code>sizeof *p</code>. <a href="https://beej.us/guide/bgc/html/split/pointers2.html#adding-to-pointers">Beej §11.1.1</a></td></tr>
+    <tr><td><code>p++</code></td><td>Move <code>p</code> to the next element.</td></tr>
+    <tr><td><code>p[i]</code> &nbsp;=&nbsp; <code>*(p + i)</code></td><td>Indexing is pointer arithmetic in different clothes. <a href="https://beej.us/guide/bgc/html/split/pointers2.html#arraypointerequiv">Beej §11.2</a></td></tr>
+    <tr><td><code>q - p</code></td><td>The number of elements from <code>p</code> to <code>q</code>. Counts elements, not bytes. The result has type <code>ptrdiff_t</code>; print it with <code>%td</code>. <a href="https://en.cppreference.com/c/language/operator_arithmetic#Pointer_arithmetic">cppreference</a></td></tr>
+    <tr><td><code>p &lt; q</code></td><td>Order of two pointers into the same array.</td></tr>
+    <tr><td><code>rs + n</code></td><td>One past the last element. May be formed and compared; must never be read or written. <code>p - 1</code> from the first element is equally undefined.</td></tr>
+    <tr><td><code>void *</code></td><td>No arithmetic and no dereference until cast. CS107's material; not used here.</td></tr>
+  </table>
+
+  <h2>Two ways to walk an array</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">by index</p>
+      <pre><code>for (size_t i = 0; i &lt; n; i++) {
+    total += rect_area(&amp;rs[i]);
+}</code></pre>
+    </div>
+    <div>
+      <p class="filename">by pointer (the shape every list and tree uses)</p>
+      <pre><code>const struct rect *end = rs + n;
+for (const struct rect *p = rs; p &lt; end; p++) {
+    total += rect_area(p);
+}</code></pre>
+    </div>
+  </div>
+  <p>Keep <code>const</code> on the walking pointer when the loop only reads; it is the same promise as <code>const struct rect *</code> in a prototype.</p>
+
+  <h2>Errors and reports you will meet</h2>
+  <table>
+    <tr><th>Message (gcc 13 or the sanitizer, abridged)</th><th>What you did</th></tr>
+    <tr><td><code>error: ‘r’ is a pointer; did you mean to use ‘-&gt;’?</code></td><td><code>r.w</code> on a pointer. Use <code>r-&gt;w</code>. Older gcc says <code>request for member ‘w’ in something not a structure or union</code>.</td></tr>
+    <tr><td><code>error: invalid type argument of ‘-&gt;’ (have ‘struct rect’)</code></td><td><code>s-&gt;w</code> on a struct value. Use <code>s.w</code>.</td></tr>
+    <tr><td><code>error: assignment of member ‘x’ in read-only object</code></td><td>Wrote through a <code>const struct rect *</code>. Either the prototype loses <code>const</code> or the write is a bug.</td></tr>
+    <tr><td><code>warning: passing argument 1 of ‘f’ discards ‘const’ qualifier from pointer target type</code></td><td>Handed a <code>const</code> pointer to a function that may write. Treat as an error.</td></tr>
+    <tr><td><code>error: incompatible type for argument 1 of ‘f’</code></td><td>Passed the struct where a pointer was wanted. Add <code>&amp;</code>.</td></tr>
+    <tr><td><code>error: invalid initializer</code> on <code>struct rect s = p;</code></td><td>Assigned a pointer to a struct. You meant <code>*p</code>, or <code>s</code> should be a pointer.</td></tr>
+    <tr><td><code>warning: initialization of ‘struct rect *’ from incompatible pointer type ‘int *’</code></td><td><code>&amp;s.x</code> is the address of a member. The struct's address is <code>&amp;s</code>.</td></tr>
+    <tr><td><code>heap-buffer-overflow</code>, region size = count × 8</td><td><code>sizeof p</code> in the <code>malloc</code>. Size what you point at.</td></tr>
+    <tr><td><code>heap-buffer-overflow</code> with frame <code>#1</code> in the walking loop, “N bytes after”</td><td><code>p &lt;= end</code>: the one-past-the-end pointer was dereferenced. N is the member's offset inside the struct.</td></tr>
+    <tr><td><code>SEGV on unknown address 0x000…</code></td><td><code>p-&gt;w</code> with <code>p</code> NULL: unchecked <code>malloc</code>, or a search that found nothing.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://beej.us/guide/bgc/html/split/structs.html">Beej ch. 8 Structs</a> · <a href="https://beej.us/guide/bgc/html/split/arrays.html">Beej ch. 6 Arrays</a> · <a href="https://beej.us/guide/bgc/html/split/pointers2.html">Beej ch. 11 Pointers II</a> · <a href="https://en.cppreference.com/c/language/sizeof">cppreference sizeof</a> · <a href="https://en.cppreference.com/c/language/array">cppreference array</a> · <a href="https://en.cppreference.com/c/language/operator_arithmetic">cppreference arithmetic operators</a> · <a href="https://en.cppreference.com/c/language/operator_member_access">cppreference member access</a></p>
+</article>
+</body>
+</html>

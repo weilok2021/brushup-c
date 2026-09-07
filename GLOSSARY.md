@@ -39,3 +39,33 @@ _Avoid_: unsigned int, length type
 **`const` pointer parameter** (`const int *a`):
 A promise that the function only reads through `a`. It binds the function, not the caller; the pointer itself may still move.
 _Avoid_: read-only pointer, constant pointer
+
+## Structs and arrays
+
+**Struct**:
+A value composed of named members, declared once where every file that uses the type can see the same declaration.
+_Avoid_: record, object
+
+**Member**:
+One named value inside a struct, reached with `.` on a struct value or `->` through a pointer.
+_Avoid_: field, property
+
+**Arrow operator** (`p->member`):
+Member access through a pointer to a struct. It means the same thing as `(*p).member`.
+_Avoid_: pointer dot
+
+**Array decay**:
+The implicit conversion of an array expression to a pointer to its first element. A function therefore receives a pointer and needs the element count separately.
+_Avoid_: array becomes a pointer
+
+**Pointer arithmetic**:
+Adding to or subtracting from a pointer in units of pointed-to elements. `p + 1` addresses the next element, not the next byte.
+_Avoid_: address math
+
+**One-past-the-end pointer**:
+The pointer `rs + n` for an array of `n` elements. Code may form and compare it, but must not dereference it.
+_Avoid_: sentinel element
+
+**`ptrdiff_t`**:
+The signed integer type produced by subtracting two pointers into the same array. Print it with `%td`.
+_Avoid_: pointer index type
