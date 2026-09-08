@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 · One Owner, One Free</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+
+<header>
+  <p class="kicker">Lesson 3 · C fundamentals for CS107</p>
+  <h1>One Owner, One Free</h1>
+  <p class="subtitle">A local pointer on the stack, a resizable block on the heap, and one rule that prevents leaks, use-after-free, and double-free.</p>
+  <div class="meta">
+    <span>About 25 minutes</span>
+    <span>Where: WSL, <code>exercises/03-owned-ints/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/heap-ownership.html">Cheat sheet</a> · <a href="0002-structs-by-pointer.html">Lesson 2</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Allocate zeroed integers, grow the block without losing it when <code>realloc</code> fails, name the one pointer responsible for freeing it, and read three lifecycle failures from their reports: use-after-free, double-free, and leak.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Use the same build loop as the first two lessons. Put this file, named <code>Makefile</code>, in the exercise folder. The <span class="tab">⇥</span> marks must be real tab characters.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c ints.c
+
+owned-ints: $(SRC) ints.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o owned-ints $(SRC)
+
+# valgrind cannot run a sanitized binary, so it gets a plain one
+owned-ints-plain: $(SRC) ints.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o owned-ints-plain $(SRC)
+
+.PHONY: check clean
+check: owned-ints-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./owned-ints-plain
+clean:
+<span class="tab">⇥</span>rm -f owned-ints owned-ints-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>The pointer and the block live in different places</h2>
+  <p>Start with a concrete program state. Suppose <code>main</code> has just run <code>int* values = calloc(4, sizeof *values);</code>. On this machine it looks like this:</p>
+  <pre><code>main's stack frame                    heap
++--------------------+               +-------------------+
+| count:  4          |               | 0 | 0 | 0 | 0     |
+| values: 0x6030 ----+--------------&gt;| four int elements |
++--------------------+               +-------------------+</code></pre>
+  <p><code>values</code> is a local pointer variable. It disappears automatically when <code>main</code> returns. The four integers form a separate heap block. That block remains allocated until somebody passes its address to <code>free</code>. Losing the local pointer does not free the block.</p>
+  <table>
+    <tr><th>Storage</th><th>Lifetime</th><th>Who ends it</th></tr>
+    <tr><td>Local variables</td><td>Until their block or function returns</td><td>The language, automatically</td></tr>
+    <tr><td>Global and <code>static</code> variables</td><td>The whole program</td><td>The process ending</td></tr>
+    <tr><td>A block from <code>malloc</code> or <code>calloc</code></td><td>From successful allocation until <code>free</code> or successful <code>realloc</code></td><td>Your program</td></tr>
+  </table>
+  <p>The C standard names these storage durations; programmers usually call the first region the <em>stack</em> and the last the <em>heap</em>. The distinction that matters is automatic versus manual lifetime.</p>
+
+  <p><strong>Give every heap block one owner.</strong> Ownership is a rule in your program, not a property stored in a pointer. The owner is responsible for exactly one eventual <code>free</code>. Other pointers may borrow the block, but borrowers do not free it and do not use it after the owner frees or resizes it.</p>
+  <pre><code>int* values = ints_new(4);    /* values owns the returned block */
+int* first = values;          /* first borrows; it does not own */
+
+printf("%d\n", *first);       /* allowed while the block lives */
+free(values);                 /* owner's one free */
+/* values and first are now dangling; dereference neither */</code></pre>
+  <p><code>free</code> releases the block. It does not erase every pointer that contains the old address. Those stale pointers are <em>dangling pointers</em>. Assigning the owner <code>NULL</code> after <code>free</code> can prevent an accidental second free through that variable, but it cannot repair aliases such as <code>first</code>.</p>
+</section>
+
+<section>
+  <h2>Four allocation operations, one lifecycle</h2>
+  <table>
+    <tr><th>Operation</th><th>What it does</th><th>Result</th></tr>
+    <tr><td><code>malloc(bytes)</code></td><td>Allocates uninitialised bytes. Reading them before writing a value is an error.</td><td>New owning pointer, or <code>NULL</code>.</td></tr>
+    <tr><td><code>calloc(count, size)</code></td><td>Allocates <code>count * size</code> bytes and clears them to zero.</td><td>New owning pointer, or <code>NULL</code>.</td></tr>
+    <tr><td><code>realloc(p, bytes)</code></td><td>Changes a block's size. It may move the block. Existing contents survive up to the smaller of the old and new sizes; added bytes are uninitialised.</td><td>On success, the only pointer to use for the resized block. On failure, <code>NULL</code> while <code>p</code>'s block still lives.</td></tr>
+    <tr><td><code>free(p)</code></td><td>Ends the block's lifetime. <code>free(NULL)</code> does nothing.</td><td>No value; every pointer into that block becomes dangling.</td></tr>
+  </table>
+  <p>Beej's summary is direct: memory from <code>malloc</code> is not initialised, and using a region after <code>free</code> is undefined behavior<a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">*</a>. All allocation results must be checked before dereferencing them.</p>
+
+  <p><strong>Never overwrite the owner with <code>realloc</code>'s result before checking it.</strong> This tempting line loses the old block when the resize fails:</p>
+  <pre><code>values = realloc(values, new_count * sizeof *values);  /* unsafe */
+if (values == NULL) {
+    /* the old block still exists, but its address was overwritten: leak */
+}</code></pre>
+  <p>Keep the original owner until success is known:</p>
+  <pre><code>int* grown = realloc(values, new_count * sizeof *values);
+if (grown == NULL) {
+    free(values);                /* old block still belongs to us */
+    return 1;
+}
+values = grown;                  /* ownership continues here */</code></pre>
+  <p>After success, use only <code>grown</code> (or <code>values</code> after the assignment). The pointer passed to <code>realloc</code> and every old alias must no longer be used, even when the returned address happens to look unchanged<a href="https://en.cppreference.com/c/memory/realloc.html">*</a>.</p>
+</section>
+
+<section>
+  <h2>The module states its ownership contract</h2>
+  <p>Function comments must say who owns a returned heap block and what happens on failure. Use this header for the exercise. It uses your preferred pointer spacing; each declaration names one variable.</p>
+  <p class="filename">ints.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* Allocate n zeroed ints. n must be at least 1.
+   Returns an owned heap block, or NULL on failure. */
+int* ints_new(size_t n);
+
+/* Resize values to hold n ints. n must be at least 1.
+   On success, returns the owning pointer and the input pointer must not be used.
+   On failure, returns NULL and the caller still owns values. */
+int* ints_resize(int* values, size_t n);
+
+/* Return the sum of the n ints at values. Borrows values; does not free it. */
+int ints_sum(const int* values, size_t n);</code></pre>
+  <p>The first two functions return ownership. The last function only borrows. A type such as <code>int*</code> cannot encode that difference, so the contract must. <code>ints_resize</code> may return <code>realloc</code> directly because its parameter is only a copy of the caller's pointer; the caller keeps its owner unchanged until it checks the returned pointer.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <p>Write <code>ints.c</code> and <code>main.c</code> without looking anything up once you begin. The exercise is small; the important part is where ownership moves.</p>
+  <ol class="steps" id="steps">
+    <li><p>Create the exercise folder:</p>
+      <pre><code>cd /mnt/c/Users/weilok.chia/Desktop/personal/brushup-c
+mkdir -p exercises/03-owned-ints &amp;&amp; cd exercises/03-owned-ints</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>ints.h</code> exactly as shown above. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>ints.c</code>. Include your own header first, then <code>&lt;stdlib.h&gt;</code>. <code>ints_new</code> calls <code>calloc</code>, sized from a local <code>int*</code>. <code>ints_resize</code> returns <code>realloc(values, n * sizeof *values)</code>. <code>ints_sum</code> sums all elements without changing or freeing them.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Start with four ints from <code>ints_new</code> and check for <code>NULL</code>. Print their initial values on one line to show that <code>calloc</code> zeroed them:</p>
+      <pre><code>initial zeros: 0 0 0 0</code></pre>
+      <p>Fill them with 1 through 4. Grow the block to seven ints using the safe temporary-pointer pattern. On failure, free the old block and return 1. On success, transfer ownership back to <code>values</code>, initialise only the three new elements with 5 through 7, and print:</p>
+      <pre><code>grown sum: 28</code></pre>
+      <p>Free the owning pointer exactly once and return 0.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, then <code>./owned-ints</code>. The bar is no warnings and those exact two lines. Run <code>make check</code>; it must report that all heap blocks were freed.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break the lifetime, three ways.</strong> Do one at a time and fix it before the next.</p>
+      <ol>
+        <li>Immediately after the final <code>free(values)</code>, print <code>values[0]</code>. Build and run. Find <code>heap-use-after-free</code>, the bad read, the freeing stack, and the allocation stack.</li>
+        <li>Replace that print with a second <code>free(values)</code>. Build and run. Find <code>attempting double-free</code> and both calls to <code>free</code>.</li>
+        <li>Remove the final <code>free</code>. Build, then run <code>make check</code>. Find the 28-byte block reported as definitely lost.</li>
+      </ol>
+      <p>Restore the correct single <code>free</code> after each report.</p>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Run the clean build and both checks once more. Then tell me: <em>lesson 3 done</em>. I will review the ownership paths as well as the output.</p>
+      <pre><code>make clean &amp;&amp; make
+./owned-ints
+make check</code></pre>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the three reports</h2>
+  <p>A use-after-free report contains three moments in the block's life:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-use-after-free</strong> ...
+<strong>READ of size 4</strong> ...
+    #0 ... in <strong>main main.c:...</strong>
+...
+<strong>freed by thread T0 here:</strong>
+    #0 ... in free
+    #1 ... in <strong>main main.c:...</strong>
+...
+<strong>previously allocated by thread T0 here:</strong>
+    #0 ... in realloc
+    #1 ... in ints_resize ints.c:...</code></pre>
+  <p>Read it as a timeline: the last stack created the current block, the middle stack ended its lifetime, and the first stack tried to read it afterward. <code>READ of size 4</code> is one <code>int</code>.</p>
+
+  <p>A double-free report moves the first question from “where was it read?” to “where was it freed again?”:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>attempting double-free</strong> ...
+    #0 ... in free
+    #1 ... in <strong>main main.c: second free</strong>
+...
+freed by thread T0 here:
+    #0 ... in free
+    #1 ... in <strong>main main.c: first free</strong></code></pre>
+  <p>The repair is not automatically “delete the second line”. In a larger program, first decide which code path owns the block. Then make that owner perform one free and make every other path borrow.</p>
+
+  <p>The leak appears under Valgrind:</p>
+  <pre><code><strong>28 bytes in 1 blocks are definitely lost</strong>
+    at ... realloc
+    by ... ints_resize (ints.c:...)
+    by ... main (main.c:...)</code></pre>
+  <p>Seven four-byte ints explain 28 bytes. The allocation stack points to <code>realloc</code> because the resize produced the final live block. Add the missing <code>free</code> to the owner, not to <code>ints_sum</code> or another borrower.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory. Each explanation appears after you choose.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary source:</strong> Beej's Guide to C Programming, <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">chapter 12, Manual Memory Allocation</a>. Read sections 12.1 through 12.5. The <a href="../reference/heap-ownership.html">cheat sheet</a> keeps the ownership and report patterns in one page.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Paste any sanitizer or Valgrind report that does not match the three shapes above. Do not guess around a lifetime error.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="../reference/heap-ownership.html">Reference: heap ownership cheat sheet</a></span>
+    <span>Next: Lesson 4, pointer-to-pointer and strings (issued after this one is checked)</span>
+  </div>
+</footer>
+
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0003-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){
+      li.classList.toggle('done',cb.checked);
+      saved[cb.dataset.step]=cb.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}
+    });
+  });
+
+  var QUIZ=[
+    {q:"main has int* values = calloc(4, sizeof *values). Which object is on the heap?",
+     opts:["the four-int block","the values pointer variable","both the pointer and the block","the integer literal 4"],a:0,
+     why:"values is a local variable in main's stack frame. Its stored address points to a separate four-int heap block. free(values) releases that block, not the local variable."},
+    {q:"realloc(values, bytes) returns NULL. What is true?",
+     opts:["the original block still lives and values still owns it","the original block was freed","values may now be passed only to free(NULL)","the original contents were reset to zero"],a:0,
+     why:"Failure leaves the original block unchanged. This is why the result belongs in a temporary pointer: overwriting values with NULL would lose the only address of a still-live block."},
+    {q:"realloc succeeds and returns grown. Which pointer should access the resized block?",
+     opts:["grown only","the old pointer only","either pointer because their addresses can be compared","any alias into the old block"],a:0,
+     why:"On success, the pointer passed to realloc and all aliases into the old block must no longer be used. The returned pointer is the valid owner, whether or not its numeric address happens to match."},
+    {q:"ints_sum(const int* values, size_t n) receives an owned block. Who frees it?",
+     opts:["the caller that owns it","ints_sum before returning","both functions once each","nobody because const frees it automatically"],a:0,
+     why:"ints_sum borrows the block. const prevents writes through its parameter but says nothing about lifetime. The ownership contract leaves the caller responsible for one free."},
+    {q:"After free(values), what does values = NULL accomplish?",
+     opts:["it prevents reuse through values but does not repair aliases","it restores the freed block as an empty allocation","it makes every alias NULL","it is required before free returns"],a:0,
+     why:"Only the values variable changes. Any copied pointer still contains a dangling address. Assigning NULL is useful local hygiene, not a replacement for clear ownership."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){
+      var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];
+      b.addEventListener('click',function(){
+        if(box.classList.contains('locked'))return;
+        box.classList.add('locked');answered++;
+        if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}
+        else{b.classList.add('wrong');
+          opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});
+          why.textContent='Not quite. '+item.why;}
+        if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Revisit only the lifecycle step behind anything you missed.';}
+      });
+      opts.appendChild(b);
+    });
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;
+    box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Heap Ownership</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · C fundamentals for CS107</p>
+  <h1>Heap Ownership</h1>
+  <p class="subtitle">Where pointers and blocks live, what each allocator promises, the safe <code>realloc</code> pattern, and how to recognize lifetime failures. Paired with <a href="../lessons/0003-one-owner-one-free.html">Lesson 3</a>.</p>
+
+  <h2>Pointer versus heap block</h2>
+  <pre><code>int* values = calloc(4, sizeof *values);
+
+stack frame                          heap
++------------------+                +---------------+
+| values: address -+---------------&gt;| 0 | 0 | 0 | 0 |
++------------------+                +---------------+</code></pre>
+  <table>
+    <tr><th>Object</th><th>Lifetime</th></tr>
+    <tr><td>Local pointer <code>values</code></td><td>Automatic: ends when its block or function returns.</td></tr>
+    <tr><td>Four-int heap block</td><td>Manual: ends at <code>free</code> or successful <code>realloc</code>.</td></tr>
+  </table>
+  <div class="rule">Losing or changing the pointer does not free its heap block. Freeing the block does not erase pointers that contain its old address.</div>
+
+  <h2>The allocation API</h2>
+  <table>
+    <tr><th>Call</th><th>Initial contents</th><th>Failure</th></tr>
+    <tr><td><code>malloc(n * sizeof *p)</code></td><td>Uninitialised. Write before reading.</td><td>Returns <code>NULL</code>.</td></tr>
+    <tr><td><code>calloc(n, sizeof *p)</code></td><td>All bytes zero.</td><td>Returns <code>NULL</code>.</td></tr>
+    <tr><td><code>realloc(p, n * sizeof *p)</code></td><td>Preserves existing bytes that fit. Added bytes are uninitialised.</td><td>Returns <code>NULL</code>; the old block remains allocated and unchanged.</td></tr>
+    <tr><td><code>free(p)</code></td><td>Ends the block's lifetime.</td><td><code>free(NULL)</code> safely does nothing.</td></tr>
+  </table>
+  <p>Use positive, nonzero sizes in this course. The special rules for zero-size allocation are implementation-sensitive and unnecessary here.</p>
+
+  <h2>Safe <code>realloc</code></h2>
+  <div class="grid">
+    <div>
+      <p class="filename">wrong: owner can be overwritten by null</p>
+      <pre><code>values = realloc(values,
+                 new_n * sizeof *values);
+if (values == NULL) {
+    /* old block leaked */
+}</code></pre>
+    </div>
+    <div>
+      <p class="filename">right: keep owner until success</p>
+      <pre><code>int* grown = realloc(values,
+                     new_n * sizeof *values);
+if (grown == NULL) {
+    free(values);
+    return 1;
+}
+values = grown;</code></pre>
+    </div>
+  </div>
+  <table>
+    <tr><th>Result</th><th>Ownership</th></tr>
+    <tr><td>Success: non-<code>NULL</code></td><td>The returned pointer owns the resized block. Do not use the input pointer or its aliases again.</td></tr>
+    <tr><td>Failure: <code>NULL</code></td><td>The original pointer still owns the unchanged original block.</td></tr>
+  </table>
+  <div class="rule"><code>realloc</code> may move the block. Use only its returned pointer after success.</div>
+
+  <h2>Ownership words</h2>
+  <table>
+    <tr><th>Term</th><th>Rule</th></tr>
+    <tr><td>Owner</td><td>The one pointer or code path responsible for eventually freeing the block.</td></tr>
+    <tr><td>Borrower</td><td>May access the live block within its contract. Does not free it or retain it beyond the promised lifetime.</td></tr>
+    <tr><td>Ownership transfer</td><td>Responsibility for the eventual free moves to another pointer or caller.</td></tr>
+    <tr><td>Dangling pointer</td><td>A stale pointer to a block whose lifetime ended through <code>free</code> or successful <code>realloc</code>. Do not dereference, compare, or free it.</td></tr>
+  </table>
+
+  <h2>State transitions</h2>
+  <pre><code>allocation succeeds       realloc succeeds           free
+no block ------------&gt; live owned block ---------&gt; resized block ----&gt; dead
+                            |                              |
+                            +-- realloc fails ------------+
+                                old block remains live</code></pre>
+  <p>Every successful allocation starts one ownership obligation. A successful <code>realloc</code> continues that obligation with its returned pointer. One <code>free</code> completes it.</p>
+
+  <h2>Function contracts</h2>
+  <table>
+    <tr><th>Shape</th><th>Typical contract</th></tr>
+    <tr><td><code>int* make(size_t n)</code></td><td>Returns ownership of a new block, or <code>NULL</code>.</td></tr>
+    <tr><td><code>int* resize(int* p, size_t n)</code></td><td>On success returns the owner and invalidates use of the input pointer; on failure returns <code>NULL</code> and caller retains ownership of <code>p</code>.</td></tr>
+    <tr><td><code>int sum(const int* p, size_t n)</code></td><td>Borrows for the call. Reads but neither changes nor frees the block.</td></tr>
+    <tr><td><code>void destroy(int* p)</code></td><td>Consumes ownership and frees the block. The caller must not use aliases afterward.</td></tr>
+  </table>
+  <p><code>const</code> controls writes through a pointer. It does not express ownership or extend lifetime. Comments must state those parts of the contract.</p>
+
+  <h2>Reports at a glance</h2>
+  <table>
+    <tr><th>Heading</th><th>Meaning</th><th>Stacks to read</th></tr>
+    <tr><td><code>heap-use-after-free</code></td><td>Code accessed a heap block after its lifetime ended.</td><td>Bad access, where freed, where allocated.</td></tr>
+    <tr><td><code>attempting double-free</code></td><td>Two paths tried to end one block's lifetime.</td><td>Second free, first free, allocation.</td></tr>
+    <tr><td><code>N bytes ... definitely lost</code></td><td>No live pointer can reach an allocated block at program exit.</td><td>Allocation or latest successful realloc.</td></tr>
+    <tr><td><code>conditional jump ... uninitialised value</code></td><td>Code read bytes from <code>malloc</code> or the grown part of <code>realloc</code> before writing them.</td><td>First use and allocation origin.</td></tr>
+  </table>
+
+  <h2>Checklist for every heap block</h2>
+  <pre><code>[ ] Size from the pointee: n * sizeof *p
+[ ] Check allocation result before dereference
+[ ] Name one owner
+[ ] Initialise before read
+[ ] Keep the old owner until realloc succeeds
+[ ] Use only realloc's result after success
+[ ] Free once on every exit path
+[ ] Do not use aliases after free or realloc</code></pre>
+
+  <p class="foot">Sources: <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">Beej ch. 12 Manual Memory Allocation</a> · <a href="https://en.cppreference.com/c/memory/malloc.html">cppreference malloc</a> · <a href="https://en.cppreference.com/c/memory/calloc.html">calloc</a> · <a href="https://en.cppreference.com/c/memory/realloc.html">realloc</a> · <a href="https://en.cppreference.com/c/memory/free.html">free</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/valgrind.html">CS107 Valgrind guide</a></p>
+</article>
+</body>
+</html>

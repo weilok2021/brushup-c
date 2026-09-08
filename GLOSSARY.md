@@ -69,3 +69,33 @@ _Avoid_: sentinel element
 **`ptrdiff_t`**:
 The signed integer type produced by subtracting two pointers into the same array. Print it with `%td`.
 _Avoid_: pointer index type
+
+## Ownership and lifetime
+
+**Owner**:
+The one pointer or code path responsible for eventually freeing a heap block.
+_Avoid_: main pointer, original pointer
+
+**Borrower**:
+A pointer allowed to access a live heap block without taking responsibility for freeing it.
+_Avoid_: secondary owner, safe alias
+
+**Ownership transfer**:
+Moving responsibility for the eventual `free` from one pointer or caller to another. A successful `realloc` transfers that responsibility to its returned pointer.
+_Avoid_: pointer replacement
+
+**Dangling pointer**:
+A stale pointer to an object whose lifetime has ended. It must not be dereferenced or freed.
+_Avoid_: freed pointer, bad address
+
+**Use-after-free**:
+Reading or writing a heap block after its lifetime ended. AddressSanitizer reports the bad access, the earlier `free`, and the allocation as a timeline.
+_Avoid_: stale read
+
+**Double-free**:
+Ending one heap block's lifetime twice. It often means that ownership was unclear or that an old pointer was used after successful `realloc`.
+_Avoid_: duplicate cleanup
+
+**`realloc`**:
+An operation that changes an owned heap block's size. Success returns the only pointer to continue using; failure returns `NULL` and leaves the original block owned and unchanged.
+_Avoid_: resize in place
