@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Queue ADT</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Queue ADT</h1>
+  <p class="subtitle">Linked queue with head and tail pointers, worst-case constant-time enqueue and dequeue, and the tail reset that keeps it from writing into freed memory. Paired with <a href="../lessons/0009-head-and-tail.html">Lesson 9</a>. Reused by lesson 12 for breadth-first search.</p>
+
+  <h2>Interface</h2>
+  <p class="filename">queue.h</p>
+  <pre><code>#pragma once
+#include &lt;stddef.h&gt;
+
+typedef struct queue queue_t;               /* opaque: struct body lives in queue.c */
+
+queue_t* queue_new(void);                   /* empty queue, or NULL on failure */
+void     queue_free(queue_t* q);            /* frees every node, then q; NULL is fine */
+int      queue_enqueue(queue_t* q, int v);  /* 1 ok, 0 if malloc failed; queue unchanged on 0 */
+int      queue_dequeue(queue_t* q, int* out); /* 1 and *out set, or 0 if empty */
+int      queue_peek(const queue_t* q, int* out); /* same as dequeue, node stays */
+size_t   queue_count(const queue_t* q);
+int      queue_is_empty(const queue_t* q);</code></pre>
+  <p>Values leave through <code>int* out</code> plus a 1/0 return. No pointer into a node ever crosses the header, so no caller can hold a node after it is freed.</p>
+
+  <h2>Private layout</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">queue.c</p>
+      <pre><code>struct node {
+    int value;            /* 4 bytes + 4 padding */
+    struct node* next;    /* 8 bytes */
+};                        /* 16 bytes per node */
+
+struct queue {
+    struct node* head;    /* oldest, NULL when empty */
+    struct node* tail;    /* newest, NULL when empty */
+    size_t count;
+};                        /* 24 bytes */</code></pre>
+    </div>
+    <div>
+      <p class="filename">After enqueue 10, 20, 30</p>
+      <pre><code>stack        heap
+q ---------&gt; [head | tail | 3]
+               |      |
+               v      v
+             [10|.]-&gt;[20|.]-&gt;[30|NULL]</code></pre>
+      <p><code>main</code> owns the queue struct through <code>q</code>. The queue struct owns every node. One <code>queue_free</code> releases all of it.</p>
+    </div>
+  </div>
+
+  <h2>The two invariants</h2>
+  <div class="rule">
+    <p><strong>1.</strong> <code>head == NULL</code> exactly when <code>tail == NULL</code>. Both ends agree about emptiness.</p>
+    <p><strong>2.</strong> <code>tail-&gt;next == NULL</code> whenever <code>tail</code> is set. The tail is the real last node.</p>
+  </div>
+  <p>True before and after every public call. Enqueue may test only <code>tail</code> and dequeue only <code>head</code> because of invariant 1. Check both whenever a function frees or links a node.</p>
+
+  <h2>The four cases</h2>
+  <table>
+    <tr><th>Call</th><th>State</th><th>Pointer writes</th></tr>
+    <tr><td><code>enqueue</code></td><td>empty</td><td><code>head = n; tail = n;</code> (both ends)</td></tr>
+    <tr><td><code>enqueue</code></td><td>non-empty</td><td><code>tail-&gt;next = n; tail = n;</code></td></tr>
+    <tr><td><code>dequeue</code></td><td>one node</td><td><code>head = NULL; tail = NULL;</code> then free the node</td></tr>
+    <tr><td><code>dequeue</code></td><td>two or more</td><td><code>head = old-&gt;next;</code> then free <code>old</code></td></tr>
+  </table>
+
+  <h2>Enqueue and dequeue</h2>
+  <div class="grid">
+    <div>
+      <pre><code>int queue_enqueue(queue_t* q, int v) {
+    struct node* n = malloc(sizeof *n);
+    if (n == NULL) return 0;
+    n-&gt;value = v;
+    n-&gt;next = NULL;
+    if (q-&gt;tail == NULL) q-&gt;head = n;
+    else                 q-&gt;tail-&gt;next = n;
+    q-&gt;tail = n;
+    q-&gt;count++;
+    return 1;
+}</code></pre>
+    </div>
+    <div>
+      <pre><code>int queue_dequeue(queue_t* q, int* out) {
+    if (q-&gt;head == NULL) return 0;
+    struct node* old = q-&gt;head;
+    *out = old-&gt;value;
+    q-&gt;head = old-&gt;next;
+    if (q-&gt;head == NULL) q-&gt;tail = NULL;
+    free(old);
+    q-&gt;count--;
+    return 1;
+}</code></pre>
+    </div>
+  </div>
+
+  <h2>Free walk (saved next)</h2>
+  <pre><code>struct node* cur = q-&gt;head;
+while (cur != NULL) {
+    struct node* next = cur-&gt;next;   /* read before free */
+    free(cur);
+    cur = next;
+}
+free(q);</code></pre>
+
+  <h2>Cost</h2>
+  <table>
+    <tr><th>Implementation</th><th>Enqueue / dequeue</th><th>Why</th></tr>
+    <tr><td>Linked, head and tail</td><td>constant, worst case</td><td>Touches only the arriving or leaving node and one end pointer. No call ever walks the list.</td></tr>
+    <tr><td>Resizing array (lesson 7 stack)</td><td>constant, amortised</td><td>The push that fills the array copies every element. Cheap on average, not on every call.</td></tr>
+  </table>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>heap-use-after-free, WRITE of size 8, 8 bytes inside a 16-byte region, in <code>queue_enqueue</code>, freed by <code>queue_dequeue</code></td><td>Dequeue freed the last node without setting <code>tail = NULL</code>. The next enqueue wrote <code>tail-&gt;next</code> into the dead block.</td></tr>
+    <tr><td><code>count</code> positive, <code>empty: yes</code>, no <code>peek</code> line; then a leak: one block direct, the rest indirect</td><td>Enqueue on an empty queue set <code>tail</code> but not <code>head</code>. <code>queue_free</code> walked from <code>NULL</code> and freed nothing.</td></tr>
+    <tr><td>heap-use-after-free, READ, in <code>queue_free</code></td><td><code>cur-&gt;next</code> read after <code>free(cur)</code>. Save <code>next</code> first.</td></tr>
+    <tr><td>Valgrind: invalid read in <code>queue_free</code> past the last node, or an infinite loop</td><td>A node was linked with <code>next</code> uninitialised. Set <code>n-&gt;next = NULL</code> in enqueue before linking.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://algs4.cs.princeton.edu/13stacks/">Sedgewick &amp; Wayne, 1.3 Bags, Queues, and Stacks</a> · <a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">Queue.java (worst-case constant time, <code>last = null</code>)</a> · <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">Beej 12.1 Allocating and Deallocating</a> · <a href="https://en.cppreference.com/w/c/memory/free">cppreference: free</a></p>
+</article>
+</body>
+</html>

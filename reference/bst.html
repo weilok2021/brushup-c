@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Binary Search Tree</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Binary Search Tree</h1>
+  <p class="subtitle">Opaque <code>bst_t</code>, one recursive helper per operation, slot insert, post-order free, and the ownership contract of a borrowed pointer. Paired with <a href="../lessons/0010-smaller-left-larger-right.html">Lesson 10</a>.</p>
+
+  <div class="rule"><strong>Invariant.</strong> At every node, every key in the left subtree is smaller and every key in the right subtree is larger. No duplicates. Every operation relies on it or preserves it.</div>
+
+  <h2>Interface</h2>
+  <p class="filename">bst.h</p>
+  <pre><code>typedef struct bst bst_t;                     /* opaque: struct bst lives only in bst.c */
+
+bst_t*     bst_new(void);                     /* NULL on allocation failure */
+void       bst_free(bst_t* t);                /* consumes ownership; NULL is a no-op */
+int        bst_insert(bst_t* t, int key);     /* 1 inserted; 0 duplicate or alloc fail, tree unchanged */
+int        bst_contains(const bst_t* t, int key);
+const int* bst_min(const bst_t* t);           /* borrowed; NULL if empty; dies with bst_free */
+int        bst_height(const bst_t* t);        /* -1 empty, 0 single node */
+void       bst_print_inorder(const bst_t* t); /* " k1 k2 ... kn\n", ascending */
+size_t     bst_count(const bst_t* t);</code></pre>
+
+  <h2>Private layout</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">bst.c, top</p>
+      <pre><code>struct node {
+    int key;               /* 4 bytes */
+    struct node* left;     /* +4 padding, 8 */
+    struct node* right;    /* 8: node is 24 bytes */
+};
+
+struct bst {
+    struct node* root;
+    size_t count;
+};</code></pre>
+    </div>
+    <div>
+      <p class="filename">after 50 30 70 20 40 60 80</p>
+      <pre><code>t ─▶ { root ─▶ 0x100, count 7 }
+
+0x100 [50 | 0x140 | 0x180]
+0x140 [30 | 0x1c0 | 0x200]
+0x180 [70 | 0x240 | 0x280]
+0x1c0 [20 | NULL | NULL]  ... leaves
+height 2, min 20, max 80</code></pre>
+    </div>
+  </div>
+  <p>Ownership: the tree owns the root node; every node owns the two nodes its pointers address; <code>NULL</code> owns nothing. Seven nodes plus one <code>struct bst</code> means 8 allocations and 8 frees. <code>make check</code> reports 9 and 9: the ninth is <code>printf</code>'s buffer.</p>
+
+  <h2>One helper per operation, one node pointer per frame</h2>
+  <table>
+    <tr><th>Public</th><th>Private helper</th><th>Base case</th><th>Step</th></tr>
+    <tr><td><code>bst_contains</code></td><td><code>contains_in(const struct node* n, int key)</code></td><td><code>n == NULL</code>: return 0</td><td>smaller: left; larger: right; equal: 1</td></tr>
+    <tr><td><code>bst_insert</code></td><td><code>insert_at(struct node** slot, int key)</code></td><td><code>*slot == NULL</code>: <code>*slot = new_node(key)</code></td><td>recurse on <code>&amp;n-&gt;left</code> or <code>&amp;n-&gt;right</code>; equal: return 0</td></tr>
+    <tr><td><code>bst_min</code></td><td><code>min_in(const struct node* n)</code>, n not NULL</td><td><code>n-&gt;left == NULL</code>: return n</td><td>recurse on <code>n-&gt;left</code></td></tr>
+    <tr><td><code>bst_height</code></td><td><code>height_of(const struct node* n)</code></td><td><code>n == NULL</code>: return -1</td><td><code>1 + max(height_of(left), height_of(right))</code></td></tr>
+    <tr><td><code>bst_print_inorder</code></td><td><code>print_inorder(const struct node* n)</code></td><td><code>n == NULL</code>: return</td><td>left, <code>printf(" %d", n-&gt;key)</code>, right</td></tr>
+    <tr><td><code>bst_free</code></td><td><code>free_nodes(struct node* n)</code></td><td><code>n == NULL</code>: return</td><td>left, right, <strong>then</strong> <code>free(n)</code></td></tr>
+  </table>
+  <p>The public function unpacks <code>t-&gt;root</code> (or <code>&amp;t-&gt;root</code>) and calls the helper. The helper is <code>static</code> and takes <code>struct node*</code>, a type the header never names. The stack holds at most <code>height + 1</code> frames at once. Sorted input gives height <code>n - 1</code>; with a 1 MB stack, 40,000 sorted inserts overflowed it.</p>
+
+  <h2>The two shapes to remember</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">insert: write through the slot</p>
+      <pre><code>static int insert_at(struct node** slot, int key) {
+    if (*slot == NULL) {
+        *slot = new_node(key);
+        return *slot != NULL;
+    }
+    struct node* n = *slot;
+    if (key &lt; n-&gt;key) return insert_at(&amp;n-&gt;left, key);
+    if (key &gt; n-&gt;key) return insert_at(&amp;n-&gt;right, key);
+    return 0;
+}
+/* wrapper: insert_at(&amp;t-&gt;root, key), add result to t-&gt;count */</code></pre>
+    </div>
+    <div>
+      <p class="filename">free: children before the node</p>
+      <pre><code>static void free_nodes(struct node* n) {
+    if (n == NULL) return;
+    free_nodes(n-&gt;left);
+    free_nodes(n-&gt;right);
+    free(n);
+}
+/* wrapper: free_nodes(t-&gt;root); free(t); */</code></pre>
+      <p>Height by hand: leaf = 1 + max(-1, -1) = 0; parent of two leaves = 1; root of the 7-key tree = 2.</p>
+    </div>
+  </div>
+
+  <h2>Ownership of every returned pointer</h2>
+  <table>
+    <tr><th>Returns</th><th>Owner</th><th>Caller must</th></tr>
+    <tr><td><code>bst_new</code> gives <code>bst_t*</code></td><td>the caller</td><td>call <code>bst_free</code> exactly once</td></tr>
+    <tr><td><code>bst_min</code> gives <code>const int*</code></td><td>the leftmost node, so the tree</td><td>never free it; never read it after <code>bst_free</code> (or after any future remove)</td></tr>
+    <tr><td><code>new_node</code> (private) gives <code>struct node*</code></td><td>the slot it is written into</td><td>attach it or free it; a node in a local copy is a leak</td></tr>
+  </table>
+
+  <h2>Traps and their reports</h2>
+  <table>
+    <tr><th>Mistake</th><th>What you see</th></tr>
+    <tr><td><code>free(n)</code> before <code>free_nodes(n-&gt;left)</code></td><td>gcc: <code>pointer ‘n’ used after ‘free’ [-Wuse-after-free]</code>. ASan: <code>heap-use-after-free</code>, READ of size 8, <code>8 bytes inside of 24-byte region</code>, in <code>free_nodes</code>. Offset 8 is the <code>left</code> member.</td></tr>
+    <tr><td><code>insert_at(struct node* n)</code> with <code>n = new_node(key)</code></td><td>No warning. Output: <code>inserted: 8 of 8</code>, empty inorder, <code>count: 8</code>, <code>min: none</code>, <code>height: -1</code>. valgrind: <code>192 bytes in 8 blocks are definitely lost</code> from <code>new_node</code>. The write went into a copy.</td></tr>
+    <tr><td>keep <code>bst_min</code>'s pointer across <code>bst_free</code></td><td>Plain build prints the stale value and exits 0. ASan: <code>heap-use-after-free</code>, READ of size 4, <code>0 bytes inside of 24-byte region</code>, in <code>main</code>; freed by a column of <code>free_nodes</code> frames, allocated by a column of <code>insert_at</code> frames. Count the frames to name the node.</td></tr>
+    <tr><td>helper without a <code>NULL</code> base case</td><td>UBSan: <code>runtime error: member access within null pointer of type 'const struct node'</code>, then ASan: <code>SEGV on unknown address 0x000000000000</code> under a column of helper frames.</td></tr>
+    <tr><td>sorted keys, huge n</td><td>ASan: <code>stack-overflow</code> in a column of identical helper frames. The tree is a list; each frame is one node.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://algs4.cs.princeton.edu/32bst/">Sedgewick &amp; Wayne, 3.2 Binary Search Trees</a> · <a href="https://algs4.cs.princeton.edu/32bst/BST.java.html">BST.java (height convention: empty -1, one node 0)</a> · <a href="https://en.cppreference.com/w/c/memory/free">cppreference: free</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/valgrind.html">CS107 Valgrind Guide (definitely lost)</a></p>
+</article>
+</body>
+</html>

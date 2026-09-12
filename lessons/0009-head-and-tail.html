@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 9 · Head and Tail</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 9 · DSA in C</p>
+  <h1>Head and Tail</h1>
+  <p class="subtitle">A queue is lesson 8's list with a second pointer at the far end. Two pointers, two invariants, and one dangling-pointer trap when the last node leaves.</p>
+  <div class="meta">
+    <span>About 40 minutes</span>
+    <span>Where: WSL, <code>exercises/09-queue/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/queue-adt.html">Cheat sheet</a> · <a href="0008-the-slot-before-the-node.html">Lesson 8</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Ship a linked queue as an opaque ADT with worst-case constant-time enqueue and dequeue, and see for yourself what AddressSanitizer says when a tail pointer outlives its node. Lesson 12 will use this exact module for breadth-first search, so its interface is general and stays fixed.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c queue.c
+
+queue: $(SRC) queue.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o queue $(SRC)
+
+queue-plain: $(SRC) queue.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o queue-plain $(SRC)
+
+.PHONY: check clean
+check: queue-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./queue-plain
+clean:
+<span class="tab">⇥</span>rm -f queue queue-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Three values, four heap blocks</h2>
+  <p>Enqueue 10, then 20, then 30. Afterwards the memory looks like this:</p>
+  <pre><code>main's stack frame            heap
+-----------------             -------------------------------------------
+q: 0x5010 ------------------&gt; 0x5010  struct queue   (24 bytes)
+                                      head:  0x5050
+                                      tail:  0x5090
+                                      count: 3
+
+                              0x5050  struct node    (16 bytes)
+                                      value: 10   next: 0x5070
+                              0x5070  struct node
+                                      value: 20   next: 0x5090
+                              0x5090  struct node
+                                      value: 30   next: NULL</code></pre>
+  <p>Every byte here is accounted for. The variable <code>q</code> lives in <code>main</code>'s stack frame and holds one address. The queue struct is a heap block of 24 bytes: two pointers of 8 bytes each and a <code>size_t</code>. Each node is a heap block of 16 bytes: a 4-byte <code>int</code>, 4 bytes of padding, and an 8-byte <code>next</code> pointer<a class="sn-ref" href="#sn1"></a>. The queue struct owns every node. <code>main</code> owns the queue struct, through <code>q</code>, and gives it back with one call to <code>queue_free</code>.</p>
+  <span class="sidenote" id="sn1">Keep the 16 in mind. AddressSanitizer will describe a node as a “16-byte region” later, and that number tells you which kind of block it is talking about.</span>
+  <p>The two structs are private to <code>queue.c</code>. The header only says <code>typedef struct queue queue_t;</code>, so <code>main.c</code> can hold a <code>queue_t*</code> and cannot reach inside it. That is the same opaque-struct shape as lessons 7 and 8. Lesson 8 added <code>typedef struct node node_t;</code> inside <code>list.c</code>; this lesson writes the plain <code>struct node</code> spelling. Both name the same private struct, so use whichever you prefer:</p>
+  <pre><code>struct node {
+    int value;
+    struct node* next;
+};
+
+struct queue {
+    struct node* head;   /* oldest node, NULL when empty */
+    struct node* tail;   /* newest node, NULL when empty */
+    size_t count;
+};</code></pre>
+  <p>Lesson 8's list had only <code>head</code>. Adding at the far end meant walking every node first. The queue adds <code>tail</code> so that the far end is always one pointer away. Sedgewick and Wayne keep the same two references, <code>first</code> and <code>last</code>: “To enqueue() an item, we add it to the end of the list; to dequeue() an item, we remove it from the beginning of the list”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>.</p>
+</section>
+
+<section>
+  <h2>Two invariants</h2>
+  <p>A second pointer is a second thing that can be wrong. Two rules must hold between calls, and every function must leave both of them true:</p>
+  <table>
+    <tr><th>Invariant</th><th>Meaning</th><th>Who relies on it</th></tr>
+    <tr><td><code>head == NULL</code> exactly when <code>tail == NULL</code></td><td>Both ends agree about emptiness. An empty queue has no node for either to point at.</td><td><code>queue_enqueue</code> tests only <code>tail</code>; <code>queue_dequeue</code> tests only <code>head</code>.</td></tr>
+    <tr><td><code>tail-&gt;next == NULL</code> whenever <code>tail</code> is set</td><td>The tail is the real last node. Nothing hangs off it.</td><td><code>queue_free</code> stops at the right place; <code>queue_enqueue</code> may link after <code>tail</code> without a walk.</td></tr>
+  </table>
+  <p>An invariant is a statement about the struct that is true before and after every public call. Inside a call it may be false for a few lines. Both planted bugs in this lesson break the first invariant, in opposite directions, and each one shows up as a different sanitizer report.</p>
+</section>
+
+<section>
+  <h2>Enqueue: two cases</h2>
+  <p>Enqueue always allocates one node, fills it, and makes it the new tail. The only question is what the old tail was:</p>
+  <pre><code>empty queue          enqueue 10             non-empty queue        enqueue 20
+head: NULL           head: 0x5050           head: 0x5050           head: 0x5050
+tail: NULL           tail: 0x5050           tail: 0x5050           tail: 0x5070
+                     [10 | NULL]            [10 | NULL]            [10 | 0x5070] [20 | NULL]
+                     ^ both ends                                     ^ old tail's next written</code></pre>
+  <p>On an empty queue there is no old tail to link after, so <code>head</code> must be set to the new node too. Miss that and <code>head</code> stays <code>NULL</code> forever: <code>tail</code> and <code>count</code> say the queue has nodes, <code>head</code> says it is empty, and the first invariant is broken.</p>
+  <pre><code>int queue_enqueue(queue_t* q, int v) {
+    struct node* n = malloc(sizeof *n);
+    if (n == NULL) {
+        return 0;
+    }
+    n-&gt;value = v;
+    n-&gt;next = NULL;                  /* second invariant, kept by construction */
+    if (q-&gt;tail == NULL) {
+        q-&gt;head = n;                 /* empty: the new node is both ends */
+    } else {
+        q-&gt;tail-&gt;next = n;           /* link after the old tail */
+    }
+    q-&gt;tail = n;
+    q-&gt;count++;
+    return 1;
+}</code></pre>
+  <p>Allocation failure leaves the queue exactly as it was and returns 0. That is the same “unchanged on failure” contract as lesson 4's <code>word_replace</code> and lesson 7's push.</p>
+</section>
+
+<section>
+  <h2>Dequeue: two cases, and the trap</h2>
+  <p>Dequeue copies the head's value out, unlinks the head, frees it, and returns 1. The trap is the moment the queue goes from one node to none:</p>
+  <pre><code>one node             after head = old-&gt;next   after free(old)
+head: 0x5050         head: NULL               head: NULL
+tail: 0x5050         tail: 0x5050             tail: 0x5050   &lt;-- points at a freed block
+[10 | NULL]          [10 | NULL]              (16 bytes, no longer yours)</code></pre>
+  <p><code>tail</code> still holds 0x5050. The node at 0x5050 has been freed. <code>tail</code> is a dangling pointer, and the first invariant is broken again: <code>head</code> is <code>NULL</code> and <code>tail</code> is not. Nothing crashes yet. The next <code>queue_enqueue</code> sees <code>tail != NULL</code>, takes the non-empty branch, and executes <code>q-&gt;tail-&gt;next = n</code>: an 8-byte write into a freed block. AddressSanitizer stops the program there. Without the sanitizer, the write lands in whatever <code>malloc</code> has since handed out, and the queue silently loses nodes<a class="sn-ref" href="#sn2"></a>.</p>
+  <span class="sidenote" id="sn2">Beej, 12.1: “It's undefined behavior to use a memory region after you free() it.” <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">Manual Memory Allocation</a>. cppreference states the same rule for <a href="https://en.cppreference.com/w/c/memory/free">free</a>: the behaviour is undefined if an access is made through the pointer after <code>free</code> returns.</span>
+  <p>The fix is one test. When the new head is <code>NULL</code>, the queue is empty, so <code>tail</code> must become <code>NULL</code> too:</p>
+  <pre><code>int queue_dequeue(queue_t* q, int* out) {
+    if (q-&gt;head == NULL) {
+        return 0;
+    }
+    struct node* old = q-&gt;head;
+    *out = old-&gt;value;
+    q-&gt;head = old-&gt;next;
+    if (q-&gt;head == NULL) {
+        q-&gt;tail = NULL;              /* last node gone: tail must not dangle */
+    }
+    free(old);
+    q-&gt;count--;
+    return 1;
+}</code></pre>
+  <p>The Java version in algs4 has the same line, <code>if (isEmpty()) last = null;</code>, with the comment “to avoid loitering”<a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">*</a>. In Java the cost of forgetting it is a node kept alive by the garbage collector. In C the node is already gone, and the cost is a write into memory you do not own. Same line, much higher stakes.</p>
+  <p>The value goes out through <code>int* out</code>, and the function returns 1 or 0 to say whether anything was removed. That keeps <code>-1</code> or <code>0</code> free to be real queue values. It also means no pointer into a node ever leaves <code>queue.c</code>, so no caller can hold a node after it is freed. Lesson 10 will return borrowed pointers and pay for it with one deliberate use-after-free.</p>
+</section>
+
+<section>
+  <h2>Peek, count, empty, free</h2>
+  <p><code>queue_peek</code> is dequeue without the unlink: copy <code>head-&gt;value</code> into <code>*out</code>, return 1, or return 0 when <code>head</code> is <code>NULL</code>. <code>queue_count</code> returns the counter. <code>queue_is_empty</code> returns <code>head == NULL</code>. All three take <code>const queue_t*</code> because they only read.</p>
+  <p><code>queue_free</code> is lesson 8's saved-next walk. Read <code>cur-&gt;next</code> before <code>free(cur)</code>, because after the free the node's bytes are not yours to read:</p>
+  <pre><code>void queue_free(queue_t* q) {
+    if (q == NULL) {
+        return;
+    }
+    struct node* cur = q-&gt;head;
+    while (cur != NULL) {
+        struct node* next = cur-&gt;next;   /* save before free */
+        free(cur);
+        cur = next;
+    }
+    free(q);
+}</code></pre>
+  <p>The walk starts from <code>head</code>. If <code>head</code> was never set (the enqueue bug above), the walk frees nothing, <code>free(q)</code> drops the only remaining route to the nodes, and Valgrind reports them as definitely lost.</p>
+</section>
+
+<section>
+  <h2>Constant time, worst case</h2>
+  <p>Count the work in <code>queue_enqueue</code>: one <code>malloc</code>, two member writes on the new node, one or two pointer writes on the queue, one increment. <code>queue_dequeue</code> is one copy, one or two pointer writes, one <code>free</code>, one decrement. Neither touches any node other than the one arriving or leaving, so neither depends on how many nodes are queued. For the linked implementation, Sedgewick and Wayne state that “the enqueue, dequeue, peek, size, and is-empty operations all take constant time in the worst case”<a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">*</a>.</p>
+  <p>Compare lesson 7's array stack. Most pushes were one store, but the push that filled the array had to copy every element into a bigger block. The cost was constant only on average over many pushes, which is what “amortised” means. algs4's resizing-array stack works the same way: “We double the size of the array in push() if it is full”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>. The linked queue has no such push. Every single call costs the same. That is why it is the right queue for lesson 12's breadth-first search, where enqueue and dequeue run once per vertex and once per edge.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">queue.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+typedef struct queue queue_t;
+
+/* Create an empty queue. Returns the new owner handle, or NULL on failure. */
+queue_t* queue_new(void);
+
+/* Free every node still in the queue, then the queue itself. NULL is fine. */
+void queue_free(queue_t* q);
+
+/* Add v at the tail. Returns 1 on success, 0 if a node could not be allocated. */
+int queue_enqueue(queue_t* q, int v);
+
+/* Remove the head value into *out. Returns 1 if a value was removed, 0 if empty. */
+int queue_dequeue(queue_t* q, int* out);
+
+/* Copy the head value into *out without removing it. Returns 1, or 0 if empty. */
+int queue_peek(const queue_t* q, int* out);
+
+/* Number of values currently in the queue. */
+size_t queue_count(const queue_t* q);
+
+/* Returns 1 if the queue holds no values, else 0. */
+int queue_is_empty(const queue_t* q);</code></pre>
+  <p>Two functions write the queue and take <code>queue_t*</code>. Three only read and take <code>const queue_t*</code>. Nothing in this header mentions <code>struct node</code>: the node is an implementation detail, and lesson 12 will not need to know it exists.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/09-queue &amp;&amp; cd exercises/09-queue</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>queue.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>queue.c</code>: the two private structs and the seven functions. Close this page first and write from the two invariants and the four cases, not from the listings. For each of enqueue and dequeue, ask “what if the queue is empty?” and “what if this is the only node?” before you type the body. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Add a small static helper, <code>drain</code>, that takes the queue and a label, prints the label, then dequeues until empty printing each value with a leading space, then prints a newline. In <code>main</code>: create the queue and check it. Enqueue 10, 20, 30, checking each call and freeing the queue on failure. Peek and print the front. Print the count with <code>%zu</code>. Drain with label <code>first:</code>. Print whether the queue is empty. Then enqueue 40 and 50 into the now-empty queue, print the count, drain with label <code>second:</code>, print empty again, free the queue, return 0. Expected, exactly:</p>
+      <pre><code>peek: 10
+count: 3
+first: 10 20 30
+empty: yes
+count: 2
+second: 40 50
+empty: yes</code></pre>
+      <p>The second round is not decoration. It is the only part of the test that enqueues into a queue that was emptied by dequeue, which is the case that the tail reset protects.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./queue</code>, and <code>make check</code>. Require no warnings, the exact seven lines, and no Valgrind errors or leaks. Valgrind should count 7 allocations and 7 frees: one queue struct, five nodes, and one stdio buffer.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it two ways, one at a time.</strong></p>
+      <ol>
+        <li>In <code>queue_dequeue</code>, delete the <code>if (q-&gt;head == NULL) q-&gt;tail = NULL;</code> test. Build and run. The first four lines print, then AddressSanitizer stops the program inside <code>queue_enqueue</code>. Read which line wrote, which line freed, and which line allocated. Restore the test.</li>
+        <li>In <code>queue_enqueue</code>, make the empty case set only <code>tail</code>: replace the if/else with <code>if (q-&gt;tail != NULL) q-&gt;tail-&gt;next = n;</code> so <code>head</code> is never written. Build and run. Nothing crashes. Read the seven lines and notice that <code>count</code> and <code>empty</code> disagree. Then run <code>make check</code> and read the leak summary. Restore the if/else.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 9 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the two reports</h2>
+  <p><strong>Experiment 1, the dangling tail.</strong> Dequeue frees the last node but leaves <code>tail</code> pointing at it. The next enqueue writes through it:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-use-after-free</strong> on address 0x502000000058
+<strong>WRITE of size 8</strong> at 0x502000000058 thread T0
+    #0 ... in <strong>queue_enqueue queue.c:...</strong>
+    #1 ... in main main.c:...
+0x502000000058 is located <strong>8 bytes inside of 16-byte region</strong>
+<strong>freed by</strong> thread T0 here:
+    #0 ... in free
+    #1 ... in <strong>queue_dequeue queue.c:...</strong>
+    #2 ... in drain main.c:...
+<strong>previously allocated by</strong> thread T0 here:
+    #0 ... in malloc
+    #1 ... in <strong>queue_enqueue queue.c:...</strong></code></pre>
+  <p>Read it as a timeline, bottom to top. The block was allocated by an enqueue (the node for 30). It was freed by a dequeue inside <code>drain</code>. Then a later enqueue wrote 8 bytes at offset 8 inside it. Offset 8 in a 16-byte node is the <code>next</code> member, so the write is <code>q-&gt;tail-&gt;next = n</code>. The pointer that carried the stale address across those three events is <code>tail</code>. Valgrind on the plain build says the same thing as “Invalid write of size 8 … Address is 8 bytes inside a block of size 16 free'd”, and adds that the new node is definitely lost, because the only link to it was written into a dead block.</p>
+  <p><strong>Experiment 2, the head that was never set.</strong> No bad access happens, so the run completes. The output itself is the evidence:</p>
+  <pre><code>count: 3
+first:
+empty: yes
+count: 5
+second:
+empty: yes</code></pre>
+  <p>No <code>peek</code> line, because peek reads <code>head</code> and <code>head</code> is <code>NULL</code>. <code>count</code> says 3 and 5, <code>empty</code> says yes: the counter and the pointers disagree, which is the first invariant broken. Then the leak report. LeakSanitizer catches this one even at -O0, because no stack copy of the first node's address survives to the end of <code>main</code>:</p>
+  <pre><code>ERROR: LeakSanitizer: detected memory leaks
+<strong>Direct leak of 16 byte(s) in 1 object(s)</strong> allocated from:
+    #1 ... in queue_enqueue queue.c:...
+<strong>Indirect leak of 32 byte(s) in 2 object(s)</strong> ...
+<strong>Indirect leak of 32 byte(s) in 2 object(s)</strong> ...
+SUMMARY: AddressSanitizer: <strong>80 byte(s) leaked in 5 allocation(s)</strong>.</code></pre>
+  <p><code>make check</code> agrees: “80 (16 direct, 64 indirect) bytes in 1 blocks are definitely lost”. One direct loss is the first node, which nothing points at once <code>free(q)</code> runs. The other four are indirect: they are reachable only through the lost one. Five 16-byte nodes, 80 bytes. When a leak report shows one direct block and a chain of indirect ones, look for a head pointer that was never set or was overwritten.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/13stacks/">1.3 Bags, Queues, and Stacks</a>, the linked-list queue part, and the code in <a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">Queue.java</a>. It is Java, but <code>enqueue</code> and <code>dequeue</code> there are line for line what you just wrote, including the <code>last = null</code> reset. For the rule you broke in experiment 1, Beej <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">12.1, Allocating and Deallocating</a>. Keep the <a href="../reference/queue-adt.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If a struct ever holds two pointers into the same list, ask what keeps them agreeing. The answer is an invariant, and the place to check it is every function that frees a node. That question is worth more than any listing on this page.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0008-the-slot-before-the-node.html">Previous: Lesson 8, the slot before the node</a> · <a href="../reference/queue-adt.html">Reference: queue ADT cheat sheet</a></span>
+    <span><a href="0010-smaller-left-larger-right.html">Next: Lesson 10, binary search tree</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0009-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"The queue holds one node. Dequeue removes it. What else must change?",opts:["tail must become NULL too","head must keep its value","tail must keep its value","count must become NULL too"],a:0,why:"head becomes NULL through old->next. tail still holds the freed node's address unless dequeue resets it, and the next enqueue would write through it."},
+    {q:"Enqueue on an empty queue. Which pointers receive the new node?",opts:["both head and tail","only tail, not head","only head, not tail","neither head nor tail"],a:0,why:"There is no old tail to link after, so the new node is both ends. Setting only tail leaves head NULL and the nodes unreachable."},
+    {q:"queue_enqueue tests only q->tail for emptiness. Which invariant allows that?",opts:["head is NULL exactly when tail is","count is zero exactly when head is","tail->next is NULL whenever tail is set","head->next is NULL whenever head is set"],a:0,why:"Because the two ends agree about emptiness, testing either one is enough. Break that agreement and the single test lies."},
+    {q:"queue_free walks the nodes. Why read cur->next before free(cur)?",opts:["freed memory must not be read","free needs the next pointer set","the list must stay linked afterwards","the count must be decremented first"],a:0,why:"After free(cur) the node's bytes are not yours. Save the next address into a local first, then free, then move."},
+    {q:"Who owns the nodes?",opts:["the queue, released by queue_free","the caller, released by main","each node, released by itself","the tail, released by dequeue"],a:0,why:"main never sees a node; it owns only the queue struct through q. queue_free releases the nodes, then the struct. Dequeue frees one node early, on the queue's behalf."},
+    {q:"Enqueue into a linked queue holding a million nodes. What does it cost?",opts:["constant, in the worst case","constant, but only on average","linear, it walks the list","logarithmic, it halves the list"],a:0,why:"tail is one pointer away, so enqueue touches the new node and the old tail only. No resize step exists, unlike the array stack, so no single call is expensive."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the two invariants for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

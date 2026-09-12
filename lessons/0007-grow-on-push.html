@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 · Grow on Push</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 7 · DSA in C</p>
+  <h1>Grow on Push</h1>
+  <p class="subtitle">A stack of ints in a heap block that doubles when it fills. The client holds one pointer and never sees inside. This is the first abstract data type of the course, and lessons 8, 9 and 10 copy its shape.</p>
+  <div class="meta">
+    <span>About 40 minutes</span>
+    <span>Where: WSL, <code>exercises/07-stack/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/stack-adt.html">Cheat sheet</a> · <a href="0006-halve-then-merge.html">Lesson 6</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Ship a stack as a module: a header that hides the struct, a <code>.c</code> that owns two heap blocks, a push that grows through a temporary pointer and survives allocation failure, and a test program that proves the LIFO order and the empty case.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c stack.c
+
+stack: $(SRC) stack.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o stack $(SRC)
+
+stack-plain: $(SRC) stack.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o stack-plain $(SRC)
+
+.PHONY: check clean
+check: stack-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./stack-plain
+clean:
+<span class="tab">⇥</span>rm -f stack stack-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Three places, two owners</h2>
+  <p>Push 10, 20 and 30 onto a stack whose block holds four ints. Here is every byte, and where it lives:</p>
+  <pre><code>main's frame          heap block A (24 bytes)        heap block B (16 bytes)
++-------------+       +----------------------+       +----+----+----+----+
+| s   0x5030  |-----&gt; | items     0x5020     |-----&gt; | 10 | 20 | 30 | ?? |
++-------------+       | count     3          |       +----+----+----+----+
+  8 bytes             | capacity  4          |         [0]  [1]  [2]  [3]
+                      +----------------------+
+                        struct stack                   capacity ints, count in use</code></pre>
+  <p>Three places. The handle <code>s</code> is a pointer in <code>main</code>'s frame; it dies when <code>main</code> returns. Block A is the struct: one pointer and two counts, 8 + 8 + 8 = 24 bytes on the heap. Block B is the items: <code>capacity</code> ints, of which the first <code>count</code> are in use. The top of the stack is <code>items[count - 1]</code>, here 30. Slot 3 holds garbage and is never read.</p>
+  <p>Two owners. The struct owns block B: it holds the only pointer to it, and it must free it. The caller owns the struct, through <code>s</code>, and must hand it back with <code>stack_free</code>. That is the two-level ownership from lesson 4 (<code>char**</code> array owning its strings), with a struct in place of the outer array<a class="sn-ref" href="#sn1"></a>.</p>
+  <span class="sidenote" id="sn1">Invariants to keep in every function: <code>count &lt;= capacity</code>, <code>items</code> points at a live block of <code>capacity</code> ints, and <code>items[0..count)</code> holds the values from bottom to top. An <em>invariant</em> is a fact that is true between calls; each function may break it briefly inside, but must restore it before returning.</span>
+</section>
+
+<section>
+  <h2>The client sees a name, not a shape</h2>
+  <p>The header declares the type without its members:</p>
+  <pre><code>typedef struct stack stack_t;       /* in stack.h: a name only */</code></pre>
+  <p>The members appear once, in <code>stack.c</code>:</p>
+  <pre><code>struct stack {                      /* in stack.c: the shape */
+    int* items;
+    size_t count;
+    size_t capacity;
+};</code></pre>
+  <p>To <code>main.c</code>, <code>struct stack</code> is an <em>incomplete type</em>: a type whose size the compiler does not know<a class="sn-ref" href="#sn2"></a>. C lets you declare a pointer to an incomplete type and pass it around. It does not let you dereference it, index through it, or take <code>sizeof</code> it. So <code>stack_t* s</code> compiles in <code>main.c</code>, and <code>s-&gt;count</code> does not:</p>
+  <pre><code>main.c:22:29: <strong>error: invalid use of incomplete typedef ‘stack_t’</strong> {aka ‘struct stack’}
+   22 |     printf("count: %zu\n", s-&gt;count);
+      |                             ^~</code></pre>
+  <span class="sidenote" id="sn2">cppreference: “An incomplete type is an object type that lacks sufficient information to determine the size of the objects of that type.” A struct “of unknown content” is one of the three kinds. <a href="https://en.cppreference.com/w/c/language/type">Type, Incomplete types</a>. Beej covers the same rule and the error messages it produces in <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html">chapter 35, Incomplete Types</a>.</span>
+  <p>This is called an <em>opaque struct</em>: a struct whose members are visible only inside its own <code>.c</code> file. The point is not secrecy. The point is that <code>stack.c</code> can change its members later (a linked list instead of an array, an extra count) and no client needs to change or even recompile with care, because no client could have touched a member. Every function the client needs is a prototype in the header, named with the module prefix: <code>stack_new</code>, <code>stack_push</code>, <code>stack_free</code>, like lesson 4's <code>words_find</code>. CS107's style guide asks for exactly this typedef-and-prototype shape<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/styleguide.html">*</a>.</p>
+  <p>One consequence for the client: it cannot put a <code>stack_t</code> on its own stack frame, because it does not know the size. It can only hold a <code>stack_t*</code>. So the struct must be created on the heap, by the module, in <code>stack_new</code>:</p>
+  <pre><code>#define INITIAL_CAPACITY 2
+
+stack_t* stack_new(void) {
+    stack_t* s = malloc(sizeof *s);              /* block A */
+    if (s == NULL) {
+        return NULL;
+    }
+    s-&gt;items = malloc(INITIAL_CAPACITY * sizeof *s-&gt;items);   /* block B */
+    if (s-&gt;items == NULL) {
+        free(s);                                 /* undo block A */
+        return NULL;
+    }
+    s-&gt;count = 0;
+    s-&gt;capacity = INITIAL_CAPACITY;
+    return s;
+}</code></pre>
+  <p><code>sizeof *s</code> works inside <code>stack.c</code> because there the type is complete. If block B fails, block A is already ours and must be freed before returning <code>NULL</code>: the partial-cleanup rule from lesson 4.</p>
+</section>
+
+<section>
+  <h2>Push: check, grow, then write</h2>
+  <p>Start with capacity 2 and push five values. Watch the block:</p>
+  <pre><code>push 10   count 0 &lt; cap 2      write items[0]        count 1
+push 20   count 1 &lt; cap 2      write items[1]        count 2
+push 30   count 2 == cap 2     GROW to 4, then write items[2]   count 3
+push 40   count 3 &lt; cap 4      write items[3]        count 4
+push 50   count 4 == cap 4     GROW to 8, then write items[4]   count 5</code></pre>
+  <p>The order inside push is fixed: check whether the block is full, grow if so, and only then write. Write first and the third push lands one slot past the end of an 8-byte block. AddressSanitizer names that exactly (you will see it in the experiments).</p>
+  <p>Growing is a <code>realloc</code>, and lesson 3's rule applies: catch the result in a temporary pointer. On success the block may have moved, and the old pointer is dead; assign the new one. On failure <code>realloc</code> returns <code>NULL</code> and the old block is untouched and still ours<a class="sn-ref" href="#sn3"></a>. Had we written <code>s-&gt;items = realloc(s-&gt;items, ...)</code>, a failure would overwrite our only pointer to block B with <code>NULL</code>, and block B would leak.</p>
+  <span class="sidenote" id="sn3">cppreference, realloc: “On failure, returns a null pointer. The original pointer ptr remains valid and may need to be deallocated.” And on success: “The original pointer ptr is invalidated and any access to it is undefined behavior (even if reallocation was in-place).” <a href="https://en.cppreference.com/w/c/memory/realloc">realloc</a>. Beej shows the same temporary-pointer pattern in <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">12.5, Changing Allocated Size with realloc()</a>.</span>
+  <pre><code>/* Double the capacity. Returns 1 on success.
+   On failure, returns 0 and the stack still owns its old block. */
+static int stack_grow(stack_t* s) {
+    size_t new_capacity = s-&gt;capacity * 2;
+    int* bigger = realloc(s-&gt;items, new_capacity * sizeof *bigger);
+    if (bigger == NULL) {
+        return 0;                    /* s-&gt;items, count, capacity unchanged */
+    }
+    s-&gt;items = bigger;               /* ownership moved to the new block */
+    s-&gt;capacity = new_capacity;
+    return 1;
+}
+
+int stack_push(stack_t* s, int value) {
+    if (s-&gt;count == s-&gt;capacity &amp;&amp; !stack_grow(s)) {
+        return 0;                    /* stack intact, value not pushed */
+    }
+    s-&gt;items[s-&gt;count] = value;
+    s-&gt;count++;
+    return 1;
+}</code></pre>
+  <p><code>stack_grow</code> is <code>static</code>: a helper that only <code>stack.c</code> can call, and not part of the header. That is the decomposition CS107 asks for: push says what happens, grow says how the block gets bigger.</p>
+  <p><strong>Why double, not add one.</strong> Growing by one slot would copy the whole block on every push: 1 + 2 + 3 + ... + n copies, about n²/2. Doubling from 2 copies 2 ints at the first grow, 4 at the second, 8 at the third; pushing n values copies fewer than n ints in total. Sedgewick and Wayne state the result for this exact design: “The push and pop operations take constant amortized time”<a href="https://algs4.cs.princeton.edu/13stacks/ResizingArrayStack.java.html">*</a>. Amortised means averaged over the whole sequence of pushes: one push may copy the block, but n pushes cost about n work altogether. Their version also halves the block when it drops to one-quarter full<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>; this lesson leaves that out, so pop never reallocates.</p>
+</section>
+
+<section>
+  <h2>Pop and peek: a status, and a value written through an address</h2>
+  <p>What should <code>stack_pop</code> return on an empty stack? Every <code>int</code> is a legal stack value, so no <code>int</code> is free to mean “nothing”. Split the two answers: return an <code>int</code> status, and write the value through a pointer the caller supplies. That is lesson 5's <code>swap_ints</code> move: to change the caller's variable, receive its address.</p>
+  <pre><code>int stack_pop(stack_t* s, int* out) {
+    if (s-&gt;count == 0) {
+        return 0;                    /* empty: *out untouched */
+    }
+    s-&gt;count--;
+    *out = s-&gt;items[s-&gt;count];       /* the old top, now just past count */
+    return 1;
+}
+
+int stack_peek(const stack_t* s, int* out) {
+    if (s-&gt;count == 0) {
+        return 0;
+    }
+    *out = s-&gt;items[s-&gt;count - 1];
+    return 1;
+}</code></pre>
+  <p>Pop does not clear the slot and does not shrink the block. Dropping <code>count</code> by one is what removes the value; the next push overwrites it. <code>stack_peek</code> and <code>stack_count</code> take <code>const stack_t*</code> because they only read. In <code>main</code>, the status return makes the loop that empties the stack a one-liner: <code>while (stack_pop(s, &amp;value))</code>.</p>
+</section>
+
+<section>
+  <h2>Free from the inside out</h2>
+  <p>Two blocks, freed in the reverse order of the pointers that reach them. Block B is reached through block A, so B goes first:</p>
+  <pre><code>void stack_free(stack_t* s) {
+    if (s == NULL) {
+        return;                      /* like free(NULL): a no-op */
+    }
+    free(s-&gt;items);                  /* block B, through A */
+    free(s);                         /* block A */
+}</code></pre>
+  <p>Swap the two lines and the second one reads <code>s-&gt;items</code> out of a block that was freed one line earlier: a use-after-free. gcc 13 spots this particular one at compile time (<code>-Wuse-after-free</code>), and AddressSanitizer catches it at run time either way. After <code>stack_free(s)</code> returns, <code>s</code> in <code>main</code> is a dangling pointer; do not touch it again.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">stack.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* A last-in, first-out stack of ints. The members are private to stack.c. */
+typedef struct stack stack_t;
+
+/* Create an empty stack on the heap. Returns NULL if allocation fails.
+   The caller owns the result and must pass it to stack_free. */
+stack_t* stack_new(void);
+
+/* Free the stack and everything it owns. Accepts NULL. Consumes ownership. */
+void stack_free(stack_t* s);
+
+/* Push value on top. Returns 1 on success.
+   On allocation failure, returns 0 and leaves the stack unchanged. */
+int stack_push(stack_t* s, int value);
+
+/* Remove the top value and write it to *out. Returns 1 if a value was popped.
+   On an empty stack, returns 0 and leaves *out unchanged. */
+int stack_pop(stack_t* s, int* out);
+
+/* Copy the top value to *out without removing it. Returns 1 if there is one.
+   On an empty stack, returns 0 and leaves *out unchanged. */
+int stack_peek(const stack_t* s, int* out);
+
+/* Number of values currently on the stack. */
+size_t stack_count(const stack_t* s);</code></pre>
+  <p>Read the contracts once more. Each one says what happens on the bad path: <code>NULL</code>, 0, untouched. A client can act on that without reading <code>stack.c</code>, which is the whole point of the header.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/07-stack &amp;&amp; cd exercises/07-stack</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>stack.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>stack.c</code>: the struct, a named constant for the initial capacity of 2, a <code>static</code> grow helper, and the six functions. Close this page first and write from the invariants and the contracts. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the source data once, as a named constant array of five ints: <code>10 20 30 40 50</code>. Create a stack and check it. Push the five values in order; if a push fails, free the stack and return 1. Print the count. Peek and print the top. Then pop in a loop, printing each value with a leading space after a <code>popped:</code> label, and end the line. Print the count again. Attempt one more pop and print whether the stack was empty. Free the stack and return 0. Expected:</p>
+      <pre><code>count: 5
+peek: 50
+popped: 50 40 30 20 10
+count: 0
+empty: yes</code></pre>
+      <p>With capacity 2, this run grows the block twice: at the third push and at the fifth. The CS107 testing guide asks for the minimal case and the fringe<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">*</a>: the pop on an empty stack is the minimal case, and the two grows are the fringe of the block.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./stack</code>, and <code>make check</code>. Require no warnings, the exact five lines, and no Valgrind errors or leaks. Valgrind should count 5 allocs and 5 frees: the struct, the first items block, two <code>realloc</code> grows, and one buffer for <code>printf</code>.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong></p>
+      <ol>
+        <li>In <code>stack_push</code>, move the line that writes <code>s-&gt;items[s-&gt;count]</code> above the grow check. Build and run. Read which push overflows, and by how many bytes past which region. Restore it.</li>
+        <li>In <code>stack_free</code>, swap the two <code>free</code> calls. Build: read the gcc warning. Run: read the AddressSanitizer timeline (the bad read, the earlier free, the allocation). Restore it.</li>
+        <li>In <code>main.c</code>, replace one <code>stack_count(s)</code> with <code>s-&gt;count</code>. Build. Read the error, and notice that it is the compiler, not the sanitizer, that stops you. Restore it.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><strong>Optional, plain build only: make <code>realloc</code> fail.</strong> In <code>stack_grow</code>, temporarily ask for <code>(size_t)1 &lt;&lt; 62</code> bytes instead of the real size. In <code>main</code>, print <code>push N failed, count still C</code> before freeing on a failed push. Run <code>make check</code> (the sanitizer build aborts on a request that large, so use the plain build under Valgrind). You should see <code>push 30 failed, count still 2</code> and <code>0 errors</code>, no leaks: the stack survived. Now write the grow without the temporary pointer, <code>s-&gt;items = realloc(s-&gt;items, ...)</code>, and run <code>make check</code> again: <code>8 bytes in 1 blocks are definitely lost</code>, allocated in <code>stack_new</code>. Restore both.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 7 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="8"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the three reports</h2>
+  <p><strong>Write before grow.</strong> The first two pushes fit. The third writes slot 2 of a block that holds two ints:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong>
+WRITE of size 4 ...
+    #0 ... in <strong>stack_push stack.c:...</strong>
+    #1 ... in main main.c:...
+0x... is located <strong>0 bytes after 8-byte region</strong>
+allocated by thread T0 here:
+    #0 ... in malloc
+    #1 ... in stack_new stack.c:...</code></pre>
+  <p>Two ints × four bytes explain the 8-byte region. “0 bytes after” is the off-by-one signature from lesson 1. The allocation site is <code>stack_new</code>, so the block that overflowed is block B at its first size: the grow had not happened yet.</p>
+  <p><strong>Struct freed before items.</strong> gcc says it first:</p>
+  <pre><code>stack.c: In function ‘stack_free’:
+stack.c:33:11: <strong>warning: pointer ‘s’ used after ‘free’</strong> [-Wuse-after-free]
+   33 |     free(s-&gt;items);
+      |          ~^~~~~~~</code></pre>
+  <p>Run it anyway and AddressSanitizer gives the timeline:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-use-after-free</strong>
+READ of size 8 ...
+    #0 ... in <strong>stack_free stack.c:...</strong>
+0x... is located <strong>0 bytes inside of 24-byte region</strong>
+freed by thread T0 here:
+    #0 ... in free
+    #1 ... in stack_free stack.c:...
+previously allocated by thread T0 here:
+    #0 ... in malloc
+    #1 ... in stack_new stack.c:...</code></pre>
+  <p>“READ of size 8” is the pointer <code>items</code> being loaded; “24-byte region” is block A, the struct. The read, the free and the allocation are three lines apart in your own code.</p>
+  <p><strong>Client reaches inside.</strong> No run at all:</p>
+  <pre><code>main.c: In function ‘main’:
+main.c:22:29: <strong>error: invalid use of incomplete typedef ‘stack_t’</strong> {aka ‘struct stack’}</code></pre>
+  <p>This is the cheapest of the three. The header made the promise, and the compiler enforces it on every client, every build.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/13stacks/">1.3 Bags, Queues, and Stacks</a>, the part headed “Array and resizing array implementations of collections”, and the listing <a href="https://algs4.cs.princeton.edu/13stacks/ResizingArrayStack.java.html">ResizingArrayStack.java</a>. The code is Java; the doubling rule and the cost claim are the ones you just implemented. For the language rule behind the opaque struct, Beej <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html">chapter 35, Incomplete Types</a>. For the test program's shape, <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">CS107 Testing Strategies</a>. Keep the <a href="../reference/stack-adt.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Before you start lesson 8, say out loud where each of the three places in the diagram lives, who owns each heap block, and which line frees it. If any of the three answers takes more than one sentence, ask me and we will draw it again.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0006-halve-then-merge.html">Previous: Lesson 6, merge sort and quicksort</a> · <a href="../reference/stack-adt.html">Reference: stack ADT cheat sheet</a></span>
+    <span><a href="0008-the-slot-before-the-node.html">Next: Lesson 8, the singly linked list</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0007-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"stack_new has returned. Where does the struct stack itself live?",opts:["in a heap block","in main's stack frame","in static storage always","inside the items block"],a:0,why:"main.c cannot size a stack_t, so it cannot hold one in its frame. stack_new mallocs the struct and hands back a pointer to it."},
+    {q:"main.c contains s->count. What does gcc report?",opts:["invalid use of incomplete typedef","assignment to a read-only member","unused variable in function main","implicit declaration of member count"],a:0,why:"In main.c the struct has no known members, so any member access is an error at compile time. That is what the opaque struct buys."},
+    {q:"realloc returns NULL inside stack_grow. What must still be true?",opts:["the old block is still owned","the old block was already freed","the stack has lost its items","the capacity has already been doubled"],a:0,why:"A failed realloc leaves the original block valid. Catching the result in a temporary pointer keeps s->items pointing at it, so push can return 0 with the stack intact."},
+    {q:"The block is full and push is called. Which order is right?",opts:["grow first, then write value","write first, then grow block","count first, then write value","free first, then write value"],a:0,why:"The write goes to items[count], which is one past the end of a full block. Growing first makes that slot exist."},
+    {q:"Why does stack_pop return a status and write through int* out?",opts:["no int value can mean empty","writing through a pointer is faster","the stack must not be const","main cannot read heap ints directly"],a:0,why:"Every int is a valid stack value, so the value alone cannot signal emptiness. The status carries that, and the address carries the value."},
+    {q:"stack_free must free in which order?",opts:["items block, then the struct","the struct, then items block","either order is equally safe","only the struct, never items"],a:0,why:"The items pointer lives inside the struct. Free the struct first and reading s->items is a use-after-free."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-draw the three places for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

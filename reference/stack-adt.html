@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Stack ADT</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Stack ADT</h1>
+  <p class="subtitle">A dynamic-array stack as a module: opaque struct, two owned heap blocks, doubling growth through a temporary pointer, and status-plus-out-parameter contracts. Paired with <a href="../lessons/0007-grow-on-push.html">Lesson 7</a>. Lessons 8, 9 and 10 reuse this shape.</p>
+
+  <h2>The ADT shape (copy for every structure)</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">stack.h · what the client sees</p>
+      <pre><code>#pragma once
+#include &lt;stddef.h&gt;
+
+typedef struct stack stack_t;   /* name only */
+
+stack_t* stack_new(void);
+void     stack_free(stack_t* s);
+int      stack_push(stack_t* s, int value);
+int      stack_pop(stack_t* s, int* out);
+int      stack_peek(const stack_t* s, int* out);
+size_t   stack_count(const stack_t* s);</code></pre>
+    </div>
+    <div>
+      <p class="filename">stack.c · the shape, private</p>
+      <pre><code>#include "stack.h"
+#include &lt;stdlib.h&gt;
+
+#define INITIAL_CAPACITY 2
+
+struct stack {
+    int* items;      /* owned block */
+    size_t count;    /* in use */
+    size_t capacity; /* allocated */
+};
+
+static int stack_grow(stack_t* s);</code></pre>
+    </div>
+  </div>
+  <p class="rule">Header: <code>typedef struct X x_t;</code>, prototypes with one-line contracts, module prefix on every name. Source: the struct body, <code>static</code> helpers, the definitions. Client: holds an <code>x_t*</code> only; <code>s-&gt;member</code> is a compile error there.</p>
+
+  <h2>Where every byte lives</h2>
+  <pre><code>main's frame          heap block A (24 bytes)        heap block B (capacity × 4 bytes)
++-------------+       +----------------------+       +----+----+----+----+
+| s           |-----&gt; | items                |-----&gt; | 10 | 20 | 30 | ?? |
++-------------+       | count     3          |       +----+----+----+----+
+ handle, 8 bytes      | capacity  4          |        [0]  [1]  [2]  [3]
+ dies with main       +----------------------+        top = items[count - 1]
+                       owned by the caller             owned by the struct</code></pre>
+  <table>
+    <tr><th>Invariant</th><th>Meaning</th></tr>
+    <tr><td><code>count &lt;= capacity</code></td><td>Never write <code>items[count]</code> without checking this first.</td></tr>
+    <tr><td><code>items</code> is live, <code>capacity</code> ints</td><td>The only pointer to block B. Replaced only by a successful <code>realloc</code>.</td></tr>
+    <tr><td><code>items[0..count)</code> are the values</td><td>Bottom at 0, top at <code>count - 1</code>. Slots at or past <code>count</code> are garbage.</td></tr>
+  </table>
+
+  <h2>Push: check, grow, write</h2>
+  <pre><code>static int stack_grow(stack_t* s) {
+    size_t new_capacity = s-&gt;capacity * 2;
+    int* bigger = realloc(s-&gt;items, new_capacity * sizeof *bigger);
+    if (bigger == NULL) return 0;          /* old block still owned, untouched */
+    s-&gt;items = bigger;                     /* old pointer is dead from here */
+    s-&gt;capacity = new_capacity;
+    return 1;
+}
+
+int stack_push(stack_t* s, int value) {
+    if (s-&gt;count == s-&gt;capacity &amp;&amp; !stack_grow(s)) return 0;   /* stack intact */
+    s-&gt;items[s-&gt;count] = value;
+    s-&gt;count++;
+    return 1;
+}</code></pre>
+  <table>
+    <tr><th>Capacity</th><th>Grows at push</th><th>Ints copied</th></tr>
+    <tr><td>2 → 4</td><td>3rd</td><td>2</td></tr>
+    <tr><td>4 → 8</td><td>5th</td><td>4</td></tr>
+    <tr><td>8 → 16</td><td>9th</td><td>8</td></tr>
+  </table>
+  <p>Doubling copies fewer than <code>n</code> ints over <code>n</code> pushes: constant amortised cost per push (Sedgewick &amp; Wayne). Growing by one would copy about <code>n²/2</code>.</p>
+
+  <h2>Pop and peek: status plus out-parameter</h2>
+  <pre><code>int stack_pop(stack_t* s, int* out) {
+    if (s-&gt;count == 0) return 0;           /* *out untouched */
+    s-&gt;count--;
+    *out = s-&gt;items[s-&gt;count];
+    return 1;
+}
+int stack_peek(const stack_t* s, int* out) {
+    if (s-&gt;count == 0) return 0;
+    *out = s-&gt;items[s-&gt;count - 1];
+    return 1;
+}
+/* client */
+int value;
+while (stack_pop(s, &amp;value)) printf(" %d", value);</code></pre>
+  <p>No <code>int</code> is free to mean “empty”, so the status is the return and the value goes through the address. Pop lowers <code>count</code>; it neither clears the slot nor shrinks the block.</p>
+
+  <h2>New and free: two blocks, inside out</h2>
+  <div class="grid">
+    <div>
+      <pre><code>stack_t* stack_new(void) {
+    stack_t* s = malloc(sizeof *s);
+    if (s == NULL) return NULL;
+    s-&gt;items = malloc(INITIAL_CAPACITY
+                      * sizeof *s-&gt;items);
+    if (s-&gt;items == NULL) {
+        free(s);            /* undo A */
+        return NULL;
+    }
+    s-&gt;count = 0;
+    s-&gt;capacity = INITIAL_CAPACITY;
+    return s;
+}</code></pre>
+    </div>
+    <div>
+      <pre><code>void stack_free(stack_t* s) {
+    if (s == NULL) return;
+    free(s-&gt;items);         /* B, reached through A */
+    free(s);                /* A */
+}</code></pre>
+      <p>Allocate outer then inner; free inner then outer. If the inner allocation fails, undo the outer before returning <code>NULL</code>.</p>
+    </div>
+  </div>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>gcc: <code>invalid use of incomplete typedef ‘stack_t’</code></td><td>A client touched a member. Use the module's functions; only <code>stack.c</code> sees the struct body.</td></tr>
+    <tr><td>gcc: <code>invalid application of ‘sizeof’ to incomplete type</code></td><td>A client tried <code>sizeof(stack_t)</code> or a <code>stack_t</code> local. Only a <code>stack_t*</code> is allowed there.</td></tr>
+    <tr><td>heap-buffer-overflow, WRITE, 0 bytes after N-byte region, in <code>stack_push</code></td><td>Wrote <code>items[count]</code> before growing. Check, grow, then write.</td></tr>
+    <tr><td>heap-use-after-free, READ of size 8, in <code>stack_free</code> (gcc also warns <code>-Wuse-after-free</code>)</td><td>Freed the struct before the items block. Free inside out.</td></tr>
+    <tr><td>Valgrind: definitely lost, allocated in <code>stack_new</code>, after a failed push</td><td><code>s-&gt;items = realloc(s-&gt;items, ...)</code> overwrote the owner with NULL. Use a temporary pointer.</td></tr>
+    <tr><td>Values come back in push order</td><td>Pop reads <code>items[0]</code> or the count was not decremented before the read.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://algs4.cs.princeton.edu/13stacks/">Sedgewick &amp; Wayne, 1.3 Bags, Queues, and Stacks</a> · <a href="https://algs4.cs.princeton.edu/13stacks/ResizingArrayStack.java.html">ResizingArrayStack.java</a> · <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html">Beej 35 Incomplete Types</a> · <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">Beej 12.5 realloc</a> · <a href="https://en.cppreference.com/w/c/memory/realloc">cppreference realloc</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/styleguide.html">CS107 Style Guide</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">CS107 Testing Strategies</a></p>
+</article>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6 · Halve, Then Merge</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 6 · DSA in C</p>
+  <h1>Halve, Then Merge</h1>
+  <p class="subtitle">Merge sort and quicksort split a range and call themselves on each half. Each call gets its own stack frame; the array and one scratch block stay on the heap, owned by exactly one function.</p>
+  <div class="meta">
+    <span>About 45 minutes</span>
+    <span>Where: WSL, <code>exercises/06-recursive-sorts/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursive-sorts.html">Cheat sheet</a> · <a href="0005-sort-then-halve.html">Lesson 5</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Write both recursive sorts from a blank file, with a merge that borrows one heap scratch block allocated by a wrapper, a partition that returns the pivot's final index, and base cases that cannot loop forever on <code>size_t</code>.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c sort.c
+
+recursive-sorts: $(SRC) sort.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o recursive-sorts $(SRC)
+
+recursive-sorts-plain: $(SRC) sort.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o recursive-sorts-plain $(SRC)
+
+.PHONY: check clean
+check: recursive-sorts-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./recursive-sorts-plain
+clean:
+<span class="tab">⇥</span>rm -f recursive-sorts recursive-sorts-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>A call gets its own frame</h2>
+  <p>Eight ints live in a heap block at, say, <code>0x5030…70</code>. A function is asked to sort the half-open range <code>[0, 8)</code> of that block. It splits the range at 4, calls itself on <code>[0, 4)</code>, and that call splits again. At the deepest point the stack looks like this:</p>
+  <pre><code>stack (newest frame at the bottom)      every frame has its own lo and hi
+main                a = 0x5030…70                    owner of the array
+merge_sort          a = 0x5030…70  n = 8  scratch = 0x5030…a0   owner of scratch
+merge_sort_range    a = 0x5030…70  lo = 0  hi = 8  scratch
+merge_sort_range    a = 0x5030…70  lo = 0  hi = 4  scratch
+merge_sort_range    a = 0x5030…70  lo = 0  hi = 2  scratch
+merge_sort_range    a = 0x5030…70  lo = 0  hi = 1  scratch      one element: return</code></pre>
+  <p>Every argument is copied into the callee's frame. Beej puts it bluntly: “EVERYTHING you pass to a function WITHOUT EXCEPTION is copied into its corresponding parameter”<a class="sn-ref" href="#sn1"></a>. So <code>lo</code> and <code>hi</code> are private to each frame, and the frame above keeps its own values while the one below works. The pointer <code>a</code> is also a copy, but every copy holds the same address, so every frame writes into the same heap block. That is the whole trick: private indices on the stack, one shared array on the heap.</p>
+  <span class="sidenote" id="sn1">Beej, <a href="https://beej.us/guide/bgc/html/split/functions.html">4.1 Passing by Value</a>. The CS107 GDB guide shows the same picture from the debugger: in a backtrace “each line represents a stack frame (ie. a function call)” (<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">GDB Guide</a>).</span>
+  <p><strong>The base case counts elements, not endpoints.</strong> The range <code>[lo, hi)</code> holds <code>hi - lo</code> elements. That subtraction is safe on <code>size_t</code> because <code>lo &lt;= hi</code> always holds: the split puts <code>mid</code> between them, and the two calls receive <code>[lo, mid)</code> and <code>[mid, hi)</code>. A range of zero or one element is already sorted, so:</p>
+  <pre><code>if (hi - lo &lt; 2) {
+    return;
+}</code></pre>
+  <p>Two ways to get this wrong. <code>if (lo == hi)</code> stops only on the empty range; a range of one element splits into <code>[lo, lo)</code> and <code>[lo, lo + 1)</code>, and the second call is the same call again, forever. <code>if (hi - 1 &lt;= lo)</code> subtracts from an index that can be 0 and wraps, the same trap as lesson 5's <code>mid - 1</code>. Test the count.</p>
+</section>
+
+<section>
+  <h2>Merge sort: halve, sort each half, merge</h2>
+  <p>Start with the eight values <code>9 4 15 9 26 5 35 4</code>. Split at the midpoint, sort each half by the same method, then merge the two sorted halves:</p>
+  <pre><code>[0, 8)   9 4 15 9 | 26 5 35 4
+[0, 4)   9 4 | 15 9          [4, 8)   26 5 | 35 4
+[0, 2)   9 | 4   -&gt; 4 9      [4, 6)   26 | 5  -&gt; 5 26
+[2, 4)   15 | 9  -&gt; 9 15     [6, 8)   35 | 4  -&gt; 4 35
+[0, 4)   merge 4 9 + 9 15    -&gt; 4 9 9 15
+[4, 8)   merge 5 26 + 4 35   -&gt; 4 5 26 35
+[0, 8)   merge 4 9 9 15 + 4 5 26 35  -&gt; 4 4 5 9 9 15 26 35</code></pre>
+  <p>Each level of the tree touches all <code>n</code> elements once, and there are about <code>log₂ n</code> levels. Sedgewick and Wayne state the bound: top-down mergesort uses “between ½ N lg N and N lg N compares and at most 6 N lg N array accesses to sort any array of length N”, and it does so no matter what the input<a class="sn-ref" href="#sn2"></a>.</p>
+  <span class="sidenote" id="sn2">Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2 Mergesort</a>. The same page names the cost: “its prime disadvantage is that it uses extra space proportional to N.” That extra space is the scratch block below.</span>
+  <p>The merge is the only real work. Walk the two runs with one index each, always taking the smaller head, into a scratch area. Ties take the left run, which keeps equal keys in their original order. When one run runs out, copy the rest of the other:</p>
+  <pre><code>left  a[0..4) = 4 9 9 15      right  a[4..8) = 4 5 26 35
+i=0 j=4   4 &lt; 4 ? no   take left   scratch[0] = 4     i=1
+i=1 j=4   4 &lt; 9 ? yes  take right  scratch[1] = 4     j=5
+i=1 j=5   5 &lt; 9 ? yes  take right  scratch[2] = 5     j=6
+i=1 j=6   26 &lt; 9 ? no  take left   scratch[3] = 9     i=2
+i=2 j=6   26 &lt; 9 ? no  take left   scratch[4] = 9     i=3
+i=3 j=6   26 &lt; 15 ? no take left   scratch[5] = 15    i=4   left run empty
+          copy the rest of right   scratch[6] = 26  scratch[7] = 35
+          copy scratch[0..8) back into a[0..8)</code></pre>
+  <pre><code>/* Merge the sorted runs a[lo..mid) and a[mid..hi) via scratch[lo..hi). */
+static void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
+    size_t i = lo;                  /* next unused in the left run */
+    size_t j = mid;                 /* next unused in the right run */
+    size_t k = lo;                  /* next free slot in scratch */
+    while (i &lt; mid &amp;&amp; j &lt; hi) {
+        if (a[j] &lt; a[i]) {
+            scratch[k++] = a[j++];
+        } else {
+            scratch[k++] = a[i++];  /* ties take the left run */
+        }
+    }
+    while (i &lt; mid) { scratch[k++] = a[i++]; }
+    while (j &lt; hi)  { scratch[k++] = a[j++]; }
+    for (k = lo; k &lt; hi; k++) {
+        a[k] = scratch[k];          /* copy back exactly [lo, hi) */
+    }
+}</code></pre>
+  <p><strong>Where does <code>scratch</code> live, and who frees it?</strong> The merge needs <code>hi - lo</code> ints of room. The lazy answer is <code>malloc</code> inside <code>merge</code>: for eight elements that is seven allocations and seven frees, and each of them can fail halfway through a sort. The right answer is one block of <code>n</code> ints, allocated once by a top-level wrapper, passed down as a parameter, and freed by that same wrapper. Sedgewick and Wayne do exactly this: their public <code>sort</code> allocates <code>aux</code> once and hands it to the recursive <code>sort(a, aux, lo, hi)</code>, and they warn that a static scratch array “is inadvisable in library software because multiple clients might use the class concurrently”<a class="sn-ref" href="#sn3"></a>.</p>
+  <span class="sidenote" id="sn3"><a href="https://algs4.cs.princeton.edu/22mergesort/Merge.java.html">Merge.java</a>: <code>Comparable[] aux = new Comparable[a.length]; sort(a, aux, 0, a.length-1);</code>. Java frees <code>aux</code> for them. In C the wrapper is the owner and must call <code>free</code>.</span>
+  <pre><code>/* Sort a[lo..hi). scratch has room for at least hi ints. */
+static void merge_sort_range(int* a, size_t lo, size_t hi, int* scratch) {
+    if (hi - lo &lt; 2) {
+        return;
+    }
+    size_t mid = lo + (hi - lo) / 2;
+    merge_sort_range(a, lo, mid, scratch);
+    merge_sort_range(a, mid, hi, scratch);
+    merge(a, lo, mid, hi, scratch);
+}
+
+void merge_sort(int* a, size_t n) {
+    if (n &lt; 2) {
+        return;
+    }
+    int* scratch = malloc(n * sizeof *scratch);
+    if (scratch == NULL) {
+        return;                     /* a is left as it was */
+    }
+    merge_sort_range(a, 0, n, scratch);
+    free(scratch);                  /* the owner frees, once */
+}</code></pre>
+  <p>Read the ownership like lesson 3. <code>merge_sort</code> owns <code>scratch</code>: it allocates, checks for <code>NULL</code><a class="sn-ref" href="#sn4"></a>, and frees. Every <code>merge_sort_range</code> and <code>merge</code> frame is a borrower: they receive the pointer, write through it, and never free it. The wrapper is also why the interface stays clean: <code>main</code> calls <code>merge_sort(a, n)</code> and never learns that a scratch block exists. The recursive function with its extra <code>lo</code>, <code>hi</code>, <code>scratch</code> parameters is <code>static</code> in <code>sort.c</code>, not in the header.</p>
+  <span class="sidenote" id="sn4">cppreference, <a href="https://en.cppreference.com/w/c/memory/malloc">malloc</a>: “On success, returns the pointer to the beginning of newly allocated memory. To avoid a memory leak, the returned pointer must be deallocated with free() or realloc(). On failure, returns a null pointer.”</span>
+</section>
+
+<section>
+  <h2>Quicksort: partition, then sort both sides in place</h2>
+  <p>Quicksort splits differently. It picks one value, the pivot, and rearranges the range so that everything left of the pivot is no larger and everything right of it is no smaller. The pivot is then in its final place and never moves again. Both sides are sorted by the same method. Nothing is copied anywhere, so there is no scratch block and no wrapper allocation.</p>
+  <p>Take the same eight values and pivot on <code>a[lo] = 9</code>. Two indices scan towards each other. <code>i</code> walks right and stops on a value that is <em>not smaller</em> than the pivot; <code>j</code> walks left and stops on a value that is <em>not larger</em>. When both have stopped and <code>i &lt; j</code>, swap and continue:</p>
+  <pre><code>pivot 9      9  4  15  9  26  5  35  4
+i=1 j=7      i stops at a[2]=15; j stops at a[7]=4          swap
+             9  4  4  9  26  5  35  15
+i=3 j=6      i stops at a[3]=9  (equal to pivot: stop!)
+             j stops at a[5]=5                              swap
+             9  4  4  5  26  9  35  15
+i=4 j=4      i stops at a[4]=26; j walks 35, 26, stops at a[3]=5
+             i=4 &gt;= j=3: crossed, stop
+swap a[lo] with a[j]:
+             5  4  4  9  26  9  35  15
+             ^ &lt;= 9 ^  [9]  ^ &gt;= 9 ^          return 3</code></pre>
+  <p>The line marked <em>stop!</em> matters. Sedgewick and Wayne: “It is best to stop the left scan for items with keys greater than or equal to the partitioning item's key and the right scan for items less than or equal to the partitioning item's key.” Skipping over equal keys looks harmless and makes the sort quadratic on inputs full of duplicates<a class="sn-ref" href="#sn5"></a>. The data has two 9s and two 4s so that you can see the stop happen.</p>
+  <span class="sidenote" id="sn5">Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a>: after partitioning, “the entry a[j] is in its final place in the array, for some j”; quicksort “is in-place (uses only a small auxiliary stack)”; it “uses ~N²/2 compares in the worst case, but random shuffling protects against this case.” This lesson skips the shuffle; on eight values it does not matter.</span>
+  <pre><code>/* Partition a[lo..hi) around the pivot a[lo]. hi - lo must be at least 1.
+   Returns the pivot's final index p: a[lo..p) &lt;= pivot &lt;= a[p+1..hi). */
+static size_t partition(int* a, size_t lo, size_t hi) {
+    int pivot = a[lo];
+    size_t i = lo + 1;              /* scans right, stops on &gt;= pivot */
+    size_t j = hi - 1;              /* scans left, stops on &lt;= pivot */
+    for (;;) {
+        while (i &lt; hi &amp;&amp; a[i] &lt; pivot) {
+            i++;
+        }
+        while (a[j] &gt; pivot) {
+            j--;                    /* a[lo] == pivot stops this at lo */
+        }
+        if (i &gt;= j) {
+            break;
+        }
+        swap_ints(&amp;a[i], &amp;a[j]);
+        i++;
+        j--;
+    }
+    swap_ints(&amp;a[lo], &amp;a[j]);       /* pivot into its final slot */
+    return j;
+}
+
+static void quick_sort_range(int* a, size_t lo, size_t hi) {
+    if (hi - lo &lt; 2) {
+        return;
+    }
+    size_t p = partition(a, lo, hi);
+    quick_sort_range(a, lo, p);     /* [lo, p): left of the pivot */
+    quick_sort_range(a, p + 1, hi); /* [p+1, hi): right of the pivot */
+}
+
+void quick_sort(int* a, size_t n) {
+    quick_sort_range(a, 0, n);
+}</code></pre>
+  <p>Two <code>size_t</code> details. The <code>i</code> scan needs <code>i &lt; hi</code> because every value after the pivot may be smaller than it. The <code>j</code> scan needs no <code>j &gt; lo</code> guard because <code>a[lo]</code> is the pivot itself, and a scan that stops on values <code>&lt;= pivot</code> cannot walk past it. Change the pivot choice and that guard becomes necessary. The swap is lesson 5's <code>swap_ints</code>, called with two addresses into the same block. The pivot's index <code>p</code> is excluded from both recursive calls: <code>[lo, p)</code> and <code>[p + 1, hi)</code> are each strictly smaller than <code>[lo, hi)</code>, which is what guarantees the recursion ends.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">sort.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* Exchange the two ints at a and b. */
+void swap_ints(int* a, int* b);
+
+/* Return 1 if the n ints at a are in ascending order, else 0. */
+int is_sorted(const int* a, size_t n);
+
+/* Sort the n ints at a into ascending order using one heap scratch block
+   of n ints, allocated and freed inside. If that block cannot be
+   allocated, a is left unchanged. */
+void merge_sort(int* a, size_t n);
+
+/* Sort the n ints at a into ascending order, in place. */
+void quick_sort(int* a, size_t n);</code></pre>
+  <p>Four public functions. The recursive workers <code>merge_sort_range</code>, <code>merge</code>, <code>partition</code> and <code>quick_sort_range</code> are <code>static</code> in <code>sort.c</code> and appear nowhere in the header. A client sees <code>(a, n)</code> and nothing about ranges or scratch.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/06-recursive-sorts &amp;&amp; cd exercises/06-recursive-sorts</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>sort.h</code> exactly as shown. Paste the setup <code>Makefile</code>. Copy your <code>swap_ints</code> and <code>is_sorted</code> from lesson 5 into a new <code>sort.c</code>, or rewrite them; they are two minutes of typing.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write the merge sort half of <code>sort.c</code>: <code>merge</code>, <code>merge_sort_range</code>, <code>merge_sort</code>. Close this page first and write from the two traces above, not from the listings. Say out loud, for each function, whether it owns or borrows <code>scratch</code>.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write the quicksort half: <code>partition</code>, <code>quick_sort_range</code>, <code>quick_sort</code>. Before writing <code>partition</code>, redo the eight-value trace on paper with the pivot 9 and check that you stop on the second 9.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the source data once, as a named constant array of eight ints in this order: <code>9 4 15 9 26 5 35 4</code>. Write a small static helper that returns a fresh heap copy of it (caller owns the copy), and reuse lesson 5's print helper. Print <code>before</code>, merge sort the copy, print <code>after merge</code> and a <code>sorted</code> line from <code>is_sorted</code>, free the copy. Then take a second fresh copy, quicksort it, print <code>after quick</code> and <code>sorted</code>, free it, return 0. Expected, exactly:</p>
+      <pre><code>before: 9 4 15 9 26 5 35 4
+after merge: 4 4 5 9 9 15 26 35
+sorted: yes
+after quick: 4 4 5 9 9 15 26 35
+sorted: yes</code></pre>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./recursive-sorts</code>, and <code>make check</code>. Require no warnings, the exact five lines, and Valgrind with 0 errors and no leaks. Valgrind's heap summary should show one more allocation than free-able copies you expect: two data copies, one scratch block, and one block the C library takes for <code>stdout</code>.</p>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong> Restore the program after each.</p>
+      <ol>
+        <li>In <code>merge</code>, change the copy-back loop to <code>k &lt;= hi</code>. Build and run. Read which function the report blames, how many frames of <code>merge_sort_range</code> sit under it, and where the address is relative to the region.</li>
+        <li>In <code>merge_sort</code>, delete the <code>free(scratch)</code> line. Build, run <code>./recursive-sorts</code>, then run <code>make check</code>. Read both outputs; note which one exits non-zero and what it says was lost.</li>
+        <li>In <code>merge_sort_range</code>, change the base case to <code>if (lo == hi)</code>. Build and run. It takes a second or so to fail. Read the first four frames of the report and count how many different line numbers appear.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 6 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="8"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the three reports</h2>
+  <p><strong>1. Copy-back off by one.</strong> The top-level merge has <code>hi = 8</code>. <code>k &lt;= hi</code> reads <code>scratch[8]</code>, one int past the 32-byte block:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x503000000090 ...
+READ of size 4 ...
+    #0 ... in <strong>merge sort.c:40</strong>
+    #1 ... in merge_sort_range sort.c:52
+    #2 ... in merge_sort_range sort.c:51
+0x503000000090 is located <strong>0 bytes after 32-byte region</strong>
+allocated by thread T0 here:
+    #0 ... in malloc
+    #1 ... in <strong>merge_sort sort.c:59</strong>
+    #2 ... in main main.c:35</code></pre>
+  <p>The read fires before the matching write to <code>a[8]</code>, so the report blames the scratch block, allocated in <code>merge_sort</code>. It is the same “0 bytes after” shape as lesson 1's off-by-one. New here: the frames under <code>merge</code> are two <code>merge_sort_range</code> frames at different line numbers: the one that called <code>merge</code>, under the one that made the recursive call on <code>[mid, hi)</code>. That is the tree from the trace, read bottom-up.</p>
+
+  <p><strong>2. Scratch never freed.</strong> Under <code>make check</code>:</p>
+  <pre><code>==12345== <strong>32 bytes in 1 blocks are definitely lost</strong> in loss record 1 of 1
+==12345==    at 0x...: malloc (in .../vgpreload_memcheck-amd64-linux.so)
+==12345==    by 0x...: <strong>merge_sort (sort.c:59)</strong>
+==12345==    by 0x...: main (main.c:35)
+==12345== LEAK SUMMARY:
+==12345==    definitely lost: 32 bytes in 1 blocks
+...
+==12345== ERROR SUMMARY: 1 errors from 1 contexts
+make: *** [Makefile:14: check] Error 1</code></pre>
+  <p>Thirty-two bytes, one block, allocated in the wrapper, never freed. Under the sanitizer build this particular leak is also reported (“LeakSanitizer: detected memory leaks, Direct leak of 32 byte(s)”), unlike lesson 1's. The difference: here the only copy of <code>scratch</code> lived in <code>merge_sort</code>'s frame, and the quicksort calls that followed overwrote that dead frame, so no stale pointer survived for the exit-time scan to find. Do not rely on that. <code>make check</code> is the gate for leaks.</p>
+
+  <p><strong>3. Base case that never fires.</strong> A one-element range calls itself on the same one-element range. Each call pushes a new frame until the stack (8 MB by default) is exhausted:</p>
+  <pre><code>AddressSanitizer:DEADLYSIGNAL
+ERROR: AddressSanitizer: <strong>stack-overflow</strong> on address 0x7ffed3462ff8 ...
+    #0 ... in merge_sort_range sort.c:50
+    #1 ... in merge_sort_range <strong>sort.c:51</strong>
+    #2 ... in merge_sort_range <strong>sort.c:51</strong>
+    #3 ... in merge_sort_range <strong>sort.c:51</strong>
+    ... (thousands more, all the same line)
+SUMMARY: AddressSanitizer: stack-overflow sort.c:50 in merge_sort_range</code></pre>
+  <p>Every frame below the first is the same function at the same line: the second recursive call, the one on <code>[mid, hi)</code>, because <code>[lo, lo + 1)</code> has <code>mid == lo</code> and calls itself on <code>[lo, lo + 1)</code> again. That column is the signature of a base case that does not shrink the problem. When you see it, print <code>lo</code> and <code>hi</code> at the top of the function, or walk one element by hand, and ask which range calls itself unchanged.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary sources:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2 Mergesort</a> (top-down part, and the paragraph on the auxiliary array) and <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a> (partitioning, and the paragraph on equal keys). Their code is Java with closed ranges <code>[lo, hi]</code>; you wrote the same algorithms with half-open ranges and an owned scratch block. For the frame model, Beej <a href="https://beej.us/guide/bgc/html/split/functions.html">4.1 Passing by Value</a>. Keep the <a href="../reference/recursive-sorts.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If you are unsure who frees a block that a recursive function uses, ask before you write the <code>free</code>. The answer is the function that called <code>malloc</code>, unless it handed ownership on, as <code>copy_of_data</code> hands it to <code>main</code>. If that is not obvious from the code, the code needs a wrapper.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0005-sort-then-halve.html">Previous: Lesson 5, Sort, Then Halve</a> · <a href="../reference/recursive-sorts.html">Reference: recursive sorts cheat sheet</a></span>
+    <span><a href="0007-grow-on-push.html">Next: Lesson 7, a stack that grows on push</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0006-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"merge_sort_range(a, 0, 8) calls merge_sort_range(a, 0, 4). What does the inner call receive?",opts:["copies of the pointer and indices","the caller's own pointer and indices","a fresh heap copy of a","a fresh stack copy of a"],a:0,why:"Every argument is copied into the new frame. The pointer copy holds the same address, so writes reach the shared heap block; lo and hi are private to the frame."},
+    {q:"Half-open [lo, hi) on size_t. Which base case is right?",opts:["hi - lo < 2","hi - lo < 1","hi - 1 <= lo","lo - hi < 2"],a:0,why:"hi - lo is the element count and cannot wrap because lo <= hi always holds. < 1 stops only on the empty range and loops forever on one element; hi - 1 wraps when hi is 0; lo - hi wraps whenever the range is non-empty."},
+    {q:"Why does merge_sort allocate scratch once, instead of merge allocating each time?",opts:["one owner, one malloc, one free","malloc inside a recursion is illegal","the scratch must be stack memory","free only works from the wrapper"],a:0,why:"n - 1 merges would mean n - 1 allocations, each able to fail mid-sort. One block owned by the wrapper is allocated, checked and freed in one place; every frame below only borrows it."},
+    {q:"partition returns p. What is true of a[p]?",opts:["it is in its final place","it is the range's smallest value","it is the range's largest value","it still has to be sorted"],a:0,why:"Nothing to its left is larger and nothing to its right is smaller, so a[p] never moves again. Both recursive calls leave index p out."},
+    {q:"The scan while (a[j] > pivot) j-- has no j > lo guard. Why is it safe?",opts:["a[lo] equals pivot and stops it","size_t cannot go below zero anyway","the i scan always stops first","j starts one past the range"],a:0,why:"The pivot is a[lo] itself and the scan stops on any value <= pivot, so it stops at lo at the latest. Pick the pivot from elsewhere and the guard becomes necessary."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the frames or the partition for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 · Sort, Then Halve</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 5 · DSA in C · Phase 2 begins</p>
+  <h1>Sort, Then Halve</h1>
+  <p class="subtitle">Insertion sort keeps a sorted prefix growing by one, and binary search keeps a shrinking half-open range. Both run on a plain <code>int</code> array you own.</p>
+  <div class="meta">
+    <span>About 35 minutes</span>
+    <span>Where: WSL, <code>exercises/05-sort-search/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/sort-search.html">Cheat sheet</a> · <a href="0004-pointer-to-slot.html">Lesson 4</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Write a swap through two pointers, an insertion sort built on that swap, a binary search that cannot underflow, and a test that checks the postcondition instead of eyeballing output.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c sort.c
+
+sort-search: $(SRC) sort.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o sort-search $(SRC)
+
+sort-search-plain: $(SRC) sort.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o sort-search-plain $(SRC)
+
+.PHONY: check clean
+check: sort-search-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./sort-search-plain
+clean:
+<span class="tab">⇥</span>rm -f sort-search sort-search-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>A swap needs two addresses</h2>
+  <p>Two ints live at two addresses:</p>
+  <pre><code>address:   0x100   0x104
+value:        9       4</code></pre>
+  <p>A function that receives the values 9 and 4 receives copies. It can swap its copies all day and the caller's memory stays <code>9 4</code>. A function that receives the addresses 0x100 and 0x104 can write through them<a class="sn-ref" href="#sn1"></a>:</p>
+  <pre><code>void swap_ints(int* a, int* b) {
+    int tmp = *a;      /* read 9 from 0x100 */
+    *a = *b;           /* write 4 into 0x100 */
+    *b = tmp;          /* write 9 into 0x104 */
+}
+
+swap_ints(&amp;x[1], &amp;x[0]);   /* caller passes addresses */</code></pre>
+  <span class="sidenote" id="sn1">Beej, section 5.4: “The function can dereference its copy of the pointer to get back to the original variable!” <a href="https://beej.us/guide/bgc/html/split/pointers.html">Passing Pointers as Arguments</a>.</span>
+  <p>This is the same rule as lesson 4's <code>char** slot</code>, one level down: to change the caller's thing, receive its address.</p>
+</section>
+
+<section>
+  <h2>Insertion sort: the left part is always sorted</h2>
+  <p>Start with eight numbers. Treat the first one as a sorted run of length one. Then take each next number and walk it left, swapping with its neighbour, until the neighbour on its left is no bigger:</p>
+  <pre><code>i=1   31 | 4  15  9  26  5  35  8      4 &lt; 31, swap
+      4  31 | 15  9  26  5  35  8      run is now a[0..1]
+i=2   4  31 | 15 ...                  15 &lt; 31, swap; 15 &gt; 4, stop
+      4  15  31 | 9 ...
+i=3   4  15  31 | 9 ...               9 &lt; 31 swap, 9 &lt; 15 swap, 9 &gt; 4 stop
+      4  9  15  31 | 26  5  35  8
+            ^ everything left of the bar is sorted, always</code></pre>
+  <p>The vertical bar is the <em>invariant</em>: before the loop handles index <code>i</code>, the range <code>a[0..i)</code> is sorted. Each pass extends it by one. When <code>i</code> reaches <code>n</code>, the whole array is sorted. Sedgewick and Wayne describe the same move as inserting each card “into its proper place among those already considered (keeping them sorted)”<a href="https://algs4.cs.princeton.edu/21elementary/">*</a>.</p>
+  <p>In C, with the swap from above:</p>
+  <pre><code>void insertion_sort(int* a, size_t n) {
+    for (size_t i = 1; i &lt; n; i++) {
+        for (size_t j = i; j &gt; 0 &amp;&amp; a[j] &lt; a[j - 1]; j--) {
+            swap_ints(&amp;a[j], &amp;a[j - 1]);
+        }
+    }
+}</code></pre>
+  <p><strong>Read the inner condition carefully.</strong> <code>j &gt; 0</code> comes first, so <code>a[j - 1]</code> is only evaluated when <code>j - 1</code> is a valid index. Writing <code>j &gt;= 0</code> with a <code>size_t</code> is always true, because an unsigned value cannot go below zero. gcc warns about it, and the run reads before the block.</p>
+  <p>Cost: on a random array, about <code>n²/4</code> compares and <code>n²/4</code> swaps. On an already sorted array, <code>n - 1</code> compares and zero swaps<a href="https://algs4.cs.princeton.edu/21elementary/">*</a>. That makes insertion sort the right tool for small or nearly sorted inputs, and the wrong tool for a million random ints. Lesson 6 fixes that with recursion.</p>
+</section>
+
+<section>
+  <h2>Binary search: keep the candidates in a half-open range</h2>
+  <p>The array is sorted: <code>4 5 8 9 15 26 31 35</code>. Search for 26. Keep two indices, <code>lo</code> and <code>hi</code>, such that every candidate lives in <code>[lo, hi)</code>: from <code>lo</code> inclusive up to <code>hi</code> exclusive.</p>
+  <pre><code>lo=0 hi=8   mid=4  a[4]=15  15 &lt; 26   lo = 5       candidates [5, 8)
+lo=5 hi=8   mid=6  a[6]=31  31 &gt; 26   hi = 6       candidates [5, 6)
+lo=5 hi=6   mid=5  a[5]=26  found     return &amp;a[5]</code></pre>
+  <p>Each step throws away half the candidates. Eight becomes four, then two, then one. For <code>n</code> elements that is about <code>log₂ n</code> steps: 20 steps for a million<a href="https://algs4.cs.princeton.edu/11model/BinarySearch.java.html">*</a>. The precondition is that the array is sorted; on an unsorted array the result is meaningless, not an error.</p>
+  <pre><code>const int* search_sorted(const int* a, size_t n, int target) {
+    size_t lo = 0;
+    size_t hi = n;                      /* candidates in [lo, hi) */
+    while (lo &lt; hi) {
+        size_t mid = lo + (hi - lo) / 2;
+        if (a[mid] == target) {
+            return &amp;a[mid];
+        }
+        if (a[mid] &lt; target) {
+            lo = mid + 1;               /* mid is too small, drop it */
+        } else {
+            hi = mid;                   /* mid is too big, it becomes the bound */
+        }
+    }
+    return NULL;
+}</code></pre>
+  <p><strong>Why half-open, and why it matters in C.</strong> Textbooks often write the closed form, <code>hi = n - 1</code>, <code>while (lo &lt;= hi)</code>, <code>hi = mid - 1</code>. With signed ints it works. With <code>size_t</code>, the moment <code>mid</code> is 0 and the target is smaller than <code>a[0]</code>, <code>hi = mid - 1</code> wraps to the largest possible value, the loop keeps going, and the next <code>a[mid]</code> reads outside the block. The half-open form never subtracts one from an index, so it cannot wrap<a class="sn-ref" href="#sn2"></a>. Sedgewick and Wayne state the invariant as “the key is in a[lo..hi] if it is in the array”<a href="https://algs4.cs.princeton.edu/11model/">*</a>; the half-open version keeps the same idea with an exclusive upper bound.</p>
+  <span class="sidenote" id="sn2">The midpoint is written <code>lo + (hi - lo) / 2</code> rather than <code>(lo + hi) / 2</code>. The two are equal for arrays this size; the first form cannot overflow when <code>lo + hi</code> exceeds the type's range, so it is the habit to keep.</span>
+  <p>The function returns a pointer to the element, or <code>NULL</code>, the same shape as lesson 4's <code>words_find</code>. The caller turns the pointer into an index with <code>hit - a</code> and prints it with <code>%td</code>, as in lesson 2.</p>
+</section>
+
+<section>
+  <h2>A test is a checked postcondition</h2>
+  <p>Looking at <code>after: 4 5 8 9 15 26 31 35</code> and nodding is not a test. A test asks the program to check the claim itself. For a sort, the claim is “no element is smaller than the one before it”:</p>
+  <pre><code>int is_sorted(const int* a, size_t n) {
+    for (size_t i = 1; i &lt; n; i++) {
+        if (a[i] &lt; a[i - 1]) {
+            return 0;
+        }
+    }
+    return 1;
+}</code></pre>
+  <p>CS107 expects every program you hand in to come with this kind of self-check<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">*</a>. From this lesson on, each exercise's <code>main</code> prints at least one line that a function computed, not one that you read off the screen.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">sort.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* Exchange the two ints at a and b. */
+void swap_ints(int* a, int* b);
+
+/* Sort the n ints at a into ascending order, in place. */
+void insertion_sort(int* a, size_t n);
+
+/* Return 1 if the n ints at a are in ascending order, else 0. */
+int is_sorted(const int* a, size_t n);
+
+/* Binary search the n sorted ints at a for target.
+   Returns a borrowed pointer to a matching element, or NULL if absent. */
+const int* search_sorted(const int* a, size_t n, int target);</code></pre>
+  <p>Two functions take <code>int*</code> because they write. Two take <code>const int*</code> because they only read. That is the whole <code>const</code> story for this lesson.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/05-sort-search &amp;&amp; cd exercises/05-sort-search</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>sort.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>sort.c</code> with the four functions. Close this page first and write them from the invariants, not from the listings. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the source data once, as a named constant array of eight ints in this order: <code>31 4 15 9 26 5 35 8</code>. Allocate a heap array of the same length, check it, and copy the eight values in. Add a small static helper that prints a label, then each int with a leading space, then a newline. Print:</p>
+      <pre><code>before: 31 4 15 9 26 5 35 8</code></pre>
+      <p>Sort the heap array. Print the <code>after</code> line the same way, then a <code>sorted</code> line using <code>is_sorted</code>. Then search for 26, 4 and 2, printing <code>index N</code> via pointer subtraction, or <code>absent</code>. Free the array and return 0. Expected:</p>
+      <pre><code>after: 4 5 8 9 15 26 31 35
+sorted: yes
+find 26: index 5
+find 4: index 0
+find 2: absent</code></pre>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./sort-search</code>, and <code>make check</code>. Require no warnings, the exact six lines, and no Valgrind errors or leaks.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it two ways, one at a time.</strong></p>
+      <ol>
+        <li>In <code>insertion_sort</code>, change <code>j &gt; 0</code> to <code>j &gt;= 0</code>. Build. Read the gcc warning, then run and read the AddressSanitizer report. Restore it.</li>
+        <li>In <code>search_sorted</code>, switch to the closed form: <code>hi = n - 1</code>, <code>while (lo &lt;= hi)</code>, <code>hi = mid - 1</code>. Build and run. The first two searches succeed; the search for 2 reads outside the block. Read where the report says the address is. Restore the half-open form.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 5 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the wrap-around failure</h2>
+  <p>The closed-form search for 2 ends with <code>mid = 0</code>, <code>a[0] = 4 &gt; 2</code>, and <code>hi = mid - 1</code>. That subtraction wraps <code>hi</code> to the largest <code>size_t</code>. The loop continues, computes a huge <code>mid</code>, and the address arithmetic wraps again, landing just before the block:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong>
+READ of size 4 ...
+    #0 ... in <strong>search_sorted sort.c:...</strong>
+    #1 ... in main main.c:...
+0x... is located <strong>4 bytes before 32-byte region</strong>
+allocated by thread T0 here:
+    #0 ... in malloc
+    #1 ... in main main.c:...</code></pre>
+  <p>Eight ints × four bytes explain the 32-byte region. “4 bytes before” means index −1: an unsigned index has wrapped. When you see a read just before a block in code that uses <code>size_t</code>, look for a <code>- 1</code> on an index that can be zero.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C. Read in this order; the first two items are short source files, not chapters.</p>
+  <ol class="reading">
+    <li><p><strong>Insertion sort in C.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>, the <code>InsertionSort</code> function at the top (the author publishes the book's <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a> free). Twelve lines. It uses the <em>shift</em> form: hold <code>A[P]</code> in <code>Tmp</code>, slide larger elements right, drop <code>Tmp</code> into the gap. Compare it with your <em>exchange</em> form and count the moves per step. Notice <code>j &gt; 0 &amp;&amp; A[j - 1] &gt; Tmp</code>: the same order of tests you wrote, and for the same reason.</p></li>
+    <li><p><strong>Binary search in C.</strong> Weiss, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/fig2_9.c">fig2_9.c</a>, <code>BinarySearch</code>. This is the <em>closed</em> form: <code>High = N - 1</code>, <code>while (Low &lt;= High)</code>, <code>High = Mid - 1</code>. It is correct because <code>Low</code>, <code>Mid</code> and <code>High</code> are signed <code>int</code>. Ask yourself, line by line, what would break if you changed those three to <code>size_t</code>. That is the wrap-around from step 6 of the exercise.</p></li>
+    <li><p><strong>Passing pointers.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/pointers.html">5.4 Passing Pointers as Arguments</a>. Two pages. This is the whole story behind <code>swap_ints</code>.</p></li>
+    <li><p><strong>If you prefer to watch first.</strong> CS50 Shorts, Doug Lloyd: <a href="https://video.cs50.io/O0VbBkUvriI">Insertion Sort</a> and <a href="https://video.cs50.io/T98PIp4omUA">Binary Search</a>. About ten minutes each, from Harvard's C-based introductory course. They step through arrays by hand, no code.</p></li>
+  </ol>
+  <p><strong>Where this lands in CS107.</strong> Lecture 8 (Generic Operations) assigns <code>bsearch</code> and <code>qsort</code>, the C library's versions of what you just wrote, and points you at their man pages<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. When you get there, Beej's Library Reference has <a href="https://beej.us/guide/bgclr/html/split/stdlib.html#man-bsearch">24.17 bsearch()</a> and <a href="https://beej.us/guide/bgclr/html/split/stdlib.html#man-qsort">24.18 qsort()</a> with worked examples. Not needed for this lesson. If you own K&amp;R, section 3.3 has <code>binsearch</code> in the same closed form as Weiss.</p>
+  <p>The invariant and cost claims above still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/21elementary/">2.1</a>, <a href="https://algs4.cs.princeton.edu/11model/">1.1</a>). Treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/sort-search.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If a loop over a <code>size_t</code> index ever needs to count down, or subtract one, stop and ask what happens at zero. That question is worth more than any listing on this page.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="../reference/sort-search.html">Reference: sort and search cheat sheet</a></span>
+    <span>Next: <a href="0006-halve-then-merge.html">Lesson 6, Halve, Then Merge</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0005-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"Insertion sort is about to handle index i. What is guaranteed?",opts:["a[0..i) is already sorted","a[i..n) is already sorted","a[i] is the smallest value","a[0] is the largest value"],a:0,why:"The invariant is a sorted prefix. Each pass walks a[i] left into it, extending the prefix by one."},
+    {q:"Why does swap_ints take int* rather than int?",opts:["to change the caller's two variables","to avoid copying two large values","to allow swapping two const values","to return both values at once"],a:0,why:"Parameters are copies. Only an address lets the function write into the caller's memory."},
+    {q:"Half-open [lo, hi). a[mid] is larger than target. Which update?",opts:["hi = mid","hi = mid - 1","lo = mid","lo = mid + 1"],a:0,why:"hi is exclusive, so setting it to mid drops mid and everything after it without subtracting one."},
+    {q:"hi has type size_t and holds 0. What is hi - 1?",opts:["the largest size_t value","negative one as expected","zero because it saturates","undefined behaviour in C"],a:0,why:"Unsigned arithmetic wraps modulo 2^64. It is defined, and it is what sends the closed-form search off the end of the block."},
+    {q:"search_sorted runs on an unsorted array. What happens?",opts:["the result is meaningless","it sorts and then searches","it always returns NULL","gcc refuses to compile it"],a:0,why:"Sorted input is a precondition, not something the function checks. Violating it gives a wrong answer silently."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the invariant for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

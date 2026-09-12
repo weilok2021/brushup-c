@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Recursive Sorts</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Recursive Sorts</h1>
+  <p class="subtitle">Merge sort with one owned scratch block, in-place quicksort, and the frame and <code>size_t</code> rules that keep the recursion finite. Paired with <a href="../lessons/0006-halve-then-merge.html">Lesson 6</a>.</p>
+
+  <h2>Interface</h2>
+  <p class="filename">sort.h</p>
+  <pre><code>void swap_ints(int* a, int* b);              /* lesson 5 */
+int  is_sorted(const int* a, size_t n);      /* lesson 5 */
+void merge_sort(int* a, size_t n);           /* one heap scratch block, freed inside */
+void quick_sort(int* a, size_t n);           /* in place */</code></pre>
+  <p>The recursive workers take <code>(a, lo, hi)</code> and are <code>static</code> in <code>sort.c</code>. A client sees <code>(a, n)</code> only.</p>
+
+  <h2>Where every byte lives</h2>
+  <pre><code>stack (one frame per call)                        heap
+main               a ──────────────────────────▶  [ n ints ]   owner: main
+merge_sort         a, n, scratch ──────────────▶  [ n ints ]   owner: merge_sort
+merge_sort_range   a, lo=0, hi=8, scratch         (borrows both)
+merge_sort_range   a, lo=0, hi=4, scratch         (borrows both)
+merge_sort_range   a, lo=0, hi=2, scratch         (borrows both)
+merge_sort_range   a, lo=0, hi=1, scratch         base case: returns</code></pre>
+  <div class="rule">Arguments are copies. <code>lo</code> and <code>hi</code> are private to each frame; every copy of <code>a</code> is the same address, so every frame writes into the same block. The frame that called <code>malloc</code> is the one that calls <code>free</code>.</div>
+
+  <h2>Merge sort</h2>
+  <p>Invariant after <code>merge_sort_range(a, lo, hi, scratch)</code>: <code>a[lo..hi)</code> is sorted. The merge copies into <code>scratch[lo..hi)</code>, then back into <code>a[lo..hi)</code>. Ties take the left run (stable).</p>
+  <pre><code>static void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
+    size_t i = lo, j = mid, k = lo;
+    while (i &lt; mid &amp;&amp; j &lt; hi) {
+        if (a[j] &lt; a[i]) scratch[k++] = a[j++];
+        else             scratch[k++] = a[i++];
+    }
+    while (i &lt; mid) scratch[k++] = a[i++];
+    while (j &lt; hi)  scratch[k++] = a[j++];
+    for (k = lo; k &lt; hi; k++) a[k] = scratch[k];   /* exactly [lo, hi) */
+}
+
+static void merge_sort_range(int* a, size_t lo, size_t hi, int* scratch) {
+    if (hi - lo &lt; 2) return;                       /* count, not endpoints */
+    size_t mid = lo + (hi - lo) / 2;
+    merge_sort_range(a, lo, mid, scratch);
+    merge_sort_range(a, mid, hi, scratch);
+    merge(a, lo, mid, hi, scratch);
+}
+
+void merge_sort(int* a, size_t n) {
+    if (n &lt; 2) return;
+    int* scratch = malloc(n * sizeof *scratch);    /* once */
+    if (scratch == NULL) return;                   /* a unchanged */
+    merge_sort_range(a, 0, n, scratch);
+    free(scratch);                                 /* once, by the owner */
+}</code></pre>
+  <table>
+    <tr><th>Fact</th><th>Value</th></tr>
+    <tr><td>Compares</td><td>between <code>½ n lg n</code> and <code>n lg n</code>, any input</td></tr>
+    <tr><td>Extra space</td><td><code>n</code> ints, allocated once by the wrapper</td></tr>
+    <tr><td>Stack depth</td><td>about <code>lg n</code> frames</td></tr>
+    <tr><td>Stable</td><td>yes, if ties take the left run</td></tr>
+  </table>
+
+  <h2>Quicksort</h2>
+  <p>Postcondition of <code>partition</code>: returns <code>p</code> with <code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code>. <code>a[p]</code> never moves again. Scans stop on equal keys.</p>
+  <pre><code>static size_t partition(int* a, size_t lo, size_t hi) {  /* hi - lo &gt;= 1 */
+    int pivot = a[lo];
+    size_t i = lo + 1;                       /* stops on &gt;= pivot */
+    size_t j = hi - 1;                       /* stops on &lt;= pivot */
+    for (;;) {
+        while (i &lt; hi &amp;&amp; a[i] &lt; pivot) i++;
+        while (a[j] &gt; pivot) j--;            /* a[lo] == pivot stops it at lo */
+        if (i &gt;= j) break;
+        swap_ints(&amp;a[i], &amp;a[j]);
+        i++; j--;
+    }
+    swap_ints(&amp;a[lo], &amp;a[j]);
+    return j;
+}
+
+static void quick_sort_range(int* a, size_t lo, size_t hi) {
+    if (hi - lo &lt; 2) return;
+    size_t p = partition(a, lo, hi);
+    quick_sort_range(a, lo, p);              /* p itself is excluded */
+    quick_sort_range(a, p + 1, hi);
+}
+
+void quick_sort(int* a, size_t n) { quick_sort_range(a, 0, n); }</code></pre>
+  <table>
+    <tr><th>Fact</th><th>Value</th></tr>
+    <tr><td>Compares</td><td>about <code>2n ln n</code> (1.39 <code>n lg n</code>) on average; <code>~n²/2</code> worst case (sorted input, pivot <code>a[lo]</code>)</td></tr>
+    <tr><td>Extra space</td><td>none on the heap; the stack only</td></tr>
+    <tr><td>Stack depth</td><td>about <code>lg n</code> typical, <code>n</code> worst case</td></tr>
+    <tr><td>Stable</td><td>no</td></tr>
+    <tr><td>Equal keys</td><td>both scans stop on them; skipping over them is quadratic on duplicates</td></tr>
+  </table>
+
+  <h2>Half-open recursion rules</h2>
+  <table>
+    <tr><th>Never write</th><th>Write instead</th><th>Because</th></tr>
+    <tr><td><code>if (lo == hi) return;</code></td><td><code>if (hi - lo &lt; 2) return;</code></td><td>A one-element range splits into itself. Infinite recursion, ASan <code>stack-overflow</code>.</td></tr>
+    <tr><td><code>if (hi - 1 &lt;= lo)</code></td><td><code>if (hi - lo &lt; 2)</code></td><td><code>hi</code> can be 0; <code>0 - 1</code> wraps. Test the count, which cannot wrap while <code>lo &lt;= hi</code>.</td></tr>
+    <tr><td><code>malloc</code> inside <code>merge</code></td><td>one block in the wrapper, passed down</td><td><code>n - 1</code> allocations that can each fail mid-sort; one owner is one <code>free</code>.</td></tr>
+    <tr><td>scratch in the header or a global</td><td><code>static</code> worker with a <code>scratch</code> parameter</td><td>Clients see <code>(a, n)</code>. A global scratch breaks with two callers at once.</td></tr>
+    <tr><td><code>quick_sort_range(a, lo, p + 1)</code></td><td><code>(a, lo, p)</code> and <code>(a, p + 1, hi)</code></td><td>Including the pivot in a side can hand the same range back; excluding it guarantees each call shrinks.</td></tr>
+  </table>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>heap-buffer-overflow READ, 0 bytes after the region, blamed on <code>merge</code>, allocated in <code>merge_sort</code></td><td>Copy-back or run loop uses <code>&lt;= hi</code>. Every range is half-open.</td></tr>
+    <tr><td>ASan <code>stack-overflow</code>, every frame the same function and line</td><td>A base case that does not shrink the range. Print <code>lo</code>, <code>hi</code> and find the call that repeats itself.</td></tr>
+    <tr><td>Valgrind: <code>N*4 bytes in 1 blocks are definitely lost</code>, from <code>merge_sort</code></td><td>The wrapper allocated scratch and did not free it. LSan may or may not report this at <code>-O0</code>; <code>make check</code> is the gate.</td></tr>
+    <tr><td>heap-buffer-overflow READ <em>before</em> the region in <code>partition</code></td><td>The <code>j</code> scan walked past <code>lo</code>. The pivot is no longer at <code>a[lo]</code>, so add a <code>j &gt; lo</code> guard.</td></tr>
+    <tr><td><code>sorted: no</code> after quicksort, values all present</td><td>Recursive calls include the pivot, or a scan skips equal keys and the ranges overlap.</td></tr>
+    <tr><td>Merge output right, order of equal keys changed</td><td>Tie goes to the right run. Use <code>a[j] &lt; a[i]</code>, not <code>&lt;=</code>.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://algs4.cs.princeton.edu/22mergesort/">Sedgewick &amp; Wayne, 2.2 Mergesort</a> · <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a> · <a href="https://beej.us/guide/bgc/html/split/functions.html">Beej 4.1 Passing by Value</a> · <a href="https://en.cppreference.com/w/c/memory/malloc">cppreference malloc</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">CS107 GDB Guide (stack frames)</a></p>
+</article>
+</body>
+</html>

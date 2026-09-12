@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Sort and Search</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Sort and Search</h1>
+  <p class="subtitle">Swap through pointers, insertion sort, half-open binary search, and the <code>size_t</code> rules that keep them inside the block. Paired with <a href="../lessons/0005-sort-then-halve.html">Lesson 5</a>.</p>
+
+  <h2>Swap</h2>
+  <pre><code>void swap_ints(int* a, int* b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+swap_ints(&amp;x[j], &amp;x[j - 1]);   /* pass addresses, not values */</code></pre>
+  <p>A parameter is a copy. To change the caller's variable, receive its address and write through it.</p>
+
+  <h2>Insertion sort</h2>
+  <p>Invariant: before handling index <code>i</code>, <code>a[0..i)</code> is sorted. Each pass walks <code>a[i]</code> left until its left neighbour is no larger.</p>
+  <pre><code>void insertion_sort(int* a, size_t n) {
+    for (size_t i = 1; i &lt; n; i++) {
+        for (size_t j = i; j &gt; 0 &amp;&amp; a[j] &lt; a[j - 1]; j--) {
+            swap_ints(&amp;a[j], &amp;a[j - 1]);
+        }
+    }
+}</code></pre>
+  <table>
+    <tr><th>Input</th><th>Compares</th><th>Swaps</th></tr>
+    <tr><td>Already sorted</td><td><code>n - 1</code></td><td><code>0</code></td></tr>
+    <tr><td>Random</td><td>about <code>n²/4</code></td><td>about <code>n²/4</code></td></tr>
+    <tr><td>Reverse sorted</td><td>about <code>n²/2</code></td><td>about <code>n²/2</code></td></tr>
+  </table>
+  <p>Good for small or nearly sorted arrays. Swaps equal the number of inversions, so a nearly sorted input is nearly free.</p>
+
+  <h2>Binary search, half-open</h2>
+  <p>Precondition: the array is sorted ascending. Invariant: every remaining candidate is in <code>[lo, hi)</code>.</p>
+  <pre><code>const int* search_sorted(const int* a, size_t n, int target) {
+    size_t lo = 0;
+    size_t hi = n;                      /* exclusive */
+    while (lo &lt; hi) {
+        size_t mid = lo + (hi - lo) / 2;
+        if (a[mid] == target) return &amp;a[mid];
+        if (a[mid] &lt; target) lo = mid + 1;
+        else                 hi = mid;
+    }
+    return NULL;
+}</code></pre>
+  <table>
+    <tr><th>Situation</th><th>Update</th><th>Why</th></tr>
+    <tr><td><code>a[mid] &lt; target</code></td><td><code>lo = mid + 1</code></td><td><code>mid</code> is too small; the first candidate is after it.</td></tr>
+    <tr><td><code>a[mid] &gt; target</code></td><td><code>hi = mid</code></td><td><code>hi</code> is exclusive; <code>mid</code> is dropped without a <code>- 1</code>.</td></tr>
+    <tr><td><code>lo == hi</code></td><td>stop, return <code>NULL</code></td><td>The range is empty.</td></tr>
+  </table>
+  <p>About <code>log₂ n</code> probes: 3 for 8 elements, 20 for a million. On an unsorted array the answer is wrong, not an error.</p>
+
+  <h2><code>size_t</code> index rules</h2>
+  <table>
+    <tr><th>Never write</th><th>Write instead</th><th>Because</th></tr>
+    <tr><td><code>j &gt;= 0</code> on a <code>size_t</code></td><td><code>j &gt; 0</code>, and index <code>j - 1</code> inside</td><td>Unsigned is always <code>&gt;= 0</code>. gcc warns (<code>-Wtype-limits</code>); the run reads before the block.</td></tr>
+    <tr><td><code>hi = mid - 1</code> with <code>mid == 0</code></td><td>half-open range, <code>hi = mid</code></td><td><code>0 - 1</code> wraps to the largest <code>size_t</code> and the loop runs off the end.</td></tr>
+    <tr><td><code>(lo + hi) / 2</code></td><td><code>lo + (hi - lo) / 2</code></td><td>The sum can overflow; the difference cannot.</td></tr>
+    <tr><td>a countdown <code>for (size_t i = n - 1; i &gt;= 0; i--)</code></td><td><code>for (size_t i = n; i-- &gt; 0; )</code></td><td>The loop never terminates on unsigned; the second form tests before decrementing.</td></tr>
+  </table>
+
+  <h2>Test by checking the postcondition</h2>
+  <pre><code>int is_sorted(const int* a, size_t n) {
+    for (size_t i = 1; i &lt; n; i++) {
+        if (a[i] &lt; a[i - 1]) return 0;
+    }
+    return 1;
+}
+printf("sorted: %s\n", is_sorted(a, n) ? "yes" : "no");</code></pre>
+  <p>Every exercise prints at least one line that a function computed about the result, not one you read off the screen.</p>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>gcc: comparison of unsigned expression in <code>&gt;= 0</code> is always true</td><td>A <code>size_t</code> loop bound that can never fail. Change the condition, then check the index inside.</td></tr>
+    <tr><td>heap-buffer-overflow, READ, address <em>before</em> the region</td><td>An unsigned index wrapped. Look for <code>- 1</code> applied to an index that can be zero.</td></tr>
+    <tr><td>heap-buffer-overflow, READ, 0 bytes <em>after</em> the region</td><td>Off-by-one at the top: <code>i &lt;= n</code>, or <code>hi = n</code> treated as inclusive.</td></tr>
+    <tr><td>Search returns NULL for a present value</td><td>The array is not sorted, or the update moved the wrong bound.</td></tr>
+    <tr><td>Sort output right, <code>sorted: no</code></td><td><code>is_sorted</code> compares in the wrong direction or starts at index 0.</td></tr>
+  </table>
+
+  <p class="foot">C readings: <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">Weiss, DSAA in C, sort.c (InsertionSort)</a> · <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/fig2_9.c">Weiss, fig2_9.c (BinarySearch, closed form, signed int)</a> · <a href="https://beej.us/guide/bgc/html/split/pointers.html">Beej 5.4 Passing Pointers as Arguments</a>. Invariants and costs: <a href="https://algs4.cs.princeton.edu/21elementary/">Sedgewick &amp; Wayne 2.1</a> · <a href="https://algs4.cs.princeton.edu/11model/">1.1</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">CS107 Testing Strategies</a></p>
+</article>
+</body>
+</html>

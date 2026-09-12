@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Singly Linked List</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+pre.diagram{background:#fff;border:1px solid var(--rule);line-height:1.35}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}pre.diagram{white-space:pre}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Singly Linked List</h1>
+  <p class="subtitle">Opaque <code>list_t</code>, heap nodes owned by the list, and one <code>node_t**</code> slot walk for insert and remove with no head special case. Paired with <a href="../lessons/0008-the-slot-before-the-node.html">Lesson 8</a>.</p>
+
+  <h2>Interface and private layout</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">list.h</p>
+      <pre><code>typedef struct list list_t;
+
+list_t* list_new(void);            /* NULL on failure */
+void    list_free(list_t* l);      /* frees nodes, then l */
+int     list_push_front(list_t* l, int v);
+int     list_insert_sorted(list_t* l, int v);
+int     list_remove(list_t* l, int v);   /* 1 removed, 0 absent */
+void    list_reverse(list_t* l);
+void    list_print(const list_t* l);     /* "1 3 5 7\n" */
+size_t  list_count(const list_t* l);</code></pre>
+    </div>
+    <div>
+      <p class="filename">list.c, private</p>
+      <pre><code>typedef struct node node_t;
+
+struct node {
+    int     value;   /* 4 + 4 padding */
+    node_t* next;    /* 8: a slot */
+};                   /* 16 bytes */
+
+struct list {
+    node_t* head;    /* a slot */
+    size_t  count;
+};                   /* 16 bytes */</code></pre>
+    </div>
+  </div>
+
+  <h2>Where every byte lives</h2>
+  <pre class="diagram"><code>main's frame            heap
++---------+             +------------+      +-----------+      +-----------+
+| l  o----+------------>| head  o----+----->| value  1  |   +->| value  3  |
++---------+             | count  2   |      | next   o--+---+  | next NULL |
+                        +------------+      +-----------+      +-----------+
+                          list_t              node_t             node_t</code></pre>
+  <p class="rule"><strong>Ownership.</strong> <code>main</code> owns the list through the handle <code>l</code>. The list owns every node. No node pointer ever leaves <code>list.c</code>, so nothing outside can free one.</p>
+  <p><strong>Invariants</strong> to keep on every path: <code>count</code> equals the number of nodes; the last node's <code>next</code> is <code>NULL</code>; each node is reachable from exactly one slot. Empty list: <code>head == NULL</code>, <code>count == 0</code>.</p>
+
+  <h2>The slot walk</h2>
+  <p>Every slot that holds a <code>node_t*</code> has an address of type <code>node_t**</code>. <code>&amp;l-&gt;head</code> is the slot before the first node; <code>&amp;(*link)-&gt;next</code> is the slot inside the node ahead. The same loop reaches the front, the middle and the end.</p>
+  <pre class="diagram"><code>slot              address   holds
+l-&gt;head           0x500     node 1        link starts here: &amp;l-&gt;head
+(node 1)-&gt;next    0x618     node 3        link = &amp;(*link)-&gt;next
+(node 3)-&gt;next    0x628     node 7
+(node 7)-&gt;next    0x638     NULL          the walk stops here at the latest</code></pre>
+  <div class="grid">
+    <div>
+      <p class="filename">insert in order</p>
+      <pre><code>node_t** link = &amp;l-&gt;head;
+while (*link != NULL &amp;&amp; (*link)-&gt;value &lt; v)
+    link = &amp;(*link)-&gt;next;
+node_t* n = node_new(v, *link);  /* next first */
+if (n == NULL) return 0;
+*link = n;                       /* slot second */
+l-&gt;count++;
+return 1;</code></pre>
+    </div>
+    <div>
+      <p class="filename">remove by value</p>
+      <pre><code>node_t** link = &amp;l-&gt;head;
+while (*link != NULL &amp;&amp; (*link)-&gt;value != v)
+    link = &amp;(*link)-&gt;next;
+if (*link == NULL) return 0;
+node_t* gone = *link;
+*link = gone-&gt;next;              /* skip over */
+free(gone);
+l-&gt;count--;
+return 1;</code></pre>
+    </div>
+  </div>
+  <p><code>&amp;(*link)-&gt;next</code> needs its parentheses: <code>-&gt;</code> binds tighter than <code>*</code>. Push front is the insert with an empty walk: <code>n = node_new(v, l-&gt;head); l-&gt;head = n;</code>.</p>
+
+  <h2>Reverse</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">iterative, three pointers, ship this</p>
+      <pre><code>node_t* prev = NULL;
+node_t* cur = l-&gt;head;
+while (cur != NULL) {
+    node_t* next = cur-&gt;next;  /* save */
+    cur-&gt;next = prev;          /* flip */
+    prev = cur;
+    cur = next;
+}
+l-&gt;head = prev;</code></pre>
+    </div>
+    <div>
+      <p class="filename">recursive, one frame per node</p>
+      <pre><code>static node_t* reverse_rec(node_t* head) {
+    if (head == NULL || head-&gt;next == NULL)
+        return head;
+    node_t* new_head = reverse_rec(head-&gt;next);
+    head-&gt;next-&gt;next = head;   /* old second is the tail */
+    head-&gt;next = NULL;
+    return new_head;
+}
+/* l-&gt;head = reverse_rec(l-&gt;head); */</code></pre>
+    </div>
+  </div>
+  <pre class="diagram"><code>prev   cur   next    flip
+NULL   1     3       1-&gt;next = NULL
+1      3     7       3-&gt;next = 1
+3      7     NULL    7-&gt;next = 3     head = 7    result: 7 3 1</code></pre>
+
+  <h2>Free and print</h2>
+  <div class="grid">
+    <div>
+      <pre><code>void list_free(list_t* l) {
+    if (l == NULL) return;
+    node_t* cur = l-&gt;head;
+    while (cur != NULL) {
+        node_t* next = cur-&gt;next;  /* before free */
+        free(cur);
+        cur = next;
+    }
+    free(l);
+}</code></pre>
+    </div>
+    <div>
+      <pre><code>void list_print(const list_t* l) {
+    const char* sep = "";
+    for (const node_t* cur = l-&gt;head;
+         cur != NULL; cur = cur-&gt;next) {
+        printf("%s%d", sep, cur-&gt;value);
+        sep = " ";
+    }
+    printf("\n");
+}</code></pre>
+    </div>
+  </div>
+  <p class="rule"><strong>Save the rest, then destroy.</strong> Any loop that changes or frees the thing it walks on reads <code>next</code> into a local first. Reverse and free both have this shape.</p>
+
+  <h2>Traps</h2>
+  <table>
+    <tr><th>Never write</th><th>Write instead</th><th>Because</th></tr>
+    <tr><td><code>*link = n; n-&gt;next = *link;</code></td><td><code>n-&gt;next = *link; *link = n;</code></td><td>The slot was the only path to the rest. Reversed, <code>n</code> points at itself and the next walk never ends.</td></tr>
+    <tr><td><code>if (l-&gt;head-&gt;value == v)</code> as a special path</td><td>the slot walk from <code>&amp;l-&gt;head</code></td><td>Two paths means two frees and two decrements; one gets forgotten.</td></tr>
+    <tr><td><code>for (...; cur = cur-&gt;next) free(cur);</code></td><td>save <code>next</code>, free, advance</td><td><code>next</code> lives inside the freed block.</td></tr>
+    <tr><td><code>*link-&gt;next</code></td><td><code>(*link)-&gt;next</code></td><td><code>link</code> is <code>node_t**</code>; <code>-&gt;</code> applies before <code>*</code>.</td></tr>
+    <tr><td>returning a <code>node_t*</code> from <code>list.h</code></td><td>return the value, or a <code>const int*</code> borrow</td><td>A client holding a node can free it or keep it past <code>list_free</code>.</td></tr>
+  </table>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>gcc: <code>pointer ‘cur’ used after ‘free’</code> [-Wuse-after-free]; ASan: heap-use-after-free, READ of size 8, <em>8 bytes inside</em> a 16-byte region</td><td><code>cur-&gt;next</code> read after <code>free(cur)</code>. The offset is the <code>next</code> member.</td></tr>
+    <tr><td>Valgrind: definitely lost, 16 bytes, allocated in <code>node_new</code> via insert or push</td><td>A remove path dropped a node without <code>free</code>. The trace names the birth, not the drop.</td></tr>
+    <tr><td>Valgrind: definitely lost <em>and</em> indirectly lost</td><td>A slot was overwritten before its old value was saved; a whole chain fell off.</td></tr>
+    <tr><td><code>count</code> one too high after a remove</td><td>A path that unlinks without <code>count--</code>.</td></tr>
+    <tr><td>Prints the first line, then hangs</td><td>A node points at itself: <code>*link = n</code> ran before <code>n-&gt;next = *link</code>.</td></tr>
+    <tr><td>Sorted line missing its tail</td><td>Insert wrote the slot with a node whose <code>next</code> is <code>NULL</code>.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://algs4.cs.princeton.edu/13stacks/">Sedgewick &amp; Wayne, 1.3 Bags, Queues, and Stacks (linked lists)</a> · <a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html">Beej 23.1 Pointers to Pointers</a> · <a href="https://beej.us/guide/bgc/html/split/pointers.html">Beej 5.4 Passing Pointers as Arguments</a> · <a href="https://en.cppreference.com/w/c/memory/free">cppreference: free</a></p>
+</article>
+</body>
+</html>
