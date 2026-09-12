@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · String Slots</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · C fundamentals for CS107</p>
+  <h1>String Slots</h1>
+  <p class="subtitle">C-string operations, arrays of owned strings, and what each level of <code>char**</code> reaches. Paired with <a href="../lessons/0004-pointer-to-slot.html">Lesson 4</a>.</p>
+
+  <h2>One string</h2>
+  <pre><code>char* p
+  |
+  v
++-----+-----+-----+-----+------+
+| 'p' | 'e' | 'a' | 'r' | '\0' |
++-----+-----+-----+-----+------+</code></pre>
+  <table>
+    <tr><th>Operation</th><th>Meaning</th></tr>
+    <tr><td><code>strlen(p)</code></td><td>Characters before <code>'\0'</code>; result is <code>size_t</code>.</td></tr>
+    <tr><td><code>strcmp(a, b) == 0</code></td><td>Equal string contents.</td></tr>
+    <tr><td><code>strcmp(a, b) &lt; 0</code></td><td><code>a</code> sorts before <code>b</code>.</td></tr>
+    <tr><td><code>strcmp(a, b) &gt; 0</code></td><td><code>a</code> sorts after <code>b</code>.</td></tr>
+    <tr><td><code>strdup(p)</code></td><td>New owned heap copy, or <code>NULL</code>. Declared by <code>&lt;string.h&gt;</code> under this project's <code>gnu11</code> mode.</td></tr>
+  </table>
+  <div class="rule">Pointer equality (<code>a == b</code>) compares addresses. <code>strcmp</code> compares string contents, and zero means equal.</div>
+
+  <h2>Literal, alias, and copy</h2>
+  <table>
+    <tr><th>Code</th><th>Ownership</th></tr>
+    <tr><td><code>const char* s = "pear";</code></td><td>Literal has static lifetime. Do not modify or free it.</td></tr>
+    <tr><td><code>const char* alias = s;</code></td><td>Copies one address. No new string and no new ownership.</td></tr>
+    <tr><td><code>char* copy = strdup(s);</code></td><td>Creates a separate heap string. Check it, then eventually <code>free(copy)</code>.</td></tr>
+  </table>
+
+  <h2>Two pointer levels</h2>
+  <pre><code>char** words             char* slot values            chars
+     |                         |                         |
+     v                         v                         v
++---------+---------+      +--------+                +--------+
+| [0] ----+---------+-----&gt;| address+---------------&gt;| pear\0  |
++---------+---------+      +--------+                +--------+</code></pre>
+  <table>
+    <tr><th>Expression</th><th>Type</th><th>Reaches</th></tr>
+    <tr><td><code>words</code></td><td><code>char**</code></td><td>First pointer slot.</td></tr>
+    <tr><td><code>words + i</code></td><td><code>char**</code></td><td>Pointer slot <code>i</code>.</td></tr>
+    <tr><td><code>&amp;words[i]</code></td><td><code>char**</code></td><td>Same pointer slot <code>i</code>.</td></tr>
+    <tr><td><code>*words</code></td><td><code>char*</code></td><td>String pointer in the first slot.</td></tr>
+    <tr><td><code>words[i]</code></td><td><code>char*</code></td><td>String pointer in slot <code>i</code>.</td></tr>
+    <tr><td><code>*words[i]</code></td><td><code>char</code></td><td>First character of string <code>i</code>.</td></tr>
+    <tr><td><code>words[i][j]</code></td><td><code>char</code></td><td>Character <code>j</code> of string <code>i</code>.</td></tr>
+  </table>
+
+  <h2>Why pass <code>char**</code>?</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">receives a copy; caller's slot unchanged</p>
+      <pre><code>void wrong(char* current) {
+    current = strdup("new");
+}</code></pre>
+    </div>
+    <div>
+      <p class="filename">receives slot address; caller's slot changes</p>
+      <pre><code>int replace(char** slot) {
+    char* copy = strdup("new");
+    if (copy == NULL) return 0;
+    free(*slot);
+    *slot = copy;
+    return 1;
+}</code></pre>
+    </div>
+  </div>
+  <p>Use a pointer-to-pointer when a function must change a pointer variable owned by its caller. For an array element, pass <code>&amp;words[i]</code>.</p>
+
+  <h2>Replace without losing the old value</h2>
+  <pre><code>char* copy = strdup(replacement);  /* allocate first */
+if (copy == NULL) {
+    return 0;                      /* old *slot survives */
+}
+free(*slot);                       /* then end old value */
+*slot = copy;                      /* transfer new ownership */
+return 1;</code></pre>
+  <div class="rule">Allocate first, free second, assign third. Failure then leaves the caller's slot unchanged.</div>
+
+  <h2>Build and destroy an array of owned strings</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">partial construction</p>
+      <pre><code>char** words = calloc(n, sizeof *words);
+if (words == NULL) return 1;
+
+for (size_t i = 0; i &lt; n; i++) {
+    words[i] = strdup(source[i]);
+    if (words[i] == NULL) {
+        words_free(words, i);
+        return 1;
+    }
+}</code></pre>
+    </div>
+    <div>
+      <p class="filename">reverse-order cleanup by level</p>
+      <pre><code>void words_free(char** words, size_t n) {
+    for (size_t i = 0; i &lt; n; i++) {
+        free(words[i]);
+    }
+    free(words);
+}</code></pre>
+    </div>
+  </div>
+  <p>At failure index <code>i</code>, exactly <code>i</code> strings were successfully created. Free those inner blocks, then the outer array.</p>
+
+  <h2>Useful parameter forms</h2>
+  <table>
+    <tr><th>Declaration</th><th>What the function can change through it</th></tr>
+    <tr><td><code>char** slot</code></td><td>The slot's <code>char*</code> and its characters.</td></tr>
+    <tr><td><code>char** words</code> (read-only by contract)</td><td>Anything; the function promises in its comment not to reassign slots. Stricter <code>char* const*</code> deferred to a later lesson.</td></tr>
+    <tr><td><code>const char* s</code></td><td>Neither characters through <code>s</code>; <code>s</code> itself may move.</td></tr>
+  </table>
+  <p>Do not force every possible <code>const</code> combination into one declaration. Use the minimum form that states the function's actual promise.</p>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>Wrong word matched, no checker error</td><td>Used <code>if (strcmp(a, b))</code>; nonzero means different. Add <code>== 0</code>.</td></tr>
+    <tr><td>Bad free, address inside outer pointer array</td><td>Freed <code>slot</code> instead of the separately allocated <code>*slot</code>.</td></tr>
+    <tr><td>One inner block definitely lost</td><td>Overwrote a slot before freeing its old owned string.</td></tr>
+    <tr><td>Outer block definitely lost</td><td>Freed every string but forgot <code>free(words)</code>.</td></tr>
+    <tr><td>Use-after-free through saved result</td><td>Used a borrowed string after <code>words_free</code>.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://beej.us/guide/bgc/html/split/strings.html">Beej ch. 7 Strings</a> · <a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html">Beej ch. 23 Pointers III</a> · <a href="https://en.cppreference.com/c/string/byte/strlen.html">cppreference strlen</a> · <a href="https://en.cppreference.com/c/string/byte/strcmp.html">strcmp</a> · <a href="https://man7.org/linux/man-pages/man3/strdup.3.html">Linux man-pages strdup</a></p>
+</article>
+</body>
+</html>

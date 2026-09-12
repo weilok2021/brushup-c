@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 · A Pointer to the Slot</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 4 · C fundamentals for CS107</p>
+  <h1>A Pointer to the Slot</h1>
+  <p class="subtitle">An array owns pointers, each pointer owns a string, and a <code>char**</code> lets a function replace one pointer in the caller's array.</p>
+  <div class="meta">
+    <span>About 30 minutes</span>
+    <span>Where: WSL, <code>exercises/04-word-slots/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/string-slots.html">Cheat sheet</a> · <a href="0003-one-owner-one-free.html">Lesson 3</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Build and free a two-level heap shape, find a string with <code>strcmp</code>, return the address of its slot, replace its owned string through <code>char**</code>, and keep every ownership obligation balanced on failure.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c words.c
+
+word-slots: $(SRC) words.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o word-slots $(SRC)
+
+word-slots-plain: $(SRC) words.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o word-slots-plain $(SRC)
+
+.PHONY: check clean
+check: word-slots-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./word-slots-plain
+clean:
+<span class="tab">⇥</span>rm -f word-slots word-slots-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>A C string is an address plus a stopping rule</h2>
+  <p>The literal <code>"pear"</code> stores five bytes:</p>
+  <pre><code>address:   +0    +1    +2    +3    +4
+byte:      'p'   'e'   'a'   'r'   '\0'
+                                      ^ zero byte marks the end</code></pre>
+  <p>A <code>char*</code> points at the first byte. C does not store the length beside that pointer. String functions walk bytes until the zero byte called the <em>null terminator</em>. Beej describes the rule as “a zero-valued byte … after the pointer that indicates the end of the string”<a href="https://beej.us/guide/bgc/html/split/strings.html#string-termination">*</a>.</p>
+  <table>
+    <tr><th>Expression</th><th>Result</th></tr>
+    <tr><td><code>strlen("pear")</code></td><td><code>4</code>. The terminator is not counted. Result type is <code>size_t</code>.</td></tr>
+    <tr><td><code>strcmp(a, b) == 0</code></td><td>The two strings contain equal bytes.</td></tr>
+    <tr><td><code>strcmp(a, b) &lt; 0</code></td><td><code>a</code> comes before <code>b</code> lexicographically.</td></tr>
+    <tr><td><code>strdup(s)</code></td><td>A new heap copy, or <code>NULL</code>. The caller owns and frees it.</td></tr>
+  </table>
+  <p><strong><code>strcmp</code> is not a boolean equality function.</strong> Zero means equal. Writing <code>if (strcmp(a, b))</code> enters the branch when the strings differ.</p>
+  <p><strong>A pointer assignment does not copy a string.</strong></p>
+  <pre><code>const char* source = "pear";
+const char* alias = source;       /* two pointers, one string */
+char* copy = strdup(source);      /* second string on the heap */</code></pre>
+  <p>Do not modify or free a string literal. A successful <code>strdup</code> result is a normal owned heap block and must be freed<a href="https://man7.org/linux/man-pages/man3/strdup.3.html">*</a>. This project uses <code>-std=gnu11</code>, so <code>&lt;string.h&gt;</code> declares <code>strdup</code>.</p>
+</section>
+
+<section>
+  <h2>An array of pointers creates two ownership levels</h2>
+  <p>After duplicating three strings, memory has this shape:</p>
+  <pre><code>main stack             heap: pointer array          heap: strings
++-----------+          +------------------+         +----------------+
+| words ----+---------&gt;| [0] -------------+--------&gt;| "pear\0"       |
++-----------+          | [1] -------------+---+     +----------------+
+                       | [2] ----------+   |   +----&gt;| "fig\0"        |
+                       +---------------|---+         +----------------+
+                                       +------------&gt;| "banana\0"     |
+                                                    +----------------+</code></pre>
+  <p><code>words</code> has type <code>char**</code>: it points to the first <code>char*</code> slot. The outer heap block owns three pointer slots. Each slot owns a separate string block. Cleanup reverses construction:</p>
+  <pre><code>for (size_t i = 0; i &lt; n; i++) {
+    free(words[i]);       /* free each inner string */
+}
+free(words);              /* then free the outer pointer array */</code></pre>
+  <p>Freeing only <code>words</code> leaks every string. Freeing only the strings leaks the pointer array. This two-level shape is the minimum needed later for hashmap buckets and graph adjacency lists.</p>
+</section>
+
+<section>
+  <h2><code>char**</code> means “address of a pointer slot”</h2>
+  <p>Suppose <code>words[1]</code> contains the pointer to <code>"fig"</code>. These expressions move through the two levels:</p>
+  <table>
+    <tr><th>Expression</th><th>Type</th><th>Meaning</th></tr>
+    <tr><td><code>words</code></td><td><code>char**</code></td><td>Address of the first slot.</td></tr>
+    <tr><td><code>words + 1</code></td><td><code>char**</code></td><td>Address of slot 1.</td></tr>
+    <tr><td><code>&amp;words[1]</code></td><td><code>char**</code></td><td>The same address of slot 1.</td></tr>
+    <tr><td><code>words[1]</code></td><td><code>char*</code></td><td>Pointer stored in slot 1: address of <code>"fig"</code>.</td></tr>
+    <tr><td><code>*words[1]</code></td><td><code>char</code></td><td>The first character, <code>'f'</code>.</td></tr>
+  </table>
+  <pre><code>char** slot                    char* in caller's slot       characters
++-----------+                  +------------------+         +---------+
+|     ------+-----------------&gt;| words[1] --------+--------&gt;| fig\0    |
++-----------+                  +------------------+         +---------+
+       slot points to the caller's pointer, not directly to the chars</code></pre>
+  <p>A function that receives only <code>char* current</code> receives a copy of the string address. Assigning <code>current = copy</code> changes only that local copy. A function that receives <code>char** slot</code> can assign <code>*slot = copy</code>, which changes the pointer stored in the caller's array. Beej reaches the same rule through <code>&amp;p</code>: the address of a pointer has pointer-to-pointer type<a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html">*</a>.</p>
+  <p>Replacement must preserve the old owner if duplication fails:</p>
+  <pre><code>char* copy = strdup(replacement);
+if (copy == NULL) {
+    return 0;              /* *slot still owns the old string */
+}
+free(*slot);               /* end old string's lifetime */
+*slot = copy;              /* caller's slot now owns the copy */
+return 1;</code></pre>
+  <p>The order matters. Freeing <code>*slot</code> before <code>strdup</code> would destroy the old value even when allocation fails.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">words.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* Find target among the n strings at words.
+   Returns the address of the matching pointer slot, or NULL if absent. */
+char** words_find(char** words, size_t n, const char* target);
+
+/* Replace the owned string at *slot with a heap copy of replacement.
+   Returns 1 on success. On failure, returns 0 and leaves *slot unchanged. */
+int word_replace(char** slot, const char* replacement);
+
+/* Return the longest of n strings. n must be at least 1.
+   Returns a borrowed pointer owned by the array. */
+const char* words_longest(char** words, size_t n);
+
+/* Free n owned strings, then free their pointer array. Consumes ownership. */
+void words_free(char** words, size_t n);</code></pre>
+  <p><code>words_longest</code> only reads the array, so its parameter is plain <code>char**</code>. The <code>const char*</code> on its return is the part that matters: it says the pointer is borrowed, owned by the array, and must not be freed by the caller. C has a stricter form, <code>char* const*</code>, that also stops the function from reassigning a slot. It is deferred to a later lesson; the <code>const char*</code> forms you already use are enough here.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd /mnt/c/Users/weilok.chia/Desktop/personal/brushup-c
+mkdir -p exercises/04-word-slots &amp;&amp; cd exercises/04-word-slots</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>words.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>words.c</code>. Include <code>words.h</code> first, then <code>&lt;stdlib.h&gt;</code> and <code>&lt;string.h&gt;</code>.</p>
+      <ul>
+        <li><code>words_find</code> walks the pointer array. It returns <code>&amp;words[i]</code> when <code>strcmp</code> reports equality and <code>NULL</code> after the loop.</li>
+        <li><code>word_replace</code> uses the allocate-first replacement sequence above.</li>
+        <li><code>words_longest</code> keeps a pointer to the first string, then compares lengths with <code>strlen</code>.</li>
+        <li><code>words_free</code> frees each string, then the array.</li>
+      </ul>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Allocate a zeroed array of three <code>char*</code> slots. Check it. Duplicate <code>"pear"</code>, <code>"fig"</code>, and <code>"banana"</code> into those slots, checking each result. If duplication at index <code>i</code> fails, call <code>words_free(words, i)</code> and return 1.</p>
+      <p>Print:</p>
+      <pre><code>before: pear fig banana</code></pre>
+      <p>Find the slot containing <code>"fig"</code>. Check that it was found, then replace it with <code>"watermelon"</code>. On any failure, free all three words and return 1. Print:</p>
+      <pre><code>after: pear watermelon banana
+longest: watermelon (10)</code></pre>
+      <p>Use <code>words_longest</code> for the final pointer and <code>strlen</code> for the printed length. Finish with one <code>words_free(words, 3)</code> and return 0.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./word-slots</code>, and <code>make check</code>. Require no warnings, the exact three lines, and no Valgrind errors or leaks.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong></p>
+      <ol>
+        <li>In <code>words_find</code>, remove <code>== 0</code> from the <code>strcmp</code> condition. It builds and runs, but replaces <code>"pear"</code> instead of <code>"fig"</code>. Restore the equality test.</li>
+        <li>In <code>word_replace</code>, change <code>free(*slot)</code> to <code>free(slot)</code>. Run under the sanitizer. Read why it says the address is inside the outer pointer array rather than at the start of a string block. Restore the dereference.</li>
+        <li>After <code>words_free</code> in <code>main</code>, print the saved <code>longest</code> pointer. Read the heap-use-after-free timeline. Remove the print.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 4 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the pointer-level failure</h2>
+  <p>The planted <code>free(slot)</code> bug passes the address of a pointer slot, not the pointer stored there. For slot 1, AddressSanitizer reports a bad free at an address eight bytes inside the 24-byte outer block:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>attempting free on address which was not malloc()-ed</strong>
+    #0 ... in free
+    #1 ... in <strong>word_replace words.c:...</strong>
+...
+address is located <strong>8 bytes inside of 24-byte region</strong>
+allocated by ... calloc ... main.c:...</code></pre>
+  <p>Three slots × eight-byte pointers explain 24 bytes. Slot 1 begins eight bytes into that array. The report therefore tells you that one dereference is missing: <code>slot</code> addresses the slot; <code>*slot</code> is the separately allocated string pointer that may be freed.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p><strong>Primary sources:</strong> Beej's <a href="https://beej.us/guide/bgc/html/split/strings.html">chapter 7, Strings</a> (through string termination) and <a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html">chapter 23, Pointers III</a> (pointer-to-pointer section). Keep the <a href="../reference/string-slots.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> When a type has two stars, draw the two arrows. Name the object each arrow reaches before changing or freeing anything.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="../reference/string-slots.html">Reference: string slots cheat sheet</a></span>
+    <span>Next: Lesson 5, insertion sort and binary search (issued after this one is checked)</span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0004-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"words has type char**. What is the type of &words[1]?",opts:["char**","char*","char","char***"],a:0,why:"words[1] is a char* slot. Taking that slot's address adds one pointer level, producing char**."},
+    {q:"Which condition means that strings a and b are equal?",opts:["strcmp(a, b) == 0","strcmp(a, b) == 1","strcmp(a, b)","a == b"],a:0,why:"strcmp returns zero for equal contents. a == b compares addresses, not string bytes."},
+    {q:"word_replace has char** slot. Which expression is the owned string pointer?",opts:["*slot","slot","**slot","&slot"],a:0,why:"slot points to the caller's pointer slot. One dereference reads the char* stored there; two dereferences reach its first character."},
+    {q:"strdup(source) succeeds. Who frees its result?",opts:["the caller that receives ownership","strdup before returning","the string literal owner","nobody; it has static lifetime"],a:0,why:"strdup allocates a new heap copy. The caller owns that copy and must eventually free it."},
+    {q:"Why duplicate the replacement before freeing *slot?",opts:["allocation failure leaves the old owned string intact","free requires two live strings","strcmp only accepts duplicated strings","the new string must reuse the old address"],a:0,why:"strdup can return NULL. Allocate first so failure preserves the old value and its ownership; free the old string only after the replacement exists."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Draw the two arrows for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>
