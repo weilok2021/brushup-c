@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 8 · Halve, Then Merge</title>
+<title>Lesson 8 · Merge sort and quicksort · Halve, Then Merge</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 8 · DSA in C</p>
+  <p class="kicker">Lesson 8 · Merge sort and quicksort · DSA in C</p>
   <h1>Halve, Then Merge</h1>
   <p class="subtitle">Merge sort and quicksort split a range and call themselves on each half. Each call gets its own stack frame; the array and one scratch block stay on the heap, owned by exactly one function.</p>
   <div class="meta">
     <span>About 45 minutes</span>
     <span>Where: WSL, <code>exercises/08-recursive-sorts/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursive-sorts.html">Cheat sheet</a> · <a href="0007-scan-stop-swap.html">Lesson 7</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursive-sorts.html">Cheat sheet</a> · <a href="0007-partition-and-merge.html">Lesson 7</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Write both recursive sorts from a blank file: lesson 7's <code>partition</code> and <code>merge</code> under lesson 6's halving recursion, with the scratch block now owned by a wrapper, and base cases that cannot loop forever on <code>size_t</code>.</div>
 </header>
@@ -369,8 +369,8 @@ SUMMARY: AddressSanitizer: stack-overflow sort.c:50 in merge_sort_range</code></
 
 <footer>
   <div class="next">
-    <span><a href="0007-scan-stop-swap.html">Previous: Lesson 7, Scan, Stop, Swap</a> · <a href="../reference/recursive-sorts.html">Reference: recursive sorts cheat sheet</a></span>
-    <span><a href="0009-grow-on-push.html">Next: Lesson 9, a stack that grows on push</a></span>
+    <span><a href="0007-partition-and-merge.html">Previous: Lesson 7, Scan, Stop, Swap</a> · <a href="../reference/recursive-sorts.html">Reference: recursive sorts cheat sheet</a></span>
+    <span><a href="0009-dynamic-array-stack.html">Next: Lesson 9, a stack that grows on push</a></span>
   </div>
 </footer>
 </article>

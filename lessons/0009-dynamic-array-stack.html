@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 9 · Grow on Push</title>
+<title>Lesson 9 · Dynamic-array stack · Grow on Push</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 9 · DSA in C</p>
+  <p class="kicker">Lesson 9 · Dynamic-array stack · DSA in C</p>
   <h1>Grow on Push</h1>
   <p class="subtitle">A stack of ints in a heap block that doubles when it fills. The client holds one pointer and never sees inside. This is the first abstract data type of the course, and lessons 10, 11 and 12 copy its shape.</p>
   <div class="meta">
     <span>About 40 minutes</span>
     <span>Where: WSL, <code>exercises/09-stack/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/stack-adt.html">Cheat sheet</a> · <a href="0008-halve-then-merge.html">Lesson 8</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/stack-adt.html">Cheat sheet</a> · <a href="0008-merge-sort-and-quicksort.html">Lesson 8</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship a stack as a module: a header that hides the struct, a <code>.c</code> that owns two heap blocks, a push that grows through a temporary pointer and survives allocation failure, and a test program that proves the LIFO order and the empty case.</div>
 </header>
@@ -356,8 +356,8 @@ main.c:22:29: <strong>error: invalid use of incomplete typedef ‘stack_t’</st
 
 <footer>
   <div class="next">
-    <span><a href="0008-halve-then-merge.html">Previous: Lesson 8, merge sort and quicksort</a> · <a href="../reference/stack-adt.html">Reference: stack ADT cheat sheet</a></span>
-    <span><a href="0010-the-slot-before-the-node.html">Next: Lesson 10, the singly linked list</a></span>
+    <span><a href="0008-merge-sort-and-quicksort.html">Previous: Lesson 8, merge sort and quicksort</a> · <a href="../reference/stack-adt.html">Reference: stack ADT cheat sheet</a></span>
+    <span><a href="0010-singly-linked-list.html">Next: Lesson 10, the singly linked list</a></span>
   </div>
 </footer>
 </article>

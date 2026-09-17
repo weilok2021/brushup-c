@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 3 · One Owner, One Free</title>
+<title>Lesson 3 · Heap ownership · One Owner, One Free</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ td:first-child code{white-space:nowrap}
 <article>
 
 <header>
-  <p class="kicker">Lesson 3 · C fundamentals for CS107</p>
+  <p class="kicker">Lesson 3 · Heap ownership · C fundamentals for CS107</p>
   <h1>One Owner, One Free</h1>
   <p class="subtitle">A local pointer on the stack, a resizable block on the heap, and one rule that prevents leaks, use-after-free, and double-free.</p>
   <div class="meta">
     <span>About 25 minutes</span>
     <span>Where: WSL, <code>exercises/03-owned-ints/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/heap-ownership.html">Cheat sheet</a> · <a href="0002-structs-by-pointer.html">Lesson 2</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/heap-ownership.html">Cheat sheet</a> · <a href="0002-structs-and-pointers.html">Lesson 2</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Allocate zeroed integers, grow the block without losing it when <code>realloc</code> fails, name the one pointer responsible for freeing it, and read three lifecycle failures from their reports: use-after-free, double-free, and leak.</div>
 </header>
@@ -269,7 +269,7 @@ freed by thread T0 here:
 <footer>
   <div class="next">
     <span><a href="../reference/heap-ownership.html">Reference: heap ownership cheat sheet</a></span>
-    <span>Next: <a href="0004-pointer-to-slot.html">Lesson 4, A Pointer to the Slot</a></span>
+    <span>Next: <a href="0004-strings-and-pointer-to-pointer.html">Lesson 4, A Pointer to the Slot</a></span>
   </div>
 </footer>
 

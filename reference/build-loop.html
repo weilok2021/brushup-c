@@ -36,7 +36,7 @@ td:first-child code{white-space:nowrap}
 <article>
   <p class="kicker">Reference · C fundamentals for CS107</p>
   <h1>The Build Loop</h1>
-  <p class="subtitle">Compile flags, the header split, a minimal Makefile, and how to read what the tools say back. Lookup only, nothing here is to be memorised. Paired with <a href="../lessons/0001-two-files-two-bugs.html">Lesson 1</a>.</p>
+  <p class="subtitle">Compile flags, the header split, a minimal Makefile, and how to read what the tools say back. Lookup only, nothing here is to be memorised. Paired with <a href="../lessons/0001-header-split-and-sanitizers.html">Lesson 1</a>.</p>
 
   <h2>The loop</h2>
   <p>Edit → <code>make</code> → <code>./prog</code> → <code>make check</code> → read the report → fix. A warning is a failed build. A sanitizer or valgrind report is a failed run, even if the output looked right. Two checkers because they cover different bugs: the sanitizer catches out-of-bounds and use-after-free the instant they happen; valgrind catches leaks at exit.</p>

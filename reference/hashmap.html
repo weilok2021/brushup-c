@@ -36,7 +36,7 @@ td:first-child code{white-space:nowrap}
 <article>
   <p class="kicker">Reference · DSA in C for CS107</p>
   <h1>Hashmap</h1>
-  <p class="subtitle">String keys, int values. Opaque <code>hashmap_t</code>, djb2 over the key, one chain per bucket, a map that owns a copy of every key, a load-factor rule that doubles the bucket array, and a resize that moves nodes without copying anything. Paired with <a href="../lessons/0013-hash-then-chain.html">Lesson 13</a>.</p>
+  <p class="subtitle">String keys, int values. Opaque <code>hashmap_t</code>, djb2 over the key, one chain per bucket, a map that owns a copy of every key, a load-factor rule that doubles the bucket array, and a resize that moves nodes without copying anything. Paired with <a href="../lessons/0013-hashmap-with-chaining.html">Lesson 13</a>.</p>
 
   <div class="rule"><strong>Invariants.</strong> Every key is in exactly one node. That node is in the chain of bucket <code>hash(key) % capacity</code>. Every node owns its key copy and the node after it. <code>count</code> equals the number of nodes. Every function relies on these or restores them before returning.</div>
 

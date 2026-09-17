@@ -36,7 +36,7 @@ td:first-child code{white-space:nowrap}
 <article>
   <p class="kicker">Reference · DSA in C for CS107 · Optional</p>
   <h1>Trie</h1>
-  <p class="subtitle">Opaque <code>trie_t</code>, one heap node per letter of every path, 26 child slots per node indexed by <code>c - 'a'</code>, insert through the slot, one finder for two questions, post-order free with a loop. Paired with <a href="../lessons/0015-twenty-six-slots.html">Lesson 15</a> (optional; the required sequence ended with lesson 14).</p>
+  <p class="subtitle">Opaque <code>trie_t</code>, one heap node per letter of every path, 26 child slots per node indexed by <code>c - 'a'</code>, insert through the slot, one finder for two questions, post-order free with a loop. Paired with <a href="../lessons/0015-trie.html">Lesson 15</a> (optional; the required sequence ended with lesson 14).</p>
 
   <div class="rule"><strong>Invariant.</strong> Slot <code>i</code> of a node leads to the node for letter <code>'a' + i</code>, or holds <code>NULL</code>. A word is a path from the root, and <code>is_end</code> on the last node says the path is a whole word. <code>count</code> equals the number of nodes with <code>is_end</code> set. Every node is one <code>calloc</code>, so a fresh node has 26 <code>NULL</code> slots and <code>is_end</code> 0.</div>
 

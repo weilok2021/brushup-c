@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 13 · Hash, Then Chain</title>
+<title>Lesson 13 · Hashmap with chaining · Hash, Then Chain</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -74,13 +74,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 13 · DSA in C</p>
+  <p class="kicker">Lesson 13 · Hashmap with chaining · DSA in C</p>
   <h1>Hash, Then Chain</h1>
   <p class="subtitle">A hashmap is an array of lesson 10's lists. A string picks the list; <code>strcmp</code> picks the node. When the lists get long, a bigger array is allocated and every node is moved into it without copying a single key.</p>
   <div class="meta">
     <span>About 45 minutes</span>
     <span>Where: WSL, <code>exercises/13-hashmap/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/hashmap.html">Cheat sheet</a> · <a href="0012-smaller-left-larger-right.html">Lesson 12</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/hashmap.html">Cheat sheet</a> · <a href="0012-binary-search-tree.html">Lesson 12</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship <code>hashmap_t</code>, a string-keyed map of ints, as an opaque ADT: djb2 over the key, one chain per bucket, a map that owns a copy of every key, a resize that relinks nodes instead of copying them, and a test program in which you watch the bucket array double from 4 to 8.</div>
 </header>
@@ -515,8 +515,8 @@ SUMMARY: AddressSanitizer: bad-free</code></pre>
 
 <footer>
   <div class="next">
-    <span><a href="0012-smaller-left-larger-right.html">Previous: Lesson 12, Smaller Left, Larger Right</a> · <a href="../reference/hashmap.html">Reference: hashmap cheat sheet</a></span>
-    <span><a href="0014-mark-then-visit.html">Next: Lesson 14, Mark, Then Visit</a></span>
+    <span><a href="0012-binary-search-tree.html">Previous: Lesson 12, Smaller Left, Larger Right</a> · <a href="../reference/hashmap.html">Reference: hashmap cheat sheet</a></span>
+    <span><a href="0014-graph-bfs-and-dfs.html">Next: Lesson 14, Mark, Then Visit</a></span>
   </div>
 </footer>
 </article>

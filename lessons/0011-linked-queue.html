@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 11 · Head and Tail</title>
+<title>Lesson 11 · Linked queue · Head and Tail</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 11 · DSA in C</p>
+  <p class="kicker">Lesson 11 · Linked queue · DSA in C</p>
   <h1>Head and Tail</h1>
   <p class="subtitle">A queue is lesson 10's list with a second pointer at the far end. Two pointers, two invariants, and one dangling-pointer trap when the last node leaves.</p>
   <div class="meta">
     <span>About 40 minutes</span>
     <span>Where: WSL, <code>exercises/11-queue/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/queue-adt.html">Cheat sheet</a> · <a href="0010-the-slot-before-the-node.html">Lesson 10</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/queue-adt.html">Cheat sheet</a> · <a href="0010-singly-linked-list.html">Lesson 10</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship a linked queue as an opaque ADT with worst-case constant-time enqueue and dequeue, and see for yourself what AddressSanitizer says when a tail pointer outlives its node. Lesson 14 will use this exact module for breadth-first search, so its interface is general and stays fixed.</div>
 </header>
@@ -352,8 +352,8 @@ SUMMARY: AddressSanitizer: <strong>80 byte(s) leaked in 5 allocation(s)</strong>
 
 <footer>
   <div class="next">
-    <span><a href="0010-the-slot-before-the-node.html">Previous: Lesson 10, the slot before the node</a> · <a href="../reference/queue-adt.html">Reference: queue ADT cheat sheet</a></span>
-    <span><a href="0012-smaller-left-larger-right.html">Next: Lesson 12, binary search tree</a></span>
+    <span><a href="0010-singly-linked-list.html">Previous: Lesson 10, the slot before the node</a> · <a href="../reference/queue-adt.html">Reference: queue ADT cheat sheet</a></span>
+    <span><a href="0012-binary-search-tree.html">Next: Lesson 12, binary search tree</a></span>
   </div>
 </footer>
 </article>

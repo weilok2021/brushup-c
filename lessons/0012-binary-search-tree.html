@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 12 · Smaller Left, Larger Right</title>
+<title>Lesson 12 · Binary search tree · Smaller Left, Larger Right</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 12 · DSA in C</p>
+  <p class="kicker">Lesson 12 · Binary search tree · DSA in C</p>
   <h1>Smaller Left, Larger Right</h1>
   <p class="subtitle">A binary search tree is a linked list that forks. Every function on it is a short recursive helper that holds one node pointer per stack frame, and the tree's height is the depth of your C stack.</p>
   <div class="meta">
     <span>About 45 minutes</span>
     <span>Where: WSL, <code>exercises/12-bst/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/bst.html">Cheat sheet</a> · <a href="0011-head-and-tail.html">Lesson 11</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/bst.html">Cheat sheet</a> · <a href="0011-linked-queue.html">Lesson 11</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship <code>bst_t</code> as an opaque ADT with eight public functions, every one a thin wrapper over a private recursive helper. Insert through a slot, free in post-order, and read an AddressSanitizer use-after-free timeline that shows the recursion itself.</div>
 </header>
@@ -361,8 +361,8 @@ height: -1
 
 <footer>
   <div class="next">
-    <span><a href="0011-head-and-tail.html">Previous: Lesson 11, Head and Tail</a> · <a href="../reference/bst.html">Reference: BST cheat sheet</a></span>
-    <span><a href="0013-hash-then-chain.html">Next: Lesson 13, Hash, Then Chain</a></span>
+    <span><a href="0011-linked-queue.html">Previous: Lesson 11, Head and Tail</a> · <a href="../reference/bst.html">Reference: BST cheat sheet</a></span>
+    <span><a href="0013-hashmap-with-chaining.html">Next: Lesson 13, Hash, Then Chain</a></span>
   </div>
 </footer>
 </article>

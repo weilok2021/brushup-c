@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 4 · A Pointer to the Slot</title>
+<title>Lesson 4 · Strings and pointer to pointer · A Pointer to the Slot</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -72,13 +72,13 @@ td:first-child code{white-space:nowrap}
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 4 · C fundamentals for CS107</p>
+  <p class="kicker">Lesson 4 · Strings and pointer to pointer · C fundamentals for CS107</p>
   <h1>A Pointer to the Slot</h1>
   <p class="subtitle">An array owns pointers, each pointer owns a string, and a <code>char**</code> lets a function replace one pointer in the caller's array.</p>
   <div class="meta">
     <span>About 30 minutes</span>
     <span>Where: WSL, <code>exercises/04-word-slots/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/string-slots.html">Cheat sheet</a> · <a href="0003-one-owner-one-free.html">Lesson 3</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/string-slots.html">Cheat sheet</a> · <a href="0003-heap-ownership.html">Lesson 3</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Build and free a two-level heap shape, find a string with <code>strcmp</code>, return the address of its slot, replace its owned string through <code>char**</code>, and keep every ownership obligation balanced on failure.</div>
 </header>
@@ -266,7 +266,7 @@ allocated by ... calloc ... main.c:...</code></pre>
 <footer>
   <div class="next">
     <span><a href="../reference/string-slots.html">Reference: string slots cheat sheet</a></span>
-    <span>Next: <a href="0005-sort-then-halve.html">Lesson 5, Sort, Then Halve</a></span>
+    <span>Next: <a href="0005-insertion-sort-and-binary-search.html">Lesson 5, Sort, Then Halve</a></span>
   </div>
 </footer>
 </article>

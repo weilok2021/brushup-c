@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 2 · Structs by Pointer</title>
+<title>Lesson 2 · Structs and pointers · Structs by Pointer</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -73,13 +73,13 @@ td:first-child code{white-space:nowrap}
 <article>
 
 <header>
-  <p class="kicker">Lesson 2 · C fundamentals for CS107</p>
+  <p class="kicker">Lesson 2 · Structs and pointers · C fundamentals for CS107</p>
   <h1>Structs by Pointer</h1>
   <p class="subtitle">Dot on the thing, arrow on the pointer, and a loop that walks an array by moving the pointer until it meets the end.</p>
   <div class="meta">
     <span>About 20 minutes</span>
     <span>Where: WSL, <code>exercises/02-rects/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/structs-and-pointers.html">Cheat sheet</a> · <a href="0001-two-files-two-bugs.html">Lesson 1</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/structs-and-pointers.html">Cheat sheet</a> · <a href="0001-header-split-and-sanitizers.html">Lesson 1</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> A struct declared once in a header, three functions that reach into it through a pointer (two that only read, one that writes), a loop written with <code>p &lt; end</code> instead of <code>i &lt; n</code>, and two more bug reports read well enough to fix from the report alone: one from the sanitizer, one from the compiler.</div>
 </header>
@@ -255,7 +255,7 @@ rect.c:5:1: warning: control reaches end of non-void function [-Wreturn-type]</c
 <footer>
   <div class="next">
     <span><a href="../reference/structs-and-pointers.html">Reference: structs and pointers cheat sheet</a></span>
-    <span>Next: <a href="0003-one-owner-one-free.html">Lesson 3, One Owner, One Free</a></span>
+    <span>Next: <a href="0003-heap-ownership.html">Lesson 3, One Owner, One Free</a></span>
   </div>
 </footer>
 

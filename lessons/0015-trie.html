@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 15 · Twenty-Six Slots</title>
+<title>Lesson 15 · Trie · Twenty-Six Slots</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -74,13 +74,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 15 · Optional · DSA in C</p>
+  <p class="kicker">Lesson 15 · Trie · Optional · DSA in C</p>
   <h1>Twenty-Six Slots</h1>
   <p class="subtitle">A trie is a tree whose every node holds twenty-six pointer slots, one per lowercase letter. Insert walks the slots and allocates through them; free visits all twenty-six before the node goes.</p>
   <div class="meta">
     <span>About 40 minutes</span>
     <span>Where: WSL, <code>exercises/15-trie/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/trie.html">Cheat sheet</a> · <a href="0014-mark-then-visit.html">Lesson 14</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/trie.html">Cheat sheet</a> · <a href="0014-graph-bfs-and-dfs.html">Lesson 14</a></span>
   </div>
   <p>The mission's required list ended with lesson 14. Stack, list, queue, tree, hashmap and graph are done, and CS107 asks for nothing more. This lesson is extra practice on two things you already own: the slot pattern from lessons 10 and 12, and the recursive post-order free from lesson 12. Skip it without guilt. Do it if you want those two patterns to sit deeper.</p>
   <div class="win"><strong>Your win today.</strong> Ship <code>trie_t</code> as an opaque ADT: insert through a <code>struct node**</code> slot chosen by subtraction, answer “whole word” and “prefix” with one shared finder and one flag test, and free seventeen nodes in post-order with a loop inside the recursion. Then read what UBSan, ASan and gcc say when the index, the flag and the free order go wrong.</div>
@@ -384,7 +384,7 @@ previously allocated by thread T0 here:
 
 <footer>
   <div class="next">
-    <span><a href="0014-mark-then-visit.html">Previous: Lesson 14, Mark, Then Visit</a> · <a href="../reference/trie.html">Reference: trie cheat sheet</a></span>
+    <span><a href="0014-graph-bfs-and-dfs.html">Previous: Lesson 14, Mark, Then Visit</a> · <a href="../reference/trie.html">Reference: trie cheat sheet</a></span>
     <span><a href="../NOTES.md">End of the planned sequence</a></span>
   </div>
 </footer>
