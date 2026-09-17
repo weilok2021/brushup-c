@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 8 · The Slot Before the Node</title>
+<title>Lesson 10 · The Slot Before the Node</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -39,6 +39,7 @@ td:first-child code{white-space:nowrap}
 .win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
 .paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
 .paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
 .ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
 .steps{list-style:none;padding:0;margin:0;counter-reset:step}
 .steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
@@ -73,13 +74,13 @@ td:first-child code{white-space:nowrap}
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 8 · DSA in C</p>
+  <p class="kicker">Lesson 10 · DSA in C</p>
   <h1>The Slot Before the Node</h1>
   <p class="subtitle">A linked list is a chain of heap nodes. The head variable and every <code>next</code> member are slots of the same type, so one walk over slots inserts and deletes at the front, in the middle and at the end with no special case.</p>
   <div class="meta">
     <span>About 40 minutes</span>
-    <span>Where: WSL, <code>exercises/08-list/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/linked-list.html">Cheat sheet</a> · <a href="0007-grow-on-push.html">Lesson 7</a></span>
+    <span>Where: WSL, <code>exercises/10-list/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/linked-list.html">Cheat sheet</a> · <a href="0009-grow-on-push.html">Lesson 9</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship a singly linked list as an ADT: insert in order and remove by value through a <code>node_t**</code> walk that never asks “is this the head?”, reverse in place with three pointers, and free a chain without touching a dead block.</div>
 </header>
@@ -109,7 +110,7 @@ clean:
 
 <section>
   <h2>Where every byte lives</h2>
-  <p>Two private structs live in <code>list.c</code>. The client sees neither. It holds a <code>list_t*</code> and nothing else, the same opaque struct arrangement as lesson 7's stack<a class="sn-ref" href="#sn1"></a>.</p>
+  <p>Two private structs live in <code>list.c</code>. The client sees neither. It holds a <code>list_t*</code> and nothing else, the same opaque struct arrangement as lesson 9's stack<a class="sn-ref" href="#sn1"></a>.</p>
   <pre><code>typedef struct node node_t;          /* private to list.c */
 
 struct node {
@@ -278,7 +279,7 @@ size_t list_count(const list_t* l);</code></pre>
   <ol class="steps" id="steps">
     <li><p>Create and enter the exercise folder:</p>
       <pre><code>cd ~/workspace/brushup-c
-mkdir -p exercises/08-list &amp;&amp; cd exercises/08-list</code></pre>
+mkdir -p exercises/10-list &amp;&amp; cd exercises/10-list</code></pre>
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>list.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
@@ -305,7 +306,7 @@ count: 4</code></pre>
         <li>In <code>list_insert_sorted</code>, create the node with <code>next = NULL</code> and never copy <code>*link</code> into it, then write <code>*link = n</code> as before. Run <code>./list</code>: read the <code>sorted</code> line. Run <code>make check</code>: read the difference between “definitely” and “indirectly” lost. Restore the order.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
-    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 8 done</em>.</p>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 10 done</em>.</p>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
     <li><p><strong>Stretch, only if you have time left.</strong> Add a <code>static node_t* reverse_rec(node_t* head)</code> that returns the new head, and call it from a second reverse in <code>main</code> so the output goes back to <code>1 3 7 9</code>. Hint: reverse the rest first; afterwards the old second node is the tail of the reversed rest, and the old head must hang off it. Count how many frames the C stack holds at the deepest point for four nodes.</p>
       <label class="check"><input type="checkbox" data-step="8"> done</label></li>
@@ -375,20 +376,28 @@ ERROR SUMMARY: 2 errors from 2 contexts</code></pre>
 
 <section>
   <h2>Read next</h2>
-  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/13stacks/">1.3 Bags, Queues, and Stacks</a>, the linked-list section: the definition, insert and remove at the beginning, insert at the end, and traversal. The code is Java with garbage collection, so it never frees a node; every place their code drops a reference is a place your code must call <code>free</code>. Then Beej <a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html">23.1 Pointers to Pointers</a> for the type step from <code>p</code> to <code>&amp;p</code>, and <a href="https://beej.us/guide/bgc/html/split/pointers.html">5.4 Passing Pointers as Arguments</a> if the copy-of-the-pointer rule needs a refresh. Keep the <a href="../reference/linked-list.html">cheat sheet</a> for lookup.</p>
+  <p>Everything here is C, or has no code at all. Read in this order; the first item is the lesson's idea in someone else's words.</p>
+  <ol class="reading">
+    <li><p><strong>The same walk, called “indirect”.</strong> Marc Kirchner, <a href="https://github.com/mkirchner/linked-list-good-taste">Linus Torvalds' linked list argument for good taste, explained</a>. A short page with all the C. It comes from a 2016 <a href="https://www.ted.com/talks/linus_torvalds_the_mind_behind_linux">TED interview</a> (14:10) where Torvalds contrasts two ways to delete a node. <code>remove_cs101</code> walks with <code>prev</code> and <code>cur</code> and ends in <code>if (prev) ... else l-&gt;head = ...</code>: that is experiment 2. <code>remove_elegant</code> declares <code>list_item **p = &amp;l-&gt;head</code>, steps with <code>p = &amp;(*p)-&gt;next</code>, and writes <code>*p = target-&gt;next</code>. “Indirect pointer” there means what <code>link</code> means here: the address of the slot, whether the slot is <code>head</code> or a <code>next</code> member. Two differences to notice. Their remove takes a node pointer, not a value, so the loop compares <code>*p != target</code> where yours compares <code>(*p)-&gt;value != v</code>. And it never calls <code>free</code>; the caller owns the node. Then read <code>insert_before</code> at the end and check it against your <code>list_insert_sorted</code>: same walk, same two-line splice.</p></li>
+    <li><p><strong>The classic alternative: a dummy header node.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/list.h">list.h</a>, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/list.c">list.c</a> and <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/testlist.c">testlist.c</a> (the author publishes the book's <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a> free). Weiss removes the head special case a different way: <code>MakeEmpty</code> mallocs one node that holds no value, and the real first node hangs off its <code>Next</code>. So “the slot before the first node” is always a node's <code>Next</code>, and a plain <code>struct Node *</code> can reach it. Compare <code>Delete</code> (fig 3.11) and <code>FindPrevious</code> (fig 3.12) with your slot walk: <code>P-&gt;Next</code> plays the part of <code>*link</code>, <code>P-&gt;Next = TmpCell-&gt;Next; free(TmpCell);</code> is your two lines, and the price is one extra node per list plus a header check in every function. Also read the <code>#if 0</code> block: fig 3.14 is the “Incorrect DeleteList algorithm” that frees <code>P</code> and then reads <code>P-&gt;Next</code>, and fig 3.15 saves <code>Tmp = P-&gt;Next</code> first. That pair is experiment 1, printed in a textbook years before you hit it. Note that Weiss calls <code>FatalError</code> when <code>malloc</code> fails; you return 0 and leave the list unchanged.</p></li>
+    <li><p><strong>The first-course version, so you can count its branches.</strong> CS50x, <a href="https://cs50.harvard.edu/x/notes/5/">Week 5 notes</a>, the Linked Lists section. The same <code>struct node { int number; struct node *next; }</code>, then four full programs: prepend, print, append, sorted insert, and an <code>unload</code> that frees with a saved <code>next</code>. Read the sorted-insert program and count its cases: empty list, belongs at the front, append at the end, insert in the middle. Four writes to four differently named slots. Your <code>list_insert_sorted</code> has one write, <code>*link = n</code>, because it walks slot addresses instead of node pointers. If you prefer to watch first, CS50 Shorts, Doug Lloyd, <a href="https://video.cs50.io/zQI3FyWm144">Singly-Linked Lists</a>, about sixteen minutes, C throughout.</p></li>
+    <li><p><strong>The two type facts the walk depends on.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/pointers-iii-pointers-to-pointers-and-more.html#pointers-to-pointers">23.1 Pointers to Pointers</a> for the step from <code>p</code> to <code>&amp;p</code>, which is the step from <code>node_t*</code> to <code>node_t**</code> in the slot table. Then <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html#use-case-self-referential-structures">35.1 Use Case: Self-Referential Structures</a>, one page on why <code>struct node *next</code> is legal inside <code>struct node</code> before the struct is complete; that is what makes <code>typedef struct node node_t;</code> in list.c work. <a href="https://beej.us/guide/bgc/html/split/pointers.html#ptpass">5.4 Passing Pointers as Arguments</a> only if the copy-of-the-pointer rule needs a refresh.</p></li>
+  </ol>
+  <p><strong>Where this lands in CS107.</strong> The calendar does not schedule linked lists by name. Lecture 7 (Stack and Heap) introduces <code>malloc</code> and <code>free</code> and assigns K&amp;R 5.6 to 5.9 or Essential C section 6 on the heap; Lecture 8 (Generic Operations) discusses use-after-free bugs, which is experiment 1 with a name<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. If you own K&amp;R, 6.5 (Self-referential Structures) builds a binary tree with the same forward-declared node pattern.</p>
+  <p>The recursive definition and the traversal idiom above still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/13stacks/">1.3</a>). Treat that link as evidence for a sentence, not as reading; the code there is Java and never frees a node. Keep the <a href="../reference/linked-list.html">cheat sheet</a> for lookup.</p>
   <div class="ask"><strong>Ask your teacher.</strong> If you ever write <code>if (l-&gt;head-&gt;value == v)</code> as a special case, stop and ask whether a slot walk removes it. And for every path that drops a node, ask two questions: was it freed, and was <code>count</code> updated. Bring the trace of <code>link</code> for one insert if the walk feels shaky; that is the piece worth re-deriving together.</div>
 </section>
 
 <footer>
   <div class="next">
-    <span><a href="0007-grow-on-push.html">Previous: Lesson 7, Grow on Push</a> · <a href="../reference/linked-list.html">Reference: linked list cheat sheet</a></span>
-    <span>Next: <a href="0009-head-and-tail.html">Lesson 9, Head and Tail</a> (a queue on this list, issued after this one is checked)</span>
+    <span><a href="0009-grow-on-push.html">Previous: Lesson 9, Grow on Push</a> · <a href="../reference/linked-list.html">Reference: linked list cheat sheet</a></span>
+    <span>Next: <a href="0011-head-and-tail.html">Lesson 11, Head and Tail</a> (a queue on this list, issued after this one is checked)</span>
   </div>
 </footer>
 </article>
 <script>
 (function(){
-  var KEY='brushup-c-lesson-0008-steps';
+  var KEY='brushup-c-lesson-0010-steps';
   var saved={};
   try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
   document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){

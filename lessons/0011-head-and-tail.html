@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 9 · Head and Tail</title>
+<title>Lesson 11 · Head and Tail</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -38,6 +38,7 @@ td:first-child code{white-space:nowrap}
 .win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
 .paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
 .paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
 .ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
 .steps{list-style:none;padding:0;margin:0;counter-reset:step}
 .steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
@@ -72,15 +73,15 @@ td:first-child code{white-space:nowrap}
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 9 · DSA in C</p>
+  <p class="kicker">Lesson 11 · DSA in C</p>
   <h1>Head and Tail</h1>
-  <p class="subtitle">A queue is lesson 8's list with a second pointer at the far end. Two pointers, two invariants, and one dangling-pointer trap when the last node leaves.</p>
+  <p class="subtitle">A queue is lesson 10's list with a second pointer at the far end. Two pointers, two invariants, and one dangling-pointer trap when the last node leaves.</p>
   <div class="meta">
     <span>About 40 minutes</span>
-    <span>Where: WSL, <code>exercises/09-queue/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/queue-adt.html">Cheat sheet</a> · <a href="0008-the-slot-before-the-node.html">Lesson 8</a></span>
+    <span>Where: WSL, <code>exercises/11-queue/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/queue-adt.html">Cheat sheet</a> · <a href="0010-the-slot-before-the-node.html">Lesson 10</a></span>
   </div>
-  <div class="win"><strong>Your win today.</strong> Ship a linked queue as an opaque ADT with worst-case constant-time enqueue and dequeue, and see for yourself what AddressSanitizer says when a tail pointer outlives its node. Lesson 12 will use this exact module for breadth-first search, so its interface is general and stays fixed.</div>
+  <div class="win"><strong>Your win today.</strong> Ship a linked queue as an opaque ADT with worst-case constant-time enqueue and dequeue, and see for yourself what AddressSanitizer says when a tail pointer outlives its node. Lesson 14 will use this exact module for breadth-first search, so its interface is general and stays fixed.</div>
 </header>
 
 <section>
@@ -124,7 +125,7 @@ q: 0x5010 ------------------&gt; 0x5010  struct queue   (24 bytes)
                                       value: 30   next: NULL</code></pre>
   <p>Every byte here is accounted for. The variable <code>q</code> lives in <code>main</code>'s stack frame and holds one address. The queue struct is a heap block of 24 bytes: two pointers of 8 bytes each and a <code>size_t</code>. Each node is a heap block of 16 bytes: a 4-byte <code>int</code>, 4 bytes of padding, and an 8-byte <code>next</code> pointer<a class="sn-ref" href="#sn1"></a>. The queue struct owns every node. <code>main</code> owns the queue struct, through <code>q</code>, and gives it back with one call to <code>queue_free</code>.</p>
   <span class="sidenote" id="sn1">Keep the 16 in mind. AddressSanitizer will describe a node as a “16-byte region” later, and that number tells you which kind of block it is talking about.</span>
-  <p>The two structs are private to <code>queue.c</code>. The header only says <code>typedef struct queue queue_t;</code>, so <code>main.c</code> can hold a <code>queue_t*</code> and cannot reach inside it. That is the same opaque-struct shape as lessons 7 and 8. Lesson 8 added <code>typedef struct node node_t;</code> inside <code>list.c</code>; this lesson writes the plain <code>struct node</code> spelling. Both name the same private struct, so use whichever you prefer:</p>
+  <p>The two structs are private to <code>queue.c</code>. The header only says <code>typedef struct queue queue_t;</code>, so <code>main.c</code> can hold a <code>queue_t*</code> and cannot reach inside it. That is the same opaque-struct shape as lessons 9 and 10. Lesson 10 added <code>typedef struct node node_t;</code> inside <code>list.c</code>; this lesson writes the plain <code>struct node</code> spelling. Both name the same private struct, so use whichever you prefer:</p>
   <pre><code>struct node {
     int value;
     struct node* next;
@@ -135,7 +136,7 @@ struct queue {
     struct node* tail;   /* newest node, NULL when empty */
     size_t count;
 };</code></pre>
-  <p>Lesson 8's list had only <code>head</code>. Adding at the far end meant walking every node first. The queue adds <code>tail</code> so that the far end is always one pointer away. Sedgewick and Wayne keep the same two references, <code>first</code> and <code>last</code>: “To enqueue() an item, we add it to the end of the list; to dequeue() an item, we remove it from the beginning of the list”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>.</p>
+  <p>Lesson 10's list had only <code>head</code>. Adding at the far end meant walking every node first. The queue adds <code>tail</code> so that the far end is always one pointer away. Sedgewick and Wayne keep the same two references, <code>first</code> and <code>last</code>: “To enqueue() an item, we add it to the end of the list; to dequeue() an item, we remove it from the beginning of the list”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>.</p>
 </section>
 
 <section>
@@ -174,7 +175,7 @@ tail: NULL           tail: 0x5050           tail: 0x5050           tail: 0x5070
     q-&gt;count++;
     return 1;
 }</code></pre>
-  <p>Allocation failure leaves the queue exactly as it was and returns 0. That is the same “unchanged on failure” contract as lesson 4's <code>word_replace</code> and lesson 7's push.</p>
+  <p>Allocation failure leaves the queue exactly as it was and returns 0. That is the same “unchanged on failure” contract as lesson 4's <code>word_replace</code> and lesson 9's push.</p>
 </section>
 
 <section>
@@ -202,13 +203,13 @@ tail: 0x5050         tail: 0x5050             tail: 0x5050   &lt;-- points at a 
     return 1;
 }</code></pre>
   <p>The Java version in algs4 has the same line, <code>if (isEmpty()) last = null;</code>, with the comment “to avoid loitering”<a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">*</a>. In Java the cost of forgetting it is a node kept alive by the garbage collector. In C the node is already gone, and the cost is a write into memory you do not own. Same line, much higher stakes.</p>
-  <p>The value goes out through <code>int* out</code>, and the function returns 1 or 0 to say whether anything was removed. That keeps <code>-1</code> or <code>0</code> free to be real queue values. It also means no pointer into a node ever leaves <code>queue.c</code>, so no caller can hold a node after it is freed. Lesson 10 will return borrowed pointers and pay for it with one deliberate use-after-free.</p>
+  <p>The value goes out through <code>int* out</code>, and the function returns 1 or 0 to say whether anything was removed. That keeps <code>-1</code> or <code>0</code> free to be real queue values. It also means no pointer into a node ever leaves <code>queue.c</code>, so no caller can hold a node after it is freed. Lesson 12 will return borrowed pointers and pay for it with one deliberate use-after-free.</p>
 </section>
 
 <section>
   <h2>Peek, count, empty, free</h2>
   <p><code>queue_peek</code> is dequeue without the unlink: copy <code>head-&gt;value</code> into <code>*out</code>, return 1, or return 0 when <code>head</code> is <code>NULL</code>. <code>queue_count</code> returns the counter. <code>queue_is_empty</code> returns <code>head == NULL</code>. All three take <code>const queue_t*</code> because they only read.</p>
-  <p><code>queue_free</code> is lesson 8's saved-next walk. Read <code>cur-&gt;next</code> before <code>free(cur)</code>, because after the free the node's bytes are not yours to read:</p>
+  <p><code>queue_free</code> is lesson 10's saved-next walk. Read <code>cur-&gt;next</code> before <code>free(cur)</code>, because after the free the node's bytes are not yours to read:</p>
   <pre><code>void queue_free(queue_t* q) {
     if (q == NULL) {
         return;
@@ -227,7 +228,7 @@ tail: 0x5050         tail: 0x5050             tail: 0x5050   &lt;-- points at a 
 <section>
   <h2>Constant time, worst case</h2>
   <p>Count the work in <code>queue_enqueue</code>: one <code>malloc</code>, two member writes on the new node, one or two pointer writes on the queue, one increment. <code>queue_dequeue</code> is one copy, one or two pointer writes, one <code>free</code>, one decrement. Neither touches any node other than the one arriving or leaving, so neither depends on how many nodes are queued. For the linked implementation, Sedgewick and Wayne state that “the enqueue, dequeue, peek, size, and is-empty operations all take constant time in the worst case”<a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">*</a>.</p>
-  <p>Compare lesson 7's array stack. Most pushes were one store, but the push that filled the array had to copy every element into a bigger block. The cost was constant only on average over many pushes, which is what “amortised” means. algs4's resizing-array stack works the same way: “We double the size of the array in push() if it is full”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>. The linked queue has no such push. Every single call costs the same. That is why it is the right queue for lesson 12's breadth-first search, where enqueue and dequeue run once per vertex and once per edge.</p>
+  <p>Compare lesson 9's array stack. Most pushes were one store, but the push that filled the array had to copy every element into a bigger block. The cost was constant only on average over many pushes, which is what “amortised” means. algs4's resizing-array stack works the same way: “We double the size of the array in push() if it is full”<a href="https://algs4.cs.princeton.edu/13stacks/">*</a>. The linked queue has no such push. Every single call costs the same. That is why it is the right queue for lesson 14's breadth-first search, where enqueue and dequeue run once per vertex and once per edge.</p>
 </section>
 
 <section>
@@ -259,7 +260,7 @@ size_t queue_count(const queue_t* q);
 
 /* Returns 1 if the queue holds no values, else 0. */
 int queue_is_empty(const queue_t* q);</code></pre>
-  <p>Two functions write the queue and take <code>queue_t*</code>. Three only read and take <code>const queue_t*</code>. Nothing in this header mentions <code>struct node</code>: the node is an implementation detail, and lesson 12 will not need to know it exists.</p>
+  <p>Two functions write the queue and take <code>queue_t*</code>. Three only read and take <code>const queue_t*</code>. Nothing in this header mentions <code>struct node</code>: the node is an implementation detail, and lesson 14 will not need to know it exists.</p>
 </section>
 
 <section>
@@ -267,7 +268,7 @@ int queue_is_empty(const queue_t* q);</code></pre>
   <ol class="steps" id="steps">
     <li><p>Create and enter the exercise folder:</p>
       <pre><code>cd ~/workspace/brushup-c
-mkdir -p exercises/09-queue &amp;&amp; cd exercises/09-queue</code></pre>
+mkdir -p exercises/11-queue &amp;&amp; cd exercises/11-queue</code></pre>
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>queue.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
@@ -291,7 +292,7 @@ empty: yes</code></pre>
         <li>In <code>queue_enqueue</code>, make the empty case set only <code>tail</code>: replace the if/else with <code>if (q-&gt;tail != NULL) q-&gt;tail-&gt;next = n;</code> so <code>head</code> is never written. Build and run. Nothing crashes. Read the seven lines and notice that <code>count</code> and <code>empty</code> disagree. Then run <code>make check</code> and read the leak summary. Restore the if/else.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
-    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 9 done</em>.</p>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 11 done</em>.</p>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
   </ol>
 </section>
@@ -338,20 +339,27 @@ SUMMARY: AddressSanitizer: <strong>80 byte(s) leaked in 5 allocation(s)</strong>
 
 <section>
   <h2>Read next</h2>
-  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/13stacks/">1.3 Bags, Queues, and Stacks</a>, the linked-list queue part, and the code in <a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">Queue.java</a>. It is Java, but <code>enqueue</code> and <code>dequeue</code> there are line for line what you just wrote, including the <code>last = null</code> reset. For the rule you broke in experiment 1, Beej <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">12.1, Allocating and Deallocating</a>. Keep the <a href="../reference/queue-adt.html">cheat sheet</a> for lookup.</p>
+  <p>Everything here is C, or language-free. Read in this order; the first two items are short source files, not chapters.</p>
+  <ol class="reading">
+    <li><p><strong>A linked queue with head and tail, in C.</strong> James Aspnes, Yale CPSC 223 notes, <a href="https://www.cs.yale.edu/homes/aspnes/pinewiki/LinkedLists.html#Queues">LinkedLists, section 4, Queues</a>. About eighty lines: <code>struct elt</code>, <code>struct queue</code> with <code>head</code> and <code>tail</code>, and <code>enqueue</code>, <code>queueEmpty</code>, <code>dequeue</code>. His enqueue has your two cases, with the comment “special case for empty queue”. Now read his dequeue. It frees the head and never resets <code>tail</code>. Ask why AddressSanitizer would not catch him: his enqueue tests <code>q-&gt;head == 0</code>, not <code>tail</code>, so a stale <code>tail</code> is never read while the queue is empty. Your version tests <code>tail</code> and so must reset it. Either pair is correct; the test in enqueue and the reset in dequeue have to agree. Two smaller differences: he returns <code>EMPTY_QUEUE</code>, which is <code>-1</code>, instead of writing through <code>int* out</code>, so <code>-1</code> cannot be a queue value, and he keeps no count.</p></li>
+    <li><p><strong>The other standard queue: a circular array.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/queue.h">queue.h</a>, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/queue.c">queue.c</a> and <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/testque.c">testque.c</a> (from the author's free <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a>). No nodes. One array plus <code>Front</code>, <code>Rear</code> and <code>Size</code> indices; <code>Succ</code> wraps an index back to 0 when it reaches <code>Capacity</code>. Compare three things with what you wrote. Enqueue and dequeue move an index instead of calling <code>malloc</code> and <code>free</code>, so there is no block to dangle and experiment 1 cannot happen. “Empty” is <code>Size == 0</code>, and <code>MakeEmpty</code> sets <code>Front = 1</code>, <code>Rear = 0</code>, so the indices alone do not say whether the queue is empty; yours says it with <code>head == NULL</code>. The price is <code>IsFull</code>: the capacity is fixed at <code>CreateQueue</code>. Read <code>testque.c</code> last. It drains the queue and refills it, the same second round as your test, for the same reason.</p></li>
+    <li><p><strong>The rule you broke in experiment 1.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">12.1 Allocating and Deallocating, malloc() and free()</a>. One paragraph: “It's undefined behavior to use a memory region after you free() it.” A dangling <code>tail</code> is exactly a pointer you kept after the free.</p></li>
+    <li><p><strong>If you prefer to watch first.</strong> CS50 Shorts, Doug Lloyd: <a href="https://video.cs50.io/3TmUv1uS92s">Queues</a>. About sixteen minutes, from Harvard's C-based introductory course. The matching <a href="https://cs50.harvard.edu/x/notes/5/">CS50x week 5 notes</a> show a queue as a fixed array with a <code>size</code> and nothing else: no head index, no tail pointer. That is the simplest of the three shapes on this list, and the one that cannot dequeue in constant time without shifting.</p></li>
+  </ol>
+  <p>The two quotations in the body about <code>first</code> and <code>last</code> and about worst-case constant time still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/13stacks/">1.3</a>, <a href="https://algs4.cs.princeton.edu/13stacks/Queue.java.html">Queue.java</a>). Treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/queue-adt.html">cheat sheet</a> for lookup.</p>
   <div class="ask"><strong>Ask your teacher.</strong> If a struct ever holds two pointers into the same list, ask what keeps them agreeing. The answer is an invariant, and the place to check it is every function that frees a node. That question is worth more than any listing on this page.</div>
 </section>
 
 <footer>
   <div class="next">
-    <span><a href="0008-the-slot-before-the-node.html">Previous: Lesson 8, the slot before the node</a> · <a href="../reference/queue-adt.html">Reference: queue ADT cheat sheet</a></span>
-    <span><a href="0010-smaller-left-larger-right.html">Next: Lesson 10, binary search tree</a></span>
+    <span><a href="0010-the-slot-before-the-node.html">Previous: Lesson 10, the slot before the node</a> · <a href="../reference/queue-adt.html">Reference: queue ADT cheat sheet</a></span>
+    <span><a href="0012-smaller-left-larger-right.html">Next: Lesson 12, binary search tree</a></span>
   </div>
 </footer>
 </article>
 <script>
 (function(){
-  var KEY='brushup-c-lesson-0009-steps';
+  var KEY='brushup-c-lesson-0011-steps';
   var saved={};
   try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
   document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){

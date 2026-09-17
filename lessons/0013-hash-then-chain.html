@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 13 · Hash, Then Chain</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+pre.diagram{background:#fff;border:1px solid var(--rule);line-height:1.35}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}pre.diagram{white-space:pre}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 13 · DSA in C</p>
+  <h1>Hash, Then Chain</h1>
+  <p class="subtitle">A hashmap is an array of lesson 10's lists. A string picks the list; <code>strcmp</code> picks the node. When the lists get long, a bigger array is allocated and every node is moved into it without copying a single key.</p>
+  <div class="meta">
+    <span>About 45 minutes</span>
+    <span>Where: WSL, <code>exercises/13-hashmap/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/hashmap.html">Cheat sheet</a> · <a href="0012-smaller-left-larger-right.html">Lesson 12</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Ship <code>hashmap_t</code>, a string-keyed map of ints, as an opaque ADT: djb2 over the key, one chain per bucket, a map that owns a copy of every key, a resize that relinks nodes instead of copying them, and a test program in which you watch the bucket array double from 4 to 8.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c hashmap.c
+
+hashmap: $(SRC) hashmap.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o hashmap $(SRC)
+
+hashmap-plain: $(SRC) hashmap.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o hashmap-plain $(SRC)
+
+.PHONY: check clean
+check: hashmap-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./hashmap-plain
+clean:
+<span class="tab">⇥</span>rm -f hashmap hashmap-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Six keys, eight buckets, three kinds of block</h2>
+  <p>Put six fruit names with a number each: <code>pear 3, fig 12, banana 7, apple 5, kiwi 9, mango 4</code>. When the test program is done inserting, memory looks like this. One variable in <code>main</code>'s frame; everything else on the heap:</p>
+  <pre class="diagram"><code>main's frame     heap
+m ──────────▶ struct hashmap (24 bytes) { buckets ──▶ 0x300, capacity 8, count 6 }
+
+0x300  the bucket array: 8 slots of 8 bytes, 64 bytes, one struct node* per slot
+       [0] NULL   [1] 0x160   [2] NULL   [3] 0x0d0   [4] NULL   [5] 0x0a0   [6] 0x100   [7] 0x190
+
+       node (24 bytes)                              key copy (strlen + 1 bytes)
+0x160  [ key 0x400 | value 9  | next NULL  ]        0x400  "kiwi\0"     5 bytes
+0x0d0  [ key 0x410 | value 12 | next NULL  ]        0x410  "fig\0"      4 bytes
+0x0a0  [ key 0x420 | value 3  | next NULL  ]        0x420  "pear\0"     5 bytes
+0x100  [ key 0x430 | value 7  | next NULL  ]        0x430  "banana\0"   7 bytes
+0x190  [ key 0x440 | value 4  | next 0x130 ]        0x440  "mango\0"    6 bytes
+0x130  [ key 0x450 | value 5  | next NULL  ]        0x450  "apple\0"    6 bytes</code></pre>
+  <p>Three kinds of heap block. The <em>bucket array</em> is one block of <code>capacity</code> pointers, every one either <code>NULL</code> or the head of a chain. A <em>node</em> is one block of 24 bytes: a pointer to the key, the <code>int</code> value, 4 bytes of padding, and the pointer to the next node in the same chain<a class="sn-ref" href="#sn1"></a>. A <em>key copy</em> is the block <code>strdup</code> made: the characters plus the terminating zero. Bucket 7 holds a chain of two nodes; every other used bucket holds one.</p>
+  <span class="sidenote" id="sn1">The 24 will show up in AddressSanitizer's report in experiment 3 as a “24-byte region”, and the offset 8 inside it is the <code>value</code> member: 8 bytes of <code>key</code> pointer come first. Lesson 12's node was also 24 bytes, laid out differently: there the 4-byte key came first.</span>
+  <p>Ownership has four levels and reads top down. <code>main</code> owns the <code>struct hashmap</code> through <code>m</code>. The struct owns the bucket array. Each slot in the array owns the chain it heads, exactly as <code>l-&gt;head</code> owned lesson 10's list. Each node owns the node after it and owns its key copy. Fourteen blocks are alive in the picture: one struct, one array, six nodes, six key copies. One <code>hashmap_free</code> releases all fourteen.</p>
+  <p>In C the two structs are private to <code>hashmap.c</code>. The header says only <code>typedef struct hashmap hashmap_t;</code>. The node is spelled <code>struct node</code> as in lessons 11 and 12; lesson 10's <code>typedef struct node node_t;</code> names the same kind of private struct and is equally fine:</p>
+  <pre><code>struct node {
+    char* key;                 /* the map's own copy, made by strdup */
+    int value;
+    struct node* next;         /* next node in the same bucket's chain */
+};
+
+struct hashmap {
+    struct node** buckets;     /* capacity slots; each holds a chain head or NULL */
+    size_t capacity;           /* number of buckets */
+    size_t count;              /* number of keys */
+};</code></pre>
+  <p><code>struct node**</code> is the type you met in lesson 4: a pointer to the first of a row of pointers. There the row held <code>char*</code>; here it holds <code>struct node*</code>. Nothing else is new about it.</p>
+</section>
+
+<section>
+  <h2>From a string to a bucket</h2>
+  <p>Which slot does <code>"fig"</code> go in? Start from 5381. For each character, multiply by 33 and add the character's code (<code>f</code> is 102, <code>i</code> is 105, <code>g</code> is 103):</p>
+  <pre class="diagram"><code>start            5381
+'f'  5381 × 33 + 102   =    177675
+'i'  177675 × 33 + 105 =   5863380
+'g'  5863380 × 33 + 103 = 193491643      hash("fig")
+
+193491643 % 4 = 3     bucket 3 of 4
+193491643 % 8 = 3     bucket 3 of 8</code></pre>
+  <p>That number is the <em>hash</em> of the string, and the remainder after dividing by the number of buckets is its <em>bucket index</em>. The same arithmetic for all six keys, plus <code>grape</code>, which the test program looks up and never inserts:</p>
+  <table>
+    <tr><th>Key</th><th>hash (djb2)</th><th>% 4</th><th>% 8</th></tr>
+    <tr><td><code>pear</code></td><td>6385579149</td><td>1</td><td>5</td></tr>
+    <tr><td><code>fig</code></td><td>193491643</td><td>3</td><td>3</td></tr>
+    <tr><td><code>banana</code></td><td>6953343506470</td><td>2</td><td>6</td></tr>
+    <tr><td><code>apple</code></td><td>210706734647</td><td>3</td><td>7</td></tr>
+    <tr><td><code>kiwi</code></td><td>6385404537</td><td>1</td><td>1</td></tr>
+    <tr><td><code>mango</code></td><td>210720424311</td><td>3</td><td>7</td></tr>
+    <tr><td><code>grape</code></td><td>210713905844</td><td>0</td><td>4</td></tr>
+  </table>
+  <p>Read the <code>% 4</code> column: <code>fig</code>, <code>apple</code> and <code>mango</code> all land in bucket 3. Same remainder, three different strings. A bucket therefore holds a chain, and finding a key means hashing to the chain and then walking it with <code>strcmp</code>. Weiss's separate-chaining <code>Find</code> carries the comment “Probably need strcmp!!” at exactly that line, because his keys are <code>int</code> and yours are not<a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashsep.c">*</a>. Comparing pointers would say two equal strings differ; comparing hashes would say <code>apple</code> and <code>mango</code> agree in bucket 7. Only the characters decide.</p>
+  <p>The function is four lines. It is called djb2, after Dan Bernstein, who posted it to comp.lang.c; the constants 5381 and 33 are his<a class="sn-ref" href="#sn2"></a>:</p>
+  <pre><code>/* djb2: start at 5381, then hash = hash * 33 + c for each byte.
+   Unsigned on purpose: wraparound is defined, signed overflow is not. */
+static unsigned long hash_djb2(const char* s) {
+    unsigned long hash = 5381;
+    for (; *s != '\0'; s++) {
+        hash = hash * 33 + *s;
+    }
+    return hash;
+}
+
+static size_t index_of(const hashmap_t* m, const char* key) {
+    return hash_djb2(key) % m-&gt;capacity;
+}</code></pre>
+  <span class="sidenote" id="sn2">Ozan Yigit's page keeps Bernstein's original: <code>unsigned long hash = 5381; ... hash = ((hash &lt;&lt; 5) + hash) + c; /* hash * 33 + c */</code>, and notes that “the magic of number 33 ... has never been adequately explained”<a href="http://www.cse.yorku.ca/~oz/hash.html">*</a>. Weiss's <code>Hash3</code> in <code>hashfunc.c</code> is the same shift-and-add shape with an <code>unsigned int</code> accumulator and no 5381 start<a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashfunc.c">*</a>. Sedgewick and Wayne hash strings the same way with 31 in place of 33<a href="https://algs4.cs.princeton.edu/34hash/">*</a>.</span>
+  <p><strong>Why <code>unsigned long</code>.</strong> Look at <code>pear</code> in the table: 6,385,579,149. That is more than 2<sup>32</sup>, and the running total passes 2<sup>31</sup> on the fourth character of every four-letter key. In an <code>int</code> that is signed overflow, which C leaves undefined, and UBSan will say so in experiment 1. In an unsigned type the arithmetic wraps modulo 2<sup>64</sup> by definition, and a hash does not care which bits it lost. <code>index_of</code> is a one-line helper so that every function computes the bucket the same way.</p>
+</section>
+
+<section>
+  <h2>Put: find the chain, copy the key, push</h2>
+  <p>Insert <code>fig 12</code> into an empty map of 4 buckets. Hash to bucket 3; walk the chain there, which is empty; allocate a node; copy the key; push the node at the head of the chain:</p>
+  <pre><code>/* Walk one chain. Returns the node holding key, or NULL. */
+static struct node* find_in(struct node* head, const char* key) {
+    for (struct node* n = head; n != NULL; n = n-&gt;next) {
+        if (strcmp(n-&gt;key, key) == 0) {
+            return n;
+        }
+    }
+    return NULL;
+}
+
+int hashmap_put(hashmap_t* m, const char* key, int value) {
+    size_t i = index_of(m, key);
+    struct node* found = find_in(m-&gt;buckets[i], key);
+    if (found != NULL) {
+        found-&gt;value = value;                            /* overwrite: no allocation */
+        return 1;
+    }
+    struct node* n = malloc(sizeof *n);
+    if (n == NULL) {
+        return 0;
+    }
+    n-&gt;key = strdup(key);                                /* the map's own copy */
+    if (n-&gt;key == NULL) {
+        free(n);
+        return 0;
+    }
+    n-&gt;value = value;
+    n-&gt;next = m-&gt;buckets[i];                             /* push onto the chain */
+    m-&gt;buckets[i] = n;
+    m-&gt;count++;
+    if (m-&gt;count &gt; m-&gt;capacity * 3 / 4) {
+        hashmap_grow(m);                                 /* a failed grow loses nothing */
+    }
+    return 1;
+}</code></pre>
+  <p><strong>The map owns a copy of every key.</strong> <code>strdup</code> allocates a fresh heap block and copies the characters into it. The CS107 library guide calls it “equivalent to malloc + strcpy” and warns that it “allocates heap memory secretly, forcing client to know to free”<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/guide/stdlib.html">*</a>. Here the client of <code>strdup</code> is <code>hashmap_put</code>, so the map is the owner, and <code>hashmap_remove</code> and <code>hashmap_free</code> are where the copies die. The caller keeps ownership of its own string. It can be a literal, a stack buffer, or a line read from a file that is overwritten a moment later; the map does not care, because it never looks at the caller's bytes again. Lesson 4's <code>word_replace</code> made the same choice for the same reason: a slot that stores a borrowed pointer is not an owner, and experiment 2 shows what happens when the map pretends to be one.</p>
+  <p>Two smaller points. A put of a key that is already present overwrites the value in place and allocates nothing, so <code>count</code> is unchanged. And the push goes at the head of the chain: <code>n-&gt;next</code> takes the old head first, then the slot takes <code>n</code>, the same two lines in the same order as lesson 10's insert.</p>
+</section>
+
+<section>
+  <h2>Load factor: when four buckets are not enough</h2>
+  <p>Suppose the map never grew. Six keys in 4 buckets, using the <code>% 4</code> column above and pushing at the head:</p>
+  <pre class="diagram"><code>[0]  NULL
+[1]  kiwi ──▶ pear
+[2]  banana
+[3]  mango ──▶ apple ──▶ fig
+
+6 keys / 4 buckets = 1.5 keys per bucket on average; the longest chain is 3</code></pre>
+  <p>The ratio 6/4 is the <em>load factor</em>: keys divided by buckets, which is the average chain length. Sedgewick and Wayne: “In a separate-chaining hash table with M lists and N keys, the number of compares (equality tests) for search and insert is proportional to N/M”<a href="https://algs4.cs.princeton.edu/34hash/">*</a>. Let N grow with M fixed and every lookup turns into lesson 10's list walk. So the map keeps the ratio bounded by growing the array. The rule this lesson uses:</p>
+  <div class="win">After adding a key, if <code>count &gt; capacity * 3 / 4</code>, double the bucket array. With 4 buckets the threshold is 3, so the fourth key triggers the first resize. With 8 it is 6; with 16 it is 12.</div>
+  <p>Trace the test program. After <code>pear</code>, <code>fig</code>, <code>banana</code>: count 3, not more than 3, still 4 buckets. <code>apple</code> goes into bucket 3 in front of <code>fig</code>, count becomes 4, and 4 &gt; 3: grow to 8. Then <code>kiwi</code> and <code>mango</code> arrive into the 8-bucket array: count 6, not more than 6. The output shows the change:</p>
+  <pre><code>after 3 puts: count 3, capacity 4
+after 6 puts: count 6, capacity 8</code></pre>
+  <p>Three-quarters is a choice, not a law. Sedgewick and Wayne's separate-chaining table starts at 4 buckets like yours, doubles when the average chain reaches 10, and halves when it drops to 2<a href="https://algs4.cs.princeton.edu/34hash/SeparateChainingHashST.java.html">*</a>. Weiss's C version never resizes at all; it picks a prime table size once and lives with it<a class="sn-ref" href="#sn3"></a>. A lower threshold means shorter chains and more resizes. This lesson uses a low one so that a six-key test shows a resize. Whatever the threshold, the doubling makes the cost amortised in the same way as lesson 9's stack: one put copies pointers for every node, but n puts do about n work in total.</p>
+  <span class="sidenote" id="sn3">Weiss's <code>InitializeTable</code> rounds the requested size up with <code>NextPrime</code> and has no rehash<a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashsep.c">*</a>; Sedgewick and Wayne describe “modular hashing: we choose the array size M to be prime”<a href="https://algs4.cs.princeton.edu/34hash/">*</a>. A prime size helps a weak hash spread. Doubling from 4 gives powers of two instead, and djb2 spreads the six keys well enough in the table above. Both designs are correct; the prime one is a fine change to make once the doubling version works.</span>
+</section>
+
+<section>
+  <h2>Resize moves nodes; it copies nothing</h2>
+  <p>This is the ownership point of the lesson. The resize replaces the bucket array. It does not replace a node, and it does not touch a key copy. Here is the moment <code>apple</code> pushed the count past 3, with the node addresses from the first diagram:</p>
+  <pre class="diagram"><code>old array, 4 slots                          new array, 8 slots
+[0] NULL                                    [0] NULL
+[1] 0x0a0 pear                              [1] NULL
+[2] 0x100 banana                            [2] NULL
+[3] 0x130 apple ──▶ 0x0d0 fig               [3] 0x0d0 fig
+                                            [4] NULL
+                                            [5] 0x0a0 pear
+                                            [6] 0x100 banana
+                                            [7] 0x130 apple
+
+four nodes, same four addresses, same four key copies; only the array is new</code></pre>
+  <p><code>apple</code> and <code>fig</code> shared bucket 3 of 4 and now sit in buckets 7 and 3 of 8. Each node was unlinked from its old chain and pushed onto its new one. Its <code>key</code> member was read (to compute the new index) and never written. The code:</p>
+  <pre><code>/* Double the bucket array and relink every existing node into it.
+   No node is copied or freed and no key is copied; only the old array is freed.
+   Returns 1, or 0 with the map unchanged. */
+static int hashmap_grow(hashmap_t* m) {
+    size_t new_capacity = m-&gt;capacity * 2;
+    struct node** bigger = calloc(new_capacity, sizeof *bigger);
+    if (bigger == NULL) {
+        return 0;
+    }
+    for (size_t i = 0; i &lt; m-&gt;capacity; i++) {
+        struct node* n = m-&gt;buckets[i];
+        while (n != NULL) {
+            struct node* next = n-&gt;next;                 /* save before relinking */
+            size_t j = hash_djb2(n-&gt;key) % new_capacity; /* new home */
+            n-&gt;next = bigger[j];
+            bigger[j] = n;
+            n = next;
+        }
+    }
+    free(m-&gt;buckets);                                    /* the only free in a resize */
+    m-&gt;buckets = bigger;
+    m-&gt;capacity = new_capacity;
+    return 1;
+}</code></pre>
+  <p>Four things to notice. <code>calloc</code>, so every new slot starts as <code>NULL</code>. <code>next</code> is saved before <code>n-&gt;next</code> is overwritten, the same “save the rest, then change the thing you stand on” shape as lesson 10's reverse and free. The new index uses <code>new_capacity</code>, not <code>m-&gt;capacity</code>, which is still the old size until the last line. And there is exactly one <code>free</code>: the old array. A resize that calls <code>strdup</code> on each key, or <code>malloc</code> for each node, makes a second copy of something that already has an owner; valgrind then reports the originals as definitely lost (the cheat sheet has that report). Forget the one <code>free</code> and the old array leaks instead; that is optional experiment 4.</p>
+  <p>Because nodes never move, a pointer into a node survives a resize. That matters for the next function.</p>
+</section>
+
+<section>
+  <h2>Get borrows; remove uses the slot</h2>
+  <p><code>hashmap_get</code> hashes, walks the chain, and returns the address of the <code>value</code> member inside the node it finds:</p>
+  <pre><code>const int* hashmap_get(const hashmap_t* m, const char* key) {
+    struct node* n = find_in(m-&gt;buckets[index_of(m, key)], key);
+    if (n == NULL) {
+        return NULL;
+    }
+    return &amp;n-&gt;value;                                    /* borrowed: lives in the node */
+}</code></pre>
+  <p>That pointer is borrowed, exactly like lesson 12's <code>bst_min</code>. The node owns the int. The header says, in the same words as <code>bst.h</code>: the pointer is owned by the map and dies with <code>hashmap_free</code>, and also with <code>hashmap_remove</code> of that key, because remove frees the node. Reading through it after either call is a use-after-free; experiment 3 does it on purpose so you see the report once, as promised in lesson 12.</p>
+  <p><code>hashmap_remove</code> is lesson 10's slot walk, started at the bucket instead of at <code>l-&gt;head</code>. The bucket slot and every <code>next</code> member are <code>struct node*</code>, so one <code>struct node**</code> reaches all of them and the first node of a chain needs no special case:</p>
+  <pre><code>int hashmap_remove(hashmap_t* m, const char* key) {
+    struct node** link = &amp;m-&gt;buckets[index_of(m, key)]; /* the slot before the chain */
+    while (*link != NULL &amp;&amp; strcmp((*link)-&gt;key, key) != 0) {
+        link = &amp;(*link)-&gt;next;
+    }
+    if (*link == NULL) {
+        return 0;                                        /* absent */
+    }
+    struct node* gone = *link;
+    *link = gone-&gt;next;                                  /* the slot skips over gone */
+    free(gone-&gt;key);
+    free(gone);
+    m-&gt;count--;
+    return 1;
+}</code></pre>
+  <p>Two frees, in the order the ownership arrows run: the key copy is reached through the node, so it goes first. Remove <code>mango</code> from bucket 7 and <code>link</code> stops at the slot itself, <code>&amp;m-&gt;buckets[7]</code>; remove <code>apple</code> and it stops at <code>&amp;mango-&gt;next</code>. Same lines either way.</p>
+</section>
+
+<section>
+  <h2>Free: key, node, array, struct</h2>
+  <p>Four levels of ownership, released from the inside out. For each bucket, walk the chain with lesson 10's saved-<code>next</code> loop, freeing the key copy and then the node. Then the array. Then the struct:</p>
+  <pre><code>void hashmap_free(hashmap_t* m) {
+    if (m == NULL) {
+        return;
+    }
+    for (size_t i = 0; i &lt; m-&gt;capacity; i++) {
+        struct node* n = m-&gt;buckets[i];
+        while (n != NULL) {
+            struct node* next = n-&gt;next;                 /* save before free */
+            free(n-&gt;key);
+            free(n);
+            n = next;
+        }
+    }
+    free(m-&gt;buckets);
+    free(m);
+}</code></pre>
+  <p>Count the allocations in the test run: one struct, one 4-slot array, six nodes, six key copies, and one 8-slot array made by the resize. Fifteen. Fourteen die in <code>hashmap_free</code>; the 4-slot array died earlier, in <code>hashmap_grow</code>. valgrind reports 16 and 16, because <code>printf</code> allocates its buffer on the first call and frees it at exit.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">hashmap.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+typedef struct hashmap hashmap_t;   /* opaque: the struct body lives in hashmap.c */
+
+/* Create an empty map with a small bucket array. Returns NULL on allocation failure. */
+hashmap_t* hashmap_new(void);
+
+/* Free every key copy, every node, the bucket array, then the map. NULL is fine. */
+void hashmap_free(hashmap_t* m);
+
+/* Insert key with value, or overwrite the value if key is already present.
+   The map stores its OWN copy of key (strdup); the caller keeps its string.
+   Returns 1, or 0 if allocation failed: then no key was added and no value changed. */
+int hashmap_put(hashmap_t* m, const char* key, int value);
+
+/* Return a borrowed pointer to the value stored for key, or NULL if absent.
+   The pointer is owned by the map and dies with hashmap_remove of that key
+   and with hashmap_free. */
+const int* hashmap_get(const hashmap_t* m, const char* key);
+
+/* Remove key: frees the map's key copy and its node.
+   Returns 1 if removed, 0 if key was absent. */
+int hashmap_remove(hashmap_t* m, const char* key);
+
+/* Number of keys in the map. */
+size_t hashmap_count(const hashmap_t* m);
+
+/* Number of buckets. Doubles when the map resizes. */
+size_t hashmap_capacity(const hashmap_t* m);</code></pre>
+  <p>Three functions change the map and take <code>hashmap_t*</code>. Three only read and take <code>const hashmap_t*</code>. Every key parameter is <code>const char*</code>: the function reads the caller's string and promises not to change it. <code>hashmap_capacity</code> exists so the test program can show the resize; a production header might leave it out. From <code>&lt;string.h&gt;</code> the exercise uses <code>strcmp</code> and <code>strdup</code>, both on the CS107 list; the sanitizer flags use <code>gnu11</code> so that <code>strdup</code>, a POSIX function, is declared without extra macros.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/13-hashmap &amp;&amp; cd exercises/13-hashmap</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>hashmap.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>hashmap.c</code>: the two private structs, <code>INITIAL_CAPACITY</code> of 4, four <code>static</code> helpers (<code>hash_djb2</code>, <code>index_of</code>, <code>find_in</code>, <code>hashmap_grow</code>) and the seven public functions. Close this page first and write from the pictures: hash, then chain; copy the key on put; relink on grow; slot walk on remove; key before node before array before struct on free. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the data once, as two named constant arrays of six: the keys <code>pear fig banana apple kiwi mango</code> and the values <code>3 12 7 5 9 4</code>, in that order. Write a static helper that puts a range of the arrays and returns 0 if any put fails, and a static helper that prints <code>get KEY: VALUE</code> or <code>get KEY: absent</code>. In <code>main</code>: create the map and check it. Put the first three keys; print the count and capacity. Put the other three; print them again. Get <code>fig</code>, then <code>grape</code>. Put <code>fig</code> again with 20 and print the count. Get <code>fig</code>. Remove <code>fig</code>, then <code>grape</code>, printing <code>yes</code> or <code>no</code> from the return value. Print the count. Free the map and return 0. On any failed put, free the map and return 1. Expected, exactly:</p>
+      <pre><code>after 3 puts: count 3, capacity 4
+after 6 puts: count 6, capacity 8
+get fig: 12
+get grape: absent
+overwrite fig: count 6
+get fig: 20
+remove fig: yes
+remove grape: no
+count: 5</code></pre>
+      <p>Line 2 is the resize. Line 5 is the overwrite path: a put that allocates nothing. Lines 4 and 8 are the absent cases, which the CS107 testing guide would call the minimal cases<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">*</a>.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./hashmap</code>, and <code>make check</code>. Require no warnings, the exact nine lines, and valgrind's <code>16 allocs, 16 frees</code> with no errors.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong></p>
+      <ol>
+        <li><strong>Signed hash.</strong> In <code>hash_djb2</code>, change <code>unsigned long hash = 5381;</code> to <code>int hash = 5381;</code>. Build: no warning. Run <code>./hashmap</code> and read the first line UBSan prints, before any of your output. Note which key and which multiplication it names. Run <code>./hashmap-plain</code> too, and notice that it prints all nine lines correctly. Restore <code>unsigned long</code>.</li>
+        <li><p><strong>Borrowed key.</strong> In <code>hashmap_put</code>, replace the <code>strdup</code> line and its <code>NULL</code> check with <code>n-&gt;key = key;</code>. Build: read the gcc warning and do not fix it yet. Then replace the body of <code>main</code> with this shorter test, which builds every key in one stack buffer:</p>
+          <pre><code>hashmap_t* m = hashmap_new();
+if (m == NULL) {
+    return 1;
+}
+char buf[16];                                /* one buffer, reused for every key */
+for (size_t i = 0; i &lt; KEY_COUNT; i++) {
+    snprintf(buf, sizeof buf, "%s", KEYS[i]);
+    if (!hashmap_put(m, buf, VALUES[i])) {
+        hashmap_free(m);
+        return 1;
+    }
+}
+printf("after 6 puts: count %zu, capacity %zu\n", hashmap_count(m), hashmap_capacity(m));
+print_get(m, "fig");
+print_get(m, "mango");
+hashmap_free(m);
+return 0;</code></pre>
+          <p>Run <code>./hashmap</code>. Read the three output lines first, then the AddressSanitizer report: which function called <code>free</code>, and where the address lives. Restore both files.</p></li>
+        <li><strong>Borrowed value after remove.</strong> In the correct <code>main.c</code>, just before the <code>remove fig</code> line add <code>const int* fig = hashmap_get(m, "fig");</code> and just after it add <code>printf("fig again: %d\n", *fig);</code>. Build and run <code>./hashmap</code>: read the three stack traces. Then run <code>./hashmap-plain</code> and look at what <code>fig again</code> prints. Remove the two lines.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><strong>Optional, experiment 4.</strong> In <code>hashmap_grow</code>, delete the <code>free(m-&gt;buckets);</code> line. Build and run: the nine lines are correct. Run <code>make check</code> and read which function allocated the lost block, and how many bytes. Restore the line.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 13 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="8"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the reports</h2>
+  <p><strong>1. Signed hash.</strong> One line, before your output (paths trimmed; line numbers are yours):</p>
+  <pre><code>hashmap.c:24:21: <strong>runtime error: signed integer overflow: 193502395 * 33 cannot be represented in type 'int'</strong>
+after 3 puts: count 3, capacity 4
+...</code></pre>
+  <p>193502395 is the running total for <code>pea</code>; multiplying it by 33 for the <code>r</code> needs 33 bits. UBSan reports each source location once, so you see the first key that overflowed and no more. Every four-letter key does the same. The nine lines still come out right on both builds, because on this machine the overflow happened to wrap and the wrong hash was at least used consistently. Undefined behaviour does not promise a crash; it promises nothing. The compiler is allowed to assume an <code>int</code> never overflows and to optimise on that assumption. <code>unsigned long</code> removes the question.</p>
+
+  <p><strong>2. Borrowed key.</strong> gcc says it first, because a <code>const char*</code> is being stored into a <code>char*</code> slot that the map intends to <code>free</code>:</p>
+  <pre><code>hashmap.c:111:12: <strong>warning: assignment discards ‘const’ qualifier from pointer target type</strong> [-Wdiscarded-qualifiers]
+  111 |     n-&gt;key = key;</code></pre>
+  <p>Then the output is wrong before anything crashes:</p>
+  <pre><code>after 6 puts: <strong>count 3, capacity 4</strong>
+get fig: <strong>absent</strong>
+get mango: 4</code></pre>
+  <p>Six puts, three keys. Every node's <code>key</code> points at <code>buf</code>, so when <code>apple</code> arrived in bucket 3, <code>find_in</code> compared <code>buf</code> with <code>buf</code>, found a match, and overwrote <code>fig</code>'s value; <code>kiwi</code> did the same to <code>pear</code>, <code>mango</code> to <code>apple</code>. No resize, because the count never passed 3. Now every node claims to hold whatever <code>buf</code> holds last, <code>mango</code>, which is why <code>fig</code> is absent and <code>mango</code> is found with a value. Then <code>hashmap_free</code> runs:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>attempting free on address which was not malloc()-ed</strong>: 0x7a556d000020 in thread T0
+    #0 in free
+    #1 in <strong>hashmap_free hashmap.c:91</strong>
+    #2 in main main.c:36
+
+Address 0x7a556d000020 is <strong>located in stack of thread T0</strong> at offset 32 in frame
+    #0 in main main.c:18
+
+  This frame has 1 object(s):
+    [32, 48) <strong>'buf' (line 24)</strong> &lt;== Memory access at offset 32 is inside this variable
+SUMMARY: AddressSanitizer: bad-free</code></pre>
+  <p>The map freed <code>main</code>'s stack. cppreference: “The behavior is undefined if the value of <code>ptr</code> does not equal a value returned earlier by <code>malloc()</code>, <code>calloc()</code>, <code>realloc()</code>”<a href="https://en.cppreference.com/w/c/memory/free">*</a>. The plain build prints the same three lines and then dies with glibc's <code>double free or corruption (out)</code>. The lesson is one sentence: a container that will call <code>free</code> on a pointer must be the one that called <code>malloc</code> for it, and <code>strdup</code> is how it does that for a string<a class="sn-ref" href="#sn4"></a>.</p>
+  <span class="sidenote" id="sn4">If you keep the full <code>main</code> instead of the short one, the first bad free is <code>hashmap_remove</code> freeing the literal <code>"fig"</code>, and the sanitizer dies inside its own allocator with a less readable SEGV: string literals live, as Beej puts it, in “read-only memory”<a href="https://beej.us/guide/bgc/html/split/strings.html">*</a>, and even the sanitizer's bookkeeping cannot write there. Same bug, worse report; that is why the experiment uses the short test.</span>
+
+  <p><strong>3. Borrowed value after remove.</strong> The plain build prints <code>fig again: -1792341989</code> and exits 0: the allocator reused the first bytes of the dead node for its own bookkeeping, and the <code>value</code> member was inside them. A different machine prints a different number, or the stale 20. The sanitizer build tells the whole story:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-use-after-free</strong> on address 0x5030000000d8
+<strong>READ of size 4</strong> at 0x5030000000d8 thread T0
+    #0 in <strong>main main.c:58</strong>                      ← the printf of *fig
+
+0x5030000000d8 is located <strong>8 bytes inside of 24-byte region</strong>
+<strong>freed by</strong> thread T0 here:
+    #0 in free
+    #1 in <strong>hashmap_remove hashmap.c:145</strong>
+    #2 in main main.c:57
+
+<strong>previously allocated by</strong> thread T0 here:
+    #0 in malloc
+    #1 in <strong>hashmap_put hashmap.c:107</strong>
+    #2 in put_range main.c:12
+    #3 in main main.c:34</code></pre>
+  <p>Read it bottom up. A 24-byte block, so a node, was allocated by the <code>malloc</code> in <code>hashmap_put</code> during the first <code>put_range</code>: that is <code>fig</code>'s node, the second key. It was freed by <code>hashmap_remove</code>, called from the <code>remove fig</code> line. Then <code>main</code> read 4 bytes at offset 8, which is the <code>value</code> member after the 8-byte <code>key</code> pointer. The pointer <code>fig</code> carried that address across the free. <code>make check</code> says the same in valgrind's words: <code>Invalid read of size 4 ... 8 bytes inside a block of size 24 free'd</code> by <code>hashmap_remove</code>.</p>
+
+  <p><strong>4. The resize that forgets.</strong> Nine correct lines, then:</p>
+  <pre><code>==12345== <strong>32 bytes in 1 blocks are definitely lost</strong> in loss record 1 of 1
+==12345==    at 0x...: calloc
+==12345==    by 0x...: <strong>hashmap_new</strong> (hashmap.c:73)
+==12345==    by 0x...: main (main.c:29)
+==12345== ERROR SUMMARY: 1 errors from 1 contexts</code></pre>
+  <p>Four slots of 8 bytes: the first bucket array, born in <code>hashmap_new</code>, abandoned in <code>hashmap_grow</code>, which valgrind cannot name because the block was already unreachable when the program ended. The trace shows where a lost block was made; you supply where it was dropped. In this run the sanitizer build's LeakSanitizer reported it too, as “Direct leak of 32 byte(s)”; as NOTES records, it does not always, and <code>make check</code> is the gate.</p>
+</section>
+
+<section>
+  <h2>A set is this map without the value</h2>
+  <p>Delete the <code>value</code> member and the map becomes a set of strings: same hash, same chains, same key copies, same resize. <code>hashmap_put</code> becomes <code>set_add</code> and returns whether the key was new; <code>hashmap_get</code> becomes <code>set_contains</code> and returns 1 or 0, with no borrowed pointer to worry about. Nothing about ownership changes. It is not part of this exercise; if you want it, write it after lesson 14.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C, or language-free. Read in this order; the first two items are short source files, not chapters.</p>
+  <ol class="reading">
+    <li><p><strong>Separate chaining in C, the textbook version.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashsep.h">hashsep.h</a>, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashsep.c">hashsep.c</a> and <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/hashfunc.c">hashfunc.c</a>, from the author's free <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a>. Three differences to find. His <code>TheLists[i]</code> is a header node allocated per bucket, so his <code>Insert</code> never writes the array slot and has no slot walk; yours has the slot walk and one allocation less per bucket. His table size is <code>NextPrime</code> of what you ask for and never changes; yours doubles. His keys are <code>int</code>, and the two comments “Probably need strcmp!!” in <code>Find</code> and “Probably need strcpy!” in <code>Insert</code> are exactly your <code>find_in</code> and your <code>strdup</code>. In <code>hashfunc.c</code>, <code>Hash3</code> is djb2's shape: <code>HashVal = (HashVal &lt;&lt; 5) + *Key++</code> in an <code>unsigned int</code>. <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/testhash.c">testhash.c</a> is his test program: 400 inserts, then 400 finds that print only on failure.</p></li>
+    <li><p><strong>djb2 as it was posted.</strong> Ozan Yigit, <a href="http://www.cse.yorku.ca/~oz/hash.html">Hash Functions</a>. Half a page of C. The <code>unsigned long</code> accumulator, the <code>(hash &lt;&lt; 5) + hash</code> form of “times 33”, Bernstein's later XOR variant, and the K&amp;R first-edition function he calls “lose lose”, which is Weiss's <code>Hash1</code>: add the characters and hope. Read it to see why the multiply matters.</p></li>
+    <li><p><strong>The two rules you broke.</strong> cppreference, <a href="https://en.cppreference.com/w/c/memory/free">free</a>, the paragraph of “The behavior is undefined if ...” sentences: passing a pointer that did not come from <code>malloc</code> (experiment 2) and accessing memory after <code>free</code> returns (experiment 3). Then the <code>strdup</code> entry of the <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/guide/stdlib.html">CS107 C Standard Library Guide</a>, three sentences on who must free the copy.</p></li>
+    <li><p><strong>If you prefer to watch first.</strong> CS50 Shorts, Doug Lloyd: <a href="https://video.cs50.io/nvzVHwrrub0">Hash Tables</a>. From Harvard's C-based introductory course. Hand traces of hashing, collisions and chaining, no ownership; the ownership part is this lesson's.</p></li>
+  </ol>
+  <p>The chain-length claim and the doubling rule in the body cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/34hash/">3.4 Hash Tables</a>, <a href="https://algs4.cs.princeton.edu/34hash/SeparateChainingHashST.java.html">SeparateChainingHashST.java</a>). Treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/hashmap.html">cheat sheet</a> for lookup. Next is lesson 14, the graph: the last lesson the mission requires, and it reuses lesson 11's queue unchanged.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Whenever a structure stores a pointer it did not allocate, ask who will free it and when the bytes behind it die. If the answer is “the caller, at some point”, the structure needs its own copy. And if a resize ever calls <code>malloc</code> or <code>strdup</code> inside its loop, stop and ask what the old block's owner is supposed to do now. Bring the bucket table for one key if the index arithmetic feels shaky; it is worth doing once by hand.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0012-smaller-left-larger-right.html">Previous: Lesson 12, Smaller Left, Larger Right</a> · <a href="../reference/hashmap.html">Reference: hashmap cheat sheet</a></span>
+    <span><a href="0014-mark-then-visit.html">Next: Lesson 14, Mark, Then Visit</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0013-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"hashmap_put(m, \"fig\", 12) runs with \"fig\" a string literal in main.c. After it returns, what does the new node's key point at?",opts:["a heap copy the map owns","the literal in main's read-only memory","a copy inside the bucket array","a copy on main's stack frame"],a:0,why:"hashmap_put calls strdup, so the node owns a fresh heap block holding f, i, g and the zero. The caller's literal is untouched and still the caller's."},
+    {q:"hashmap_grow doubles the bucket array. What happens to the existing nodes?",opts:["relinked into new buckets, addresses unchanged","copied to new nodes, then freed","kept in the old bucket array","freed and re-created from their keys"],a:0,why:"Each node is unlinked from its old chain and pushed onto a chain in the new array. No malloc, no strdup, no free of a node; the only free is the old array. That is also why a pointer from hashmap_get survives a resize."},
+    {q:"const int* v = hashmap_get(m, \"fig\"); then hashmap_remove(m, \"fig\") returns 1. What is v now?",opts:["dangling, reading it is undefined","NULL, because the key went","valid, the int outlives removal","freed, so call free again"],a:0,why:"v addressed the value member inside the node. hashmap_remove freed that node. The address is still in v; the bytes are not yours. ASan reports the read as heap-use-after-free, 8 bytes inside a 24-byte region."},
+    {q:"Two different keys hash to bucket 3. How does hashmap_get tell them apart?",opts:["strcmp on each node's key","comparing the two hash values","comparing the two key pointers","the order inside the chain"],a:0,why:"Same bucket means same remainder, nothing more. The chain is walked and every key is compared by content. Comparing pointers would say two equal strings differ; comparing hashes would say apple and mango agree."},
+    {q:"Why is hash_djb2's accumulator unsigned long rather than int?",opts:["unsigned wraparound is defined, signed is not","unsigned multiplication by 33 runs much faster","the modulo needs an unsigned left operand","string lengths are size_t, so hashes are"],a:0,why:"pear's running total passes 2^31 on its fourth character. In an int that is signed overflow, undefined, and UBSan says so. In unsigned long the value wraps modulo 2^64 by definition, and any bit pattern is a fine hash."},
+    {q:"8 buckets hold 6 keys and a seventh, new key is put. Under the rule count > capacity * 3 / 4, what happens?",opts:["key added, then the array doubles","key added, no resize until 8","key added to the longest chain","key rejected until the array doubles"],a:0,why:"After the insert the count is 7, and 7 > 6, so the array doubles to 16 and all seven nodes are relinked. Six keys in eight buckets was exactly three-quarters, on the line; the rule fires when the count goes past it."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-draw the four ownership levels for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

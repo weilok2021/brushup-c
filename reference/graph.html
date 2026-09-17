@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Graph (adjacency lists)</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Graph (adjacency lists)</h1>
+  <p class="subtitle">Opaque <code>graph_t</code>: an array of list heads, two 16-byte nodes per undirected edge, front insertion, breadth-first search on lesson 11's queue, recursive depth-first search, and connected components. Paired with <a href="../lessons/0014-mark-then-visit.html">Lesson 14</a>.</p>
+
+  <div class="rule"><strong>The rule.</strong> Mark a vertex when it is found: when BFS enqueues it, when a recursive helper enters it. Never when it is visited. A mark means “already in the queue or out of it”. Break the rule and a vertex is queued twice (BFS) or a cycle recurses forever (DFS).</div>
+
+  <h2>Interface</h2>
+  <p class="filename">graph.h</p>
+  <pre><code>typedef struct graph graph_t;                      /* opaque: struct graph lives only in graph.c */
+
+graph_t* graph_new(size_t vertex_count);           /* vertices 0 .. n-1, no edges; NULL on failure */
+void     graph_free(graph_t* g);                   /* every edge node, the array, then g; NULL ok */
+int      graph_add_edge(graph_t* g, int u, int v); /* v joins u's list AND u joins v's; 1 ok, 0 bad vertex or alloc fail, unchanged */
+size_t   graph_vertex_count(const graph_t* g);
+size_t   graph_degree(const graph_t* g, int v);    /* length of v's list */
+void     graph_print(const graph_t* g);            /* "v:" then " nbr" each, one line per vertex */
+size_t   graph_bfs(const graph_t* g, int start, int* order);      /* order[] holds n ints; returns visited count */
+size_t   graph_dfs(const graph_t* g, int start, int* order);      /* same contract, recursive */
+size_t   graph_components(const graph_t* g, int* component);      /* component[v] = id 0..; returns id count */</code></pre>
+  <p><code>graph.c</code> includes <code>queue.h</code>; <code>main.c</code> never sees a queue. Vertex ids are <code>int</code> because the queue carries <code>int</code>.</p>
+
+  <h2>Private layout</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">graph.c, top</p>
+      <pre><code>struct edge {
+    int to;                /* 4 bytes + 4 padding */
+    struct edge* next;     /* 8: node is 16 bytes */
+};
+
+struct graph {
+    size_t n;
+    struct edge** adj;     /* adj[u]: head of u's list */
+};                         /* 16 bytes */</code></pre>
+    </div>
+    <div>
+      <p class="filename">after 0-1, 0-2, 1-3, 2-3, 3-4, 5-6 (n = 8)</p>
+      <pre><code>g ─▶ { n 8, adj ─▶ 0x100 }
+
+adj[0] ─▶ [2]─▶[1]      adj[4] ─▶ [3]
+adj[1] ─▶ [3]─▶[0]      adj[5] ─▶ [6]
+adj[2] ─▶ [3]─▶[0]      adj[6] ─▶ [5]
+adj[3] ─▶ [4]─▶[2]─▶[1] adj[7]   NULL
+newest neighbour first: reverse insertion order</code></pre>
+    </div>
+  </div>
+  <p>Ownership: <code>main</code> owns the struct through <code>g</code>; the struct owns the array (<code>calloc</code>, so every head starts <code>NULL</code>); each slot <code>adj[u]</code> owns u's nodes. Six edges are twelve nodes; with the struct and the array, 14 blocks. The lesson's test program totals 32 allocations and 32 frees: 14 graph blocks, 3 <code>marked</code> arrays, 2 queue structs, 10 queue nodes, 2 arrays in <code>main</code>, 1 <code>printf</code> buffer.</p>
+
+  <h2>Add an edge: two nodes, four pointer writes</h2>
+  <pre><code>struct edge* uv = malloc(sizeof *uv);      /* allocate both first, so a failed second */
+struct edge* vu = malloc(sizeof *vu);      /* malloc leaves the graph unchanged      */
+if (uv == NULL || vu == NULL) { free(uv); free(vu); return 0; }
+uv-&gt;to = v;  uv-&gt;next = g-&gt;adj[u];  g-&gt;adj[u] = uv;    /* front insert on slot adj[u] */
+vu-&gt;to = u;  vu-&gt;next = g-&gt;adj[v];  g-&gt;adj[v] = vu;    /* front insert on slot adj[v] */</code></pre>
+
+  <h2>The three walks</h2>
+  <table>
+    <tr><th>Walk</th><th>Remembers pending work in</th><th>Mark written</th><th>Visit means</th><th>Owns and frees</th></tr>
+    <tr><td><code>graph_bfs</code></td><td>a <code>queue_t</code> from lesson 11</td><td>when enqueued</td><td>dequeue, append to <code>order[]</code></td><td><code>marked</code> (calloc) and the queue; both freed on every exit</td></tr>
+    <tr><td><code>dfs_visit</code> (static)</td><td>C stack frames, at most <code>n</code></td><td>on entry, first line</td><td>append to <code>order[]</code> via <code>size_t* count</code></td><td>nothing; wrapper owns <code>marked</code></td></tr>
+    <tr><td><code>label_visit</code> (static)</td><td>C stack frames</td><td><code>component[v] = id</code>, the label is the mark</td><td>the write itself</td><td>nothing; caller owns <code>component</code>, filled with -1 first</td></tr>
+  </table>
+
+  <div class="grid">
+    <div>
+      <p class="filename">BFS core</p>
+      <pre><code>marked[start] = 1;
+queue_enqueue(q, start);
+while (queue_dequeue(q, &amp;v)) {
+    order[count++] = v;
+    for (e = g-&gt;adj[v]; e; e = e-&gt;next)
+        if (!marked[e-&gt;to]) {
+            marked[e-&gt;to] = 1;   /* here */
+            queue_enqueue(q, e-&gt;to);
+        }
+}
+queue_free(q); free(marked);</code></pre>
+    </div>
+    <div>
+      <p class="filename">DFS helper</p>
+      <pre><code>static void dfs_visit(const graph_t* g, int v,
+        int* marked, int* order, size_t* count) {
+    marked[v] = 1;               /* first */
+    order[(*count)++] = v;
+    for (e = g-&gt;adj[v]; e; e = e-&gt;next)
+        if (!marked[e-&gt;to])
+            dfs_visit(g, e-&gt;to, marked, order, count);
+}
+/* components: fill -1; for each v == -1:
+   label_visit(g, v, component, id++) */</code></pre>
+    </div>
+  </div>
+
+  <h2>Trace on the test graph, from 0</h2>
+  <table>
+    <tr><th>Walk</th><th>Order</th><th>Why</th></tr>
+    <tr><td>BFS</td><td><code>0 2 1 3 4</code></td><td>0's list reads 2 then 1; 2 enqueues 3 before 1 is dequeued; 3 enqueues 4.</td></tr>
+    <tr><td>DFS</td><td><code>0 2 3 4 1</code></td><td>0 enters 2, 2 enters 3, 3 enters 4; unwind; 0 enters 1 last.</td></tr>
+    <tr><td>BFS from 4</td><td><code>4 3 2 1 0</code></td><td>The far end. Prints <code>4</code> alone if add_edge is directed by mistake.</td></tr>
+    <tr><td>Components</td><td><code>0 0 0 0 0 1 1 2</code>, count 3</td><td>Walks start at 0, then 5, then 7. Vertex 7 has an empty list.</td></tr>
+    <tr><td>BFS, mark on dequeue</td><td><code>0 2 1 3 3 4 4</code>, count 7</td><td>1 sees 3 unmarked while 3 is queued; 3 dequeued twice enqueues 4 twice.</td></tr>
+  </table>
+
+  <h2>Cost</h2>
+  <table>
+    <tr><th>Operation</th><th>Cost</th><th>Why</th></tr>
+    <tr><td><code>graph_add_edge</code></td><td>constant</td><td>two mallocs, four pointer writes, no walk</td></tr>
+    <tr><td><code>graph_degree</code></td><td>length of one list</td><td>walks v's list (Skiena keeps a <code>degree[]</code> array instead)</td></tr>
+    <tr><td>BFS, DFS, components</td><td>proportional to V + E</td><td>each vertex entered once (the mark), each list read once</td></tr>
+    <tr><td>space</td><td>proportional to V + E</td><td>one slot per vertex, two nodes per edge; plus <code>n</code> ints of marks per walk</td></tr>
+  </table>
+
+  <h2>Traps and their reports</h2>
+  <table>
+    <tr><th>Mistake</th><th>What you see</th></tr>
+    <tr><td>BFS marks on dequeue</td><td>No warning. Test graph: <code>bfs from 0: 0 2 1 3 3 4 4</code>, <code>visited: 7</code>; <code>make check</code> passes (35 allocs). With edge 1-2 added: ASan <code>heap-buffer-overflow</code>, WRITE of size 4, <code>0 bytes after 32-byte region</code>, in <code>graph_bfs</code> at <code>order[count++] = v</code>, allocated in <code>main</code>.</td></tr>
+    <tr><td><code>dfs_visit</code> marks after its loop</td><td>ASan <code>stack-overflow</code>, a column of identical <code>dfs_visit</code> frames far deeper than <code>n</code>. A cycle with no mark; no stack size fixes it.</td></tr>
+    <tr><td><code>graph_add_edge</code> links only u to v</td><td>No report, <code>make check</code> passes (22 allocs). Lists one-sided, <code>degree 3: 1</code>, <code>bfs from 4: 4</code>, <code>visited: 1</code>. Walks from 0 and the components still pass, because every test edge points from smaller to larger. Search from the far end.</td></tr>
+    <tr><td><code>queue_free(q)</code> missing in <code>graph_bfs</code></td><td>valgrind: <code>24 bytes in 1 blocks are definitely lost</code>, once per BFS call, by <code>queue_new</code> under <code>graph_bfs</code> under <code>main</code>; 32 allocs, 30 frees. Only the struct: dequeue already freed every node.</td></tr>
+    <tr><td><code>component[]</code> left at calloc's zeros</td><td>Every vertex looks labelled 0 before the loop; nothing is visited, count 0 (or one component if the check is <code>!= 0</code>). Fill with -1 first.</td></tr>
+    <tr><td>self-loop <code>u-u</code></td><td>Both front inserts land on the same slot: u appears twice in its own list, degree counts 2. algs4's <code>Graph</code> documents the same convention. Not in the test data.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/">Skiena, Algorithm Design Manual programs</a> (<a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/graph.c">graph.c</a>, <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/bfs-dfs.c">bfs-dfs.c</a>, <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/connected.c">connected.c</a>) · <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#graphSearchImplementation">Aspnes, Yale CPSC 223 notes, 5.14.5.1</a> (<a href="https://www.cs.yale.edu/homes/aspnes/classes/223/examples/graphSearch/search.c">search.c</a>: parent as the mark, recursive <code>dfsHelper</code>, array-queue <code>bfs</code>) · <a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture10.pdf">Su, CS161 Lecture 10</a> (DFS paints grey first; Theta(m + n)) · <a href="https://algs4.cs.princeton.edu/41graph/">Sedgewick &amp; Wayne, 4.1 Undirected Graphs</a> (propositions on V + E) · <a href="https://algs4.cs.princeton.edu/41graph/BreadthFirstPaths.java.html">BreadthFirstPaths.java</a> (mark next to enqueue) · <a href="https://algs4.cs.princeton.edu/41graph/CC.java.html">CC.java</a> · <a href="https://algs4.cs.princeton.edu/13stacks/Bag.java.html">Bag.java</a> (front insertion) · <a href="https://en.cppreference.com/w/c/memory/calloc">cppreference: calloc</a></p>
+</article>
+</body>
+</html>

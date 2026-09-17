@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 7 · Grow on Push</title>
+<title>Lesson 9 · Grow on Push</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -38,6 +38,7 @@ td:first-child code{white-space:nowrap}
 .win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
 .paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
 .paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
 .ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
 .steps{list-style:none;padding:0;margin:0;counter-reset:step}
 .steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
@@ -72,13 +73,13 @@ td:first-child code{white-space:nowrap}
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 7 · DSA in C</p>
+  <p class="kicker">Lesson 9 · DSA in C</p>
   <h1>Grow on Push</h1>
-  <p class="subtitle">A stack of ints in a heap block that doubles when it fills. The client holds one pointer and never sees inside. This is the first abstract data type of the course, and lessons 8, 9 and 10 copy its shape.</p>
+  <p class="subtitle">A stack of ints in a heap block that doubles when it fills. The client holds one pointer and never sees inside. This is the first abstract data type of the course, and lessons 10, 11 and 12 copy its shape.</p>
   <div class="meta">
     <span>About 40 minutes</span>
-    <span>Where: WSL, <code>exercises/07-stack/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/stack-adt.html">Cheat sheet</a> · <a href="0006-halve-then-merge.html">Lesson 6</a></span>
+    <span>Where: WSL, <code>exercises/09-stack/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/stack-adt.html">Cheat sheet</a> · <a href="0008-halve-then-merge.html">Lesson 8</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship a stack as a module: a header that hides the struct, a <code>.c</code> that owns two heap blocks, a push that grows through a temporary pointer and survives allocation failure, and a test program that proves the LIFO order and the empty case.</div>
 </header>
@@ -267,7 +268,7 @@ size_t stack_count(const stack_t* s);</code></pre>
   <ol class="steps" id="steps">
     <li><p>Create and enter the exercise folder:</p>
       <pre><code>cd ~/workspace/brushup-c
-mkdir -p exercises/07-stack &amp;&amp; cd exercises/07-stack</code></pre>
+mkdir -p exercises/09-stack &amp;&amp; cd exercises/09-stack</code></pre>
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>stack.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
@@ -292,7 +293,7 @@ empty: yes</code></pre>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
     <li><p><strong>Optional, plain build only: make <code>realloc</code> fail.</strong> In <code>stack_grow</code>, temporarily ask for <code>(size_t)1 &lt;&lt; 62</code> bytes instead of the real size. In <code>main</code>, print <code>push N failed, count still C</code> before freeing on a failed push. Run <code>make check</code> (the sanitizer build aborts on a request that large, so use the plain build under Valgrind). You should see <code>push 30 failed, count still 2</code> and <code>0 errors</code>, no leaks: the stack survived. Now write the grow without the temporary pointer, <code>s-&gt;items = realloc(s-&gt;items, ...)</code>, and run <code>make check</code> again: <code>8 bytes in 1 blocks are definitely lost</code>, allocated in <code>stack_new</code>. Restore both.</p>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
-    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 7 done</em>.</p>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 9 done</em>.</p>
       <label class="check"><input type="checkbox" data-step="8"> done</label></li>
   </ol>
 </section>
@@ -341,20 +342,28 @@ main.c:22:29: <strong>error: invalid use of incomplete typedef ‘stack_t’</st
 
 <section>
   <h2>Read next</h2>
-  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/13stacks/">1.3 Bags, Queues, and Stacks</a>, the part headed “Array and resizing array implementations of collections”, and the listing <a href="https://algs4.cs.princeton.edu/13stacks/ResizingArrayStack.java.html">ResizingArrayStack.java</a>. The code is Java; the doubling rule and the cost claim are the ones you just implemented. For the language rule behind the opaque struct, Beej <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html">chapter 35, Incomplete Types</a>. For the test program's shape, <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">CS107 Testing Strategies</a>. Keep the <a href="../reference/stack-adt.html">cheat sheet</a> for lookup.</p>
-  <div class="ask"><strong>Ask your teacher.</strong> Before you start lesson 8, say out loud where each of the three places in the diagram lives, who owns each heap block, and which line frees it. If any of the three answers takes more than one sentence, ask me and we will draw it again.</div>
+  <p>Everything here is C, except the last item, which is pure theory. Read in this order; the first item is three short source files, not a chapter.</p>
+  <ol class="reading">
+    <li><p><strong>An array stack in C that does not grow.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/stackar.h">stackar.h</a>, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/stackar.c">stackar.c</a> and <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/teststka.c">teststka.c</a> (the author publishes the book's <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a> free). The header hides the struct the same way yours does: <code>struct StackRecord;</code> is an incomplete type, and the client only ever holds a pointer. Two differences to look for. His typedef hides the pointer too (<code>typedef struct StackRecord *Stack;</code>), so a client cannot tell that <code>Stack</code> is an address; yours keeps the <code>*</code> visible. And his stack has a fixed capacity: <code>CreateStack(MaxElements)</code> allocates once, <code>IsFull</code> compares against it, and <code>Push</code> on a full stack calls <code>Error</code> instead of growing. Read <code>Push</code>, <code>Pop</code> and <code>TopAndPop</code> against your own and note that his top is an index that starts at <code>-1</code>, where yours is a count that starts at 0. <code>DisposeStack</code> frees the array before the record, the same inside-out order as your <code>stack_free</code>. The test program creates a stack of 12, pushes 0 to 9, then prints and pops until empty. It never tries the pop on an empty stack; yours does.</p></li>
+    <li><p><strong>The grow step, and the module split.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/manual-memory-allocation.html">12.5 Changing Allocated Size with realloc()</a>, including 12.5.1. The first example catches <code>realloc</code> in <code>new_p</code>, tests it for <code>NULL</code>, and only then assigns it to <code>p</code>: your <code>stack_grow</code> exactly. The <code>readline</code> example in 12.5.1 is a growing buffer in a loop, <code>bufsize *= 2</code> then <code>realloc</code> through <code>new_buf</code>, and it ends with a shrink-to-fit that your stack leaves out. Then <a href="https://beej.us/guide/bgc/html/split/multifile-projects.html">chapter 17, Multifile Projects</a>: 17.1 on prototypes in headers, 17.2 on include guards (the long form of your <code>#pragma once</code>), and 17.3 on <code>static</code>, the keyword that keeps <code>stack_grow</code> out of the header. For the rule behind the opaque struct, <a href="https://beej.us/guide/bgc/html/split/incomplete-types.html">chapter 35, Incomplete Types</a>; 35.2 lists the error messages, and 35.5 shows a struct being completed later in the same file, which is what <code>stack.c</code> does.</p></li>
+    <li><p><strong>The same ideas in CS50's C.</strong> CS50x, <a href="https://cs50.harvard.edu/x/notes/5/#stacks">Week 5 notes, Stacks</a> and the <a href="https://cs50.harvard.edu/x/notes/5/#arrays">Arrays</a> section that follows it. The stack there is a struct with a fixed <code>CAPACITY</code> array and a <code>size</code>; the notes say outright that it would be nice if it could grow, then show a list going from three ints to four, first by <code>malloc</code>, copy and <code>free</code>, then by <code>realloc</code> caught in <code>int *tmp</code>. That is one grow step of your stack, written out in <code>main</code> with no struct around it. If you prefer to watch first, the CS50 Short <a href="https://video.cs50.io/hVsNqhEthOk">Stacks</a> (Doug Lloyd) draws the array version with a <code>top</code> index, pushed and popped by hand, then the linked-list version. The array version keeps the struct on the caller's frame and passes <code>&amp;s</code>, which your header forbids. The linked-list version hands a head pointer back and forth, <code>list = push(list, 12)</code>; hold that shape until lesson 10.</p></li>
+    <li><p><strong>Why doubling costs so little.</strong> MIT 6.006, Fall 2011, <a href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/resources/mit6_006f11_lec09/">Lecture 9 notes, Table Doubling</a>, page 2, the part headed “How fast to grow?”. No code, two lines of arithmetic. Growing by one slot costs 1 + 2 + ... + n, which is order n². Doubling costs 1 + 2 + 4 + 8 + ... + n, which is order n. The notes are about hash tables, and the sum is the same for your <code>items</code> block. The paragraph headed “Amortized Analysis” under it is the definition of the word, with a rent-versus-daily-cost picture.</p></li>
+  </ol>
+  <p><strong>Where this lands in CS107.</strong> Lecture 7 (Stack and Heap) is where <code>realloc</code> is introduced<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. The slides write <code>str = realloc(str, ...)</code> and then <code>assert(str != NULL)</code>: the direct assignment this lesson told you not to write. It is fine there because an <code>assert</code> aborts the program on failure, so nothing survives to leak. Your stack promises to survive a failed push, so it needs the temporary pointer. Lecture 8 (Generic Operations) introduces <code>void*</code>, which is how a stack like this one comes to hold any type. Not needed for this lesson. The course <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/styleguide.html">style guide</a> asks for the typedef form you used, and its <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/testing.html">testing guide</a> is where the minimal-case-and-fringe rule behind your test program comes from.</p>
+  <p>The doubling and amortised-cost sentences in the body still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/13stacks/">1.3</a>, <a href="https://algs4.cs.princeton.edu/13stacks/ResizingArrayStack.java.html">ResizingArrayStack.java</a>). Treat those links as evidence for a sentence, not as reading; the code there is Java. Keep the <a href="../reference/stack-adt.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> Before you start lesson 10, say out loud where each of the three places in the diagram lives, who owns each heap block, and which line frees it. If any of the three answers takes more than one sentence, ask me and we will draw it again.</div>
 </section>
 
 <footer>
   <div class="next">
-    <span><a href="0006-halve-then-merge.html">Previous: Lesson 6, merge sort and quicksort</a> · <a href="../reference/stack-adt.html">Reference: stack ADT cheat sheet</a></span>
-    <span><a href="0008-the-slot-before-the-node.html">Next: Lesson 8, the singly linked list</a></span>
+    <span><a href="0008-halve-then-merge.html">Previous: Lesson 8, merge sort and quicksort</a> · <a href="../reference/stack-adt.html">Reference: stack ADT cheat sheet</a></span>
+    <span><a href="0010-the-slot-before-the-node.html">Next: Lesson 10, the singly linked list</a></span>
   </div>
 </footer>
 </article>
 <script>
 (function(){
-  var KEY='brushup-c-lesson-0007-steps';
+  var KEY='brushup-c-lesson-0009-steps';
   var saved={};
   try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
   document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){

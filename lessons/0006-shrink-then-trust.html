@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6 · Shrink, Then Trust</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 6 · DSA in C</p>
+  <h1>Shrink, Then Trust</h1>
+  <p class="subtitle">A recursive function answers the smallest range outright, hands every other range on one size smaller, and trusts the answer that comes back. Four small functions, one array, and a debugger view of the frames.</p>
+  <div class="meta">
+    <span>About 40 minutes</span>
+    <span>Where: WSL, <code>exercises/06-recursion/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursion.html">Cheat sheet</a> · <a href="0005-sort-then-halve.html">Lesson 5</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Write four recursive functions over a half-open range <code>[lo, hi)</code> from a blank file, each in a different shape (shrink by one, work on the way back up, halve, halve and keep one side), watch their frames in <code>gdb</code>, and recognise the two sanitizer reports that mean a recursion never shrank.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c recur.c
+
+recursion: $(SRC) recur.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o recursion $(SRC)
+
+recursion-plain: $(SRC) recur.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o recursion-plain $(SRC)
+
+.PHONY: check clean
+check: recursion-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./recursion-plain
+clean:
+<span class="tab">⇥</span>rm -f recursion recursion-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Two rules and one act of trust</h2>
+  <p>Eight ints sit in a heap block: <code>9 4 15 9 26 5 35 4</code>. Ask for the sum of the range <code>[0, 8)</code>. A loop would walk it. A recursive function says instead: the sum of <code>[0, 8)</code> is <code>a[0]</code> plus the sum of <code>[1, 8)</code>. And the sum of <code>[1, 8)</code> is <code>a[1]</code> plus the sum of <code>[2, 8)</code>. The chain ends at <code>[8, 8)</code>, the empty range, whose sum is 0 with no call at all:</p>
+  <pre><code>sum [0, 8) = 9  + sum [1, 8)
+sum [1, 8) = 4  + sum [2, 8)
+sum [2, 8) = 15 + sum [3, 8)
+sum [3, 8) = 9  + sum [4, 8)
+sum [4, 8) = 26 + sum [5, 8)
+sum [5, 8) = 5  + sum [6, 8)
+sum [6, 8) = 35 + sum [7, 8)
+sum [7, 8) = 4  + sum [8, 8)
+sum [8, 8) = 0                     empty: answered without a call</code></pre>
+  <pre><code>long sum_range(const int* a, size_t lo, size_t hi) {
+    if (lo == hi) {
+        return 0;                     /* base case: the empty range */
+    }
+    return a[lo] + sum_range(a, lo + 1, hi);
+}</code></pre>
+  <p>Two rules make this finite. <strong>Rule 1, the base case:</strong> some range is answered without calling. Here it is the empty range. <strong>Rule 2, shrink:</strong> every other call receives a range that is strictly smaller. Here <code>[lo + 1, hi)</code> has one element fewer than <code>[lo, hi)</code>. Aspnes lists the two ways this goes wrong, under the headings “Omitting the base case” and “Failure to make progress”<a class="sn-ref" href="#sn1"></a>. Break either rule and the calls never stop.</p>
+  <span class="sidenote" id="sn1">Aspnes, Yale CPSC 223 notes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#Common_problems_with_recursion">5.3.2 Common problems with recursion</a>. On the missing base case: “This is the recursive version of an infinite loop.” On failing to make progress: “we thought we were recursing on a smaller instance of the problem, but in fact we weren't.”</span>
+  <p>Then the act of trust. While writing the line <code>a[lo] + sum_range(a, lo + 1, hi)</code>, do not trace the inner call. Assume it returns the correct sum of the smaller range, and write the one step that turns that into the sum of the whole range. That assumption is safe exactly when the two rules hold, because the smaller range is closer to the base case, which you did write by hand. Shrink, then trust.</p>
+</section>
+
+<section>
+  <h2>Every call gets its own frame</h2>
+  <p>Each call to <code>sum_range</code> is a new stack frame with its own copies of <code>a</code>, <code>lo</code> and <code>hi</code>. The pointer copies all hold the same address, so every frame reads the same heap block; only <code>lo</code> differs. Stop the program under <code>gdb</code> when <code>lo</code> is 3 and ask for a backtrace:</p>
+  <pre><code>(gdb) break sum_range if lo == 3
+(gdb) run
+Breakpoint 1, sum_range (a=0x503000000040, lo=3, hi=8) at recur.c:6
+(gdb) backtrace
+#0  sum_range (a=0x503000000040, lo=3, hi=8) at recur.c:6
+#1  in sum_range (a=0x503000000040, lo=2, hi=8) at recur.c:9
+#2  in sum_range (a=0x503000000040, lo=1, hi=8) at recur.c:9
+#3  in sum_range (a=0x503000000040, lo=0, hi=8) at recur.c:9
+#4  in main () at main.c:30</code></pre>
+  <p>The CS107 GDB guide reads such a listing this way: “Each line represents a stack frame (ie. a function call)”<a class="sn-ref" href="#sn2"></a>. Frame 0 is the newest. Frames 1 to 3 are the same function, paused at line 9, the line with the recursive call: each is waiting for the frame below it to return so that it can add its own <code>a[lo]</code>. Nothing has been added yet. The additions happen on the way back up, newest frame first:</p>
+  <span class="sidenote" id="sn2">CS107, <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">GDB Guide</a>, the backtrace section. <code>up</code> and <code>down</code> move between frames; <code>info frame</code> prints one frame's addresses. In this build each <code>sum_range</code> frame is 64 bytes, so the eight live frames of the full call use half a kilobyte of the 8 MB stack.</span>
+  <pre><code>lo=8 returns 0
+lo=7 returns 4  + 0   = 4
+lo=6 returns 35 + 4   = 39
+lo=5 returns 5  + 39  = 44
+lo=4 returns 26 + 44  = 70
+lo=3 returns 9  + 70  = 79
+lo=2 returns 15 + 79  = 94
+lo=1 returns 4  + 94  = 98
+lo=0 returns 9  + 98  = 107</code></pre>
+</section>
+
+<section>
+  <h2>Work after the call runs on the way back up</h2>
+  <p>Move the work to the other side of the recursive call and the order reverses. This function prints the range last to first:</p>
+  <pre><code>void print_backwards(const int* a, size_t lo, size_t hi) {
+    if (lo == hi) {
+        return;
+    }
+    print_backwards(a, lo + 1, hi);   /* the rest first ... */
+    printf(" %d", a[lo]);             /* ... then this one, on the way back up */
+}</code></pre>
+  <p>The frame for <code>lo = 0</code> calls before it prints, and so does every frame under it. The deepest non-empty frame, <code>lo = 7</code>, is the first one to reach its <code>printf</code>, so 4 prints first, then 35, then 5, and 9 prints last: <code>4 35 5 26 9 15 4 9</code>. Aspnes shows the same pair, <code>printRangeRecursive</code> with the print before the call and <code>printRangeRecursiveReversed</code> with it after<a class="sn-ref" href="#sn3"></a>. Remember this shape. Lesson 8's merge runs after both recursive calls, and lesson 12 frees a tree node after both of its children, for exactly this reason.</p>
+  <span class="sidenote" id="sn3">Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#Example_of_recursion_in_C">5.3.1 Example of recursion in C</a>: a block of routines that “print numbers i where start &lt;= i &lt; stop”, half-open like yours, in <code>int</code> rather than <code>size_t</code>.</span>
+</section>
+
+<section>
+  <h2>Halve instead of shrinking by one</h2>
+  <p>Shrinking by one puts one frame on the stack per element: eight frames for eight ints, a million for a million. Aspnes: “it's best to try to avoid linear recursions like the one in printRangeRecursive, where the depth of the recursion is proportional to the number of things we are doing. Much safer are even splits”<a class="sn-ref" href="#sn4"></a>. Halving gives a tree of calls instead of a chain, and the tree is only about <code>log₂ n</code> deep. The largest value of <code>[0, 8)</code> is the larger of the largest of <code>[0, 4)</code> and the largest of <code>[4, 8)</code>:</p>
+  <span class="sidenote" id="sn4">Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#Blowing_out_the_stack">5.3.2.2 Blowing out the stack</a>: “if we call printRangeRecursive(0, 1000000), we will probably get a segmentation fault after the first 100,000 numbers or so.”</span>
+  <pre><code>[0, 8)  9 4 15 9 26 5 35 4                    -&gt; max(15, 35) = 35
+[0, 4)  9 4 15 9      [4, 8)  26 5 35 4       -&gt; max(9, 15) = 15,  max(26, 35) = 35
+[0, 2)  9 4  [2, 4)  15 9  [4, 6)  26 5  [6, 8)  35 4
+[0, 1) 9 [1, 2) 4 [2, 3) 15 [3, 4) 9 [4, 5) 26 [5, 6) 5 [6, 7) 35 [7, 8) 4    one element each</code></pre>
+  <pre><code>int max_range(const int* a, size_t lo, size_t hi) {
+    if (hi - lo == 1) {
+        return a[lo];                 /* one element is its own maximum */
+    }
+    size_t mid = lo + (hi - lo) / 2;
+    int left = max_range(a, lo, mid);
+    int right = max_range(a, mid, hi);
+    return left &gt; right ? left : right;
+}</code></pre>
+  <p>Three things to check against the two rules. The base case is one element, not zero, because the empty range has no maximum; the header says the range must hold at least one element. Both halves are strictly smaller than <code>[lo, hi)</code> whenever it holds two or more elements, because <code>mid</code> then lies strictly between <code>lo</code> and <code>hi</code>. And the deepest chain is <code>[0, 8)</code>, <code>[0, 4)</code>, <code>[0, 2)</code>, <code>[0, 1)</code>: four frames for eight elements, and only about twenty for a million. Lesson 8's merge sort is this function with a merge in place of the comparison.</p>
+</section>
+
+<section>
+  <h2>Halve and keep one side</h2>
+  <p>Binary search halves too, but it keeps only one half. Lesson 5 wrote it as a loop; here it is as a recursion on the sorted copy <code>4 4 5 9 9 15 26 35</code>, searching for 26 and then for 7:</p>
+  <pre><code>search 26 in [0, 8)   mid = 4, a[4] = 9,  26 &gt; 9   keep [5, 8)
+search 26 in [5, 8)   mid = 6, a[6] = 26  found     return &amp;a[6]
+
+search 7 in [0, 8)    mid = 4, a[4] = 9,  7 &lt; 9    keep [0, 4)
+search 7 in [0, 4)    mid = 2, a[2] = 5,  7 &gt; 5    keep [3, 4)
+search 7 in [3, 4)    mid = 3, a[3] = 9,  7 &lt; 9    keep [3, 3)
+search 7 in [3, 3)    empty                        return NULL</code></pre>
+  <pre><code>const int* search_range(const int* a, size_t lo, size_t hi, int target) {
+    if (lo == hi) {
+        return NULL;                  /* empty range: not here */
+    }
+    size_t mid = lo + (hi - lo) / 2;
+    if (a[mid] == target) {
+        return &amp;a[mid];
+    }
+    if (target &lt; a[mid]) {
+        return search_range(a, lo, mid, target);      /* [lo, mid) */
+    }
+    return search_range(a, mid + 1, hi, target);      /* [mid + 1, hi) */
+}</code></pre>
+  <p>The half-open range earns its keep here. Dropping <code>a[mid]</code> from the left half is <code>[lo, mid)</code>: no <code>mid - 1</code>, so nothing can wrap when <code>mid</code> is 0, the trap lesson 5 needed an explicit check for. Dropping it from the right half is <code>[mid + 1, hi)</code>. Both halves exclude <code>mid</code>, so both are strictly smaller: rule 2 holds. Aspnes writes the same function with a length instead of two indices and the base case <code>length == 0</code><a class="sn-ref" href="#sn5"></a>.</p>
+  <span class="sidenote" id="sn5">Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#binarySearch">5.3.3.1 Binary search: recursive and iterative versions</a>. His recursive <code>binarySearch(target, a, length)</code> recurses on <code>a</code> with <code>index</code> for the bottom half and on <code>a + index + 1</code> for the top half: pointer arithmetic where you pass <code>lo</code> and <code>hi</code>.</span>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">recur.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+/* Sum of the ints in a[lo..hi). Shrinks the range by one element per call. */
+long sum_range(const int* a, size_t lo, size_t hi);
+
+/* Print the ints in a[lo..hi) last to first, space-separated, no newline. */
+void print_backwards(const int* a, size_t lo, size_t hi);
+
+/* Largest int in a[lo..hi). The range must hold at least one element.
+   Halves the range per call. */
+int max_range(const int* a, size_t lo, size_t hi);
+
+/* Binary search for target in the sorted range a[lo..hi).
+   Returns a borrowed pointer to a matching element, or NULL if absent. */
+const int* search_range(const int* a, size_t lo, size_t hi, int target);</code></pre>
+  <p>Every function takes the array once and the range as two indices, the shape every recursive function in lessons 8 and 12 will keep. <code>sum_range</code> returns <code>long</code> so that the sum of many ints has room. The search returns a borrowed pointer, as lesson 5's did.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/06-recursion &amp;&amp; cd exercises/06-recursion</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>recur.h</code> exactly as shown and paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>recur.c</code>, one function at a time, with this page closed. For each function, before typing it, say out loud what the base case is and why the call receives a smaller range. Order: <code>sum_range</code>, <code>print_backwards</code>, <code>max_range</code>, <code>search_range</code>.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare two named constant arrays: the data <code>9 4 15 9 26 5 35 4</code> and its sorted form <code>4 4 5 9 9 15 26 35</code>. Write a small static helper that returns a fresh heap copy of an array (caller owns the copy) and take one copy of each. Print the sum of the data, the data backwards, the max of the whole data and of <code>[0, 4)</code>, then search the sorted copy for 26 (print its index with pointer subtraction and <code>%td</code>, as in lesson 5) and for 7. Free both copies, return 0. Expected, exactly:</p>
+      <pre><code>sum: 107
+backwards: 4 35 5 26 9 15 4 9
+max: 35
+max of [0, 4): 15
+found 26 at index 6
+found 7: no</code></pre>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./recursion</code>, and <code>make check</code>. Require no warnings, the exact six lines, and Valgrind with 0 errors and no leaks: 3 allocations, 3 frees (two copies and the block the C library takes for <code>stdout</code>).</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Look at the frames.</strong> Paste these commands, one per line, and read the backtrace against the listing above. Then type <code>up</code> once and read which frame you are in and what its <code>lo</code> is.</p>
+      <pre><code>gdb -q ./recursion
+(gdb) break sum_range if lo == 3
+(gdb) run
+(gdb) backtrace
+(gdb) up
+(gdb) quit</code></pre>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong> Restore the program after each.</p>
+      <ol>
+        <li>In <code>max_range</code>, change the left call to <code>max_range(a, lo, hi)</code>. Build and run. Read the first four frames of the report and count how many different line numbers appear.</li>
+        <li>In <code>print_backwards</code>, move the <code>printf</code> above the recursive call. Predict the second output line before you run, then run.</li>
+        <li>In <code>search_range</code>, change the right call to <code>search_range(a, mid, hi, target)</code>. Build and run. Note which search dies, the one for 26 or the one for 7, and work out on paper which range calls itself unchanged.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 6 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="8"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the reports</h2>
+  <p><strong>1. A call that never shrinks.</strong> <code>max_range(a, lo, hi)</code> calls itself with the same range, forever. Each call pushes a frame until the 8 MB stack is gone:</p>
+  <pre><code>AddressSanitizer:DEADLYSIGNAL
+ERROR: AddressSanitizer: <strong>stack-overflow</strong> on address 0x7ffed9fb7ff8 ...
+    #0 ... in max_range recur.c:25
+    #1 ... in max_range <strong>recur.c:25</strong>
+    #2 ... in max_range <strong>recur.c:25</strong>
+    #3 ... in max_range <strong>recur.c:25</strong>
+SUMMARY: AddressSanitizer: stack-overflow recur.c:25 in max_range</code></pre>
+  <p>One function, one line number, all the way down. Aspnes calls this the “dead give-away”: “segmentation faults that produce huge piles of stack frames when you type where in gdb”<a class="sn-ref" href="#sn6"></a>. The line is the recursive call whose range did not shrink. When you see this column, find that line and ask what is smaller about its arguments. Here, nothing.</p>
+  <span class="sidenote" id="sn6">Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#Failure_to_make_progress">5.3.2.3 Failure to make progress</a>. <code>where</code> is gdb's other name for <code>backtrace</code>.</span>
+
+  <p><strong>2. Print before the call.</strong> No report. The line reads <code>backwards: 9 4 15 9 26 5 35 4</code>, the array forwards, because every frame now prints before the frame under it gets a turn. The only difference between the two programs is which side of the call the work sits on.</p>
+
+  <p><strong>3. A range that shrinks only sometimes.</strong> The search for 26 succeeds: <code>[5, 8)</code> is smaller than <code>[0, 8)</code> even with the wrong call, because <code>mid</code> happened to be 4. The search for 7 dies:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>stack-overflow</strong> ...
+    #0 ... in search_range recur.c:30
+    #1 ... in search_range <strong>recur.c:41</strong>
+    #2 ... in search_range <strong>recur.c:41</strong>
+    #3 ... in search_range <strong>recur.c:41</strong></code></pre>
+  <p>Trace it: <code>[2, 4)</code> has <code>mid = 3</code>, and <code>7 &lt; 9</code> keeps <code>[2, 3)</code>. Then <code>[2, 3)</code> has <code>mid = 2</code>, <code>7 &gt; 5</code>, and the right half is <code>[mid, hi) = [2, 3)</code> again. Same column as report 1, with frame 0 at the base-case line because that is where the new frame is when the stack runs out. A range that shrinks on most inputs and not on one is still a broken rule 2; the test data has to include the input that finds it.</p>
+
+  <p><strong>Also worth seeing once.</strong> Delete the base case of <code>sum_range</code>. gcc 13 warns at build time, <code>infinite recursion detected [-Winfinite-recursion]</code>, and the run reports a <strong>heap-buffer-overflow</strong>, READ of size 4, 0 bytes after the 32-byte region, under nine <code>sum_range</code> frames. The calls did keep shrinking the range; they walked off the end of the block at <code>a[8]</code> long before the stack ran out. Missing base case, but the array was the first thing to give way.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C or language-free. Read in this order.</p>
+  <ol class="reading">
+    <li><p><strong>Recursion in C, with its failure modes.</strong> James Aspnes, <em>Notes on Data Structures and Programming Techniques</em> (Yale CPSC 223), <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#recursion">5.3 Recursion</a>. Read 5.3.1 (the <code>printRange</code> family: iterative, recursive, reversed, split; your <code>print_backwards</code> and <code>max_range</code> are the second and fourth), 5.3.2 (the three common problems, each with the broken code shown) and 5.3.3.1 (binary search recursive, then rewritten as the loop you had in lesson 5). Skip 5.3.4 until lesson 8 and 5.3.5 for now.</p></li>
+    <li><p><strong>Same ideas, first-course pace.</strong> CS50x, <a href="https://cs50.harvard.edu/x/notes/3/#recursion">Week 3 notes, Recursion</a>: “A base case is defined as the condition that stops the recursion from continuing indefinitely”, with a <code>draw</code> function written as a loop and again as a recursion. Five minutes.</p></li>
+    <li><p><strong>Frames, from the debugger's side.</strong> CS107 <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">GDB Guide</a>, the backtrace section and the <code>up</code>, <code>down</code>, <code>frame</code> commands. You used them in step 6; read what else the guide expects you to do with them.</p></li>
+    <li><p><strong>If you prefer to watch first.</strong> CS50 Shorts: <a href="https://video.cs50.io/mz6tAJMVmfM">Recursion</a> and <a href="https://video.cs50.io/aCPkszeKRa4">Call Stacks</a> (Doug Lloyd, from Harvard's C-based course). Call Stacks draws the frames being pushed and popped; watch it before Recursion if the backtrace above still looks abstract.</p></li>
+  </ol>
+  <p><strong>Where this lands in CS107.</strong> Lecture 14 (x86-64 Runtime Stack) covers call and return, parameter passing and local stack storage, the machine view of the frames in your backtrace<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. If you own K&amp;R, section 4.10 (Recursion) is two pages with a recursive <code>printd</code> and a quicksort. Keep the <a href="../reference/recursion.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If a recursive function you are writing has no line you can point to and say “this range is smaller”, stop and ask before running it. The same goes for a base case you cannot state in one sentence. Both questions are cheaper than reading a thousand-frame report.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0005-sort-then-halve.html">Previous: Lesson 5, Sort, Then Halve</a> · <a href="../reference/recursion.html">Reference: recursion cheat sheet</a></span>
+    <span><a href="0007-scan-stop-swap.html">Next: Lesson 7, Scan, Stop, Swap</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0006-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"sum_range(a, 0, 8) has called down to lo = 3. How many sum_range frames are alive?",opts:["four frames, for lo 0 to 3","three frames, for lo 1 to 3","eight frames, one for each int read","one frame, reused again by every call"],a:0,why:"Frames for lo = 0, 1, 2 and 3 are all alive: the first three are paused at the recursive call, waiting to add their own a[lo]. A frame is released only when its call returns."},
+    {q:"Which line makes print_backwards print last to first?",opts:["the printf after the recursive call","the printf before the recursive call","the base case returning at once","the lo + 1 argument passed"],a:0,why:"Work placed after the call waits for every deeper frame to finish first, so the deepest frame prints first. Move the printf above the call and the order is forwards."},
+    {q:"max_range on [0, 8) halves. How deep does the stack get, counting the [0, 8) frame?",opts:["four frames deep at most","eight frames deep at most","three frames deep at most","two frames deep at most"],a:0,why:"[0, 8), [0, 4), [0, 2), [0, 1): four frames. Halving gives about log2 n depth; shrinking by one gives n."},
+    {q:"search_range takes the right half as [mid + 1, hi). Why not [mid, hi)?",opts:["the range must shrink every call","size_t cannot represent the value mid","a[mid] needs comparing a second time","the left half already holds mid"],a:0,why:"a[mid] has been compared and is not the target, so both halves leave it out. With [mid, hi) a one-element range calls itself unchanged, and the stack overflows on the search for 7."},
+    {q:"gcc says 'infinite recursion detected' and ASan reports heap-buffer-overflow, not stack-overflow. What happened?",opts:["the walk left the block first","the stack grew past the heap","ASan cannot see the stack frames","the compiler removed the base case"],a:0,why:"Without the base case sum_range keeps stepping lo past hi and reads a[8], one int past the block. Eight elements are gone long before eight megabytes of stack are."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the frames for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

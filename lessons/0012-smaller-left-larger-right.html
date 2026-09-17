@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 10 · Smaller Left, Larger Right</title>
+<title>Lesson 12 · Smaller Left, Larger Right</title>
 <style>
 :root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
 *{box-sizing:border-box}
@@ -38,6 +38,7 @@ td:first-child code{white-space:nowrap}
 .win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
 .paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
 .paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
 .ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
 .steps{list-style:none;padding:0;margin:0;counter-reset:step}
 .steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
@@ -72,13 +73,13 @@ td:first-child code{white-space:nowrap}
 <body>
 <article>
 <header>
-  <p class="kicker">Lesson 10 · DSA in C</p>
+  <p class="kicker">Lesson 12 · DSA in C</p>
   <h1>Smaller Left, Larger Right</h1>
   <p class="subtitle">A binary search tree is a linked list that forks. Every function on it is a short recursive helper that holds one node pointer per stack frame, and the tree's height is the depth of your C stack.</p>
   <div class="meta">
     <span>About 45 minutes</span>
-    <span>Where: WSL, <code>exercises/10-bst/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/bst.html">Cheat sheet</a> · <a href="0009-head-and-tail.html">Lesson 9</a></span>
+    <span>Where: WSL, <code>exercises/12-bst/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/bst.html">Cheat sheet</a> · <a href="0011-head-and-tail.html">Lesson 11</a></span>
   </div>
   <div class="win"><strong>Your win today.</strong> Ship <code>bst_t</code> as an opaque ADT with eight public functions, every one a thin wrapper over a private recursive helper. Insert through a slot, free in post-order, and read an AddressSanitizer use-after-free timeline that shows the recursion itself.</div>
 </header>
@@ -116,7 +117,7 @@ t ──────────▶ struct bst { root ──▶ 0x100, count 7 }
 0x140  [ 30 | left 0x1c0 | right 0x200 ]     0x180  [ 70 | left 0x240 | right 0x280 ]
 0x1c0  [ 20 | NULL | NULL ]  0x200  [ 40 | NULL | NULL ]  0x240  [ 60 | NULL | NULL ]  0x280  [ 80 | NULL | NULL ]</code></pre>
   <p>Read any node and look left: every key down there is smaller. Look right: every key down there is larger. Sedgewick and Wayne state the rule as “the key in any node is larger than the keys in all nodes in that node's left subtree and smaller than the keys in all nodes in that node's right subtree”<a href="https://algs4.cs.princeton.edu/32bst/">*</a>. That is the invariant. Every function below either relies on it or preserves it.</p>
-  <p>In C the node is a private struct in <code>bst.c</code>, and so is the tree that holds the root and a count. The header only says <code>typedef struct bst bst_t;</code>, exactly as the stack, list and queue did<a class="sn-ref" href="#sn1"></a>. As in lesson 9, <code>struct node</code> is spelled out; lesson 8's <code>node_t</code> typedef names the same kind of private struct and is equally fine:</p>
+  <p>In C the node is a private struct in <code>bst.c</code>, and so is the tree that holds the root and a count. The header only says <code>typedef struct bst bst_t;</code>, exactly as the stack, list and queue did<a class="sn-ref" href="#sn1"></a>. As in lesson 11, <code>struct node</code> is spelled out; lesson 10's <code>node_t</code> typedef names the same kind of private struct and is equally fine:</p>
   <pre><code>struct node {
     int key;
     struct node* left;
@@ -128,12 +129,12 @@ struct bst {
     size_t count;
 };</code></pre>
   <span class="sidenote" id="sn1">One node is 24 bytes on your machine: 4 for the <code>int</code>, 4 of padding so the first pointer sits on an 8-byte boundary, then 8 and 8. The number 24 shows up in the sanitizer reports later; that is where it comes from.</span>
-  <p>Ownership is the same as lesson 8's list, forked: the tree owns the root node, and every node owns the two nodes its pointers address. A <code>NULL</code> pointer owns nothing. Seven nodes, seven owners, one <code>bst_free</code>.</p>
+  <p>Ownership is the same as lesson 10's list, forked: the tree owns the root node, and every node owns the two nodes its pointers address. A <code>NULL</code> pointer owns nothing. Seven nodes, seven owners, one <code>bst_free</code>.</p>
 </section>
 
 <section>
   <h2>Recursion walks the heap using the stack</h2>
-  <p>The list in lessons 8 and 9 had one “next” per node, so a <code>while</code> loop walked it. A tree has two, and the natural walk is recursion: a function that handles one node and calls itself on a child. Search for 60 in the tree above:</p>
+  <p>The list in lessons 10 and 11 had one “next” per node, so a <code>while</code> loop walked it. A tree has two, and the natural walk is recursion: a function that handles one node and calls itself on a child. Search for 60 in the tree above:</p>
   <pre><code>contains_in(0x100, 60)        60 &gt; 50: go right
   contains_in(0x180, 60)      60 &lt; 70: go left
     contains_in(0x240, 60)    60 == 60: return 1</code></pre>
@@ -167,7 +168,7 @@ int bst_contains(const bst_t* t, int key) {
 
 0x140  [ 30 | left 0x1c0 | right NULL ]  ──▶  [ 30 | left 0x1c0 | right 0x200 ]
                           ^ 0x150, the slot</code></pre>
-  <p>This is lesson 8's slot pattern with one more branch: the helper receives the <em>address of the pointer to change</em>, a <code>struct node**</code>. At the root that address is <code>&amp;t-&gt;root</code>; one level down it is <code>&amp;n-&gt;left</code> or <code>&amp;n-&gt;right</code>. The base case is a slot that holds <code>NULL</code>, and the write goes through the slot<a class="sn-ref" href="#sn3"></a>:</p>
+  <p>This is lesson 10's slot pattern with one more branch: the helper receives the <em>address of the pointer to change</em>, a <code>struct node**</code>. At the root that address is <code>&amp;t-&gt;root</code>; one level down it is <code>&amp;n-&gt;left</code> or <code>&amp;n-&gt;right</code>. The base case is a slot that holds <code>NULL</code>, and the write goes through the slot<a class="sn-ref" href="#sn3"></a>:</p>
   <pre><code>static int insert_at(struct node** slot, int key) {
     if (*slot == NULL) {
         *slot = new_node(key);             /* writes into the parent, or into t-&gt;root */
@@ -182,7 +183,7 @@ int bst_contains(const bst_t* t, int key) {
     }
     return 0;                              /* duplicate: tree unchanged */
 }</code></pre>
-  <span class="sidenote" id="sn3">Sedgewick and Wayne write insert the other way round: the helper returns the node and every caller reassigns, <code>node.left = put(node.left, ...)</code><a href="https://algs4.cs.princeton.edu/32bst/BST.java.html">*</a>. Both are correct. The slot form writes only the one pointer that changes, and it is the form you already own from lesson 8.</span>
+  <span class="sidenote" id="sn3">Sedgewick and Wayne write insert the other way round: the helper returns the node and every caller reassigns, <code>node.left = put(node.left, ...)</code><a href="https://algs4.cs.princeton.edu/32bst/BST.java.html">*</a>. Both are correct. The slot form writes only the one pointer that changes, and it is the form you already own from lesson 10.</span>
   <p>If the helper took a <code>struct node* n</code> instead and did <code>n = new_node(key)</code>, it would write into its own parameter, a copy that dies with the frame. The parent's <code>NULL</code> would stay <code>NULL</code>, the node would be unreachable, and the count would still go up. You will make that change on purpose in the experiments.</p>
   <p><strong>Why <code>bst_insert</code> returns 1 or 0.</strong> This tree is a set: a key is in it once or not at all, so a duplicate is not an error, it is simply “nothing to do”. A failed <code>malloc</code> is also “nothing changed”. Both cases return 0 and leave the tree exactly as it was, and the caller adds the return value to its own count of successful inserts. A caller that needs to tell the two apart can call <code>bst_contains</code> first. A three-valued return would be the alternative; not worth it here.</p>
 </section>
@@ -259,7 +260,7 @@ size_t bst_count(const bst_t* t);</code></pre>
   <ol class="steps" id="steps">
     <li><p>Create and enter the exercise folder:</p>
       <pre><code>cd ~/workspace/brushup-c
-mkdir -p exercises/10-bst &amp;&amp; cd exercises/10-bst</code></pre>
+mkdir -p exercises/12-bst &amp;&amp; cd exercises/12-bst</code></pre>
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>bst.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
@@ -283,7 +284,7 @@ contains 65: no</code></pre>
         <li><strong>Borrowed pointer after free.</strong> In <code>main.c</code>, keep the <code>const int* m</code> from <code>bst_min</code>, and after <code>bst_free(t)</code> add <code>printf("min again: %d\n", *m);</code>. Build and run <code>./bst</code>. Read the three stack traces. Then run <code>./bst-plain</code> once and notice that it prints <code>min again: 20</code> and exits 0. Remove the line.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
-    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 10 done</em>.</p>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 12 done</em>.</p>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
   </ol>
 </section>
@@ -347,20 +348,27 @@ height: -1
 
 <section>
   <h2>Read next</h2>
-  <p><strong>Primary source:</strong> Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/32bst/">3.2 Binary Search Trees</a>, the “Basic implementation” part and the first paragraphs of “Analysis”. The code is Java and it returns the node from insert instead of writing through a slot; the invariant, the recursive shapes and the height convention are the ones you just used. Their <a href="https://algs4.cs.princeton.edu/32bst/BST.java.html">BST.java</a> is the file the height convention was taken from. For the rule behind experiment 3, cppreference <a href="https://en.cppreference.com/w/c/memory/free">free</a>, one paragraph. Keep the <a href="../reference/bst.html">cheat sheet</a> for lookup.</p>
+  <p>Everything here is C or language-free theory. Read in this order; the first item is three short source files, not a chapter.</p>
+  <ol class="reading">
+    <li><p><strong>A BST in C, written the other way round.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/tree.h">tree.h</a>, <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/tree.c">tree.c</a> and <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/testtree.c">testtree.c</a> (the author publishes the book's <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a> free). About 150 lines in all. His <code>Insert</code> takes a <code>SearchTree</code> and returns one: inside, <code>T-&gt;Left = Insert(X, T-&gt;Left)</code>; in <code>testtree.c</code>, <code>T = Insert(j, T)</code>. That is the assign-the-return form. Yours receives a <code>struct node**</code> and writes <code>*slot</code> once. Trace one insert in each and count the pointer writes: his reassigns every link on the path, yours writes one. Then read <code>MakeEmpty</code>: two recursive calls, then <code>free(T)</code>, the same post-order as your <code>free_nodes</code>, but it returns <code>NULL</code> so the caller can write <code>T = MakeEmpty(T)</code>. <code>FindMin</code> is recursive and <code>FindMax</code> is a <code>while</code> loop; both are correct. <code>Find</code> and <code>FindMin</code> return a <code>Position</code>, a pointer into the tree, and <code>tree.h</code> never says how long it stays valid; your <code>bst_min</code> comment does. There is no height function and no in-order print. A failed <code>malloc</code> in <code>Insert</code> calls <code>FatalError</code> where yours returns 0. He has <code>Delete</code>, which you do not; that is the extension if you want one.</p></li>
+    <li><p><strong>The same search, in CS50's C.</strong> CS50x notes, <a href="https://cs50.harvard.edu/x/notes/5/#trees">Week 5, Trees</a>. Five minutes. One function, <code>bool search(node *tree, int number)</code>: base case on <code>NULL</code> first, then the same three-way branch as your <code>contains_in</code>. The parameter is named <code>tree</code>, not <code>node</code>, and that is the right way to read every helper you wrote: each call receives a whole subtree, and a <code>NULL</code> is the empty one. If you prefer to watch first, Doug Lloyd's CS50 short <a href="https://video.cs50.io/mz6tAJMVmfM">Recursion</a> is about fourteen minutes on the shape you used eight times today.</p></li>
+    <li><p><strong>Practice problems in C.</strong> Nick Parlante, <em>Binary Trees</em>, Stanford CS Education Library article 110. Stanford's own copy at cslibrary.stanford.edu is gone; a <a href="https://github.com/mitnk/cslibrary.stanford.edu/blob/master/110/BinaryTrees.html">mirror on GitHub</a> has the full text. Read Section 1 and do problems 1 to 6 in Section 2 in C, then check against Section 3; skip Section 4, which is Java. His <code>insert</code> also returns the root, and he calls that “the standard trick to avoid using reference parameters”; your slot is the other standard trick. Two differences to notice. <code>maxDepth</code> counts nodes, so the empty tree is 0 and a leaf is 1: that is the other height convention the lesson mentioned, and it explains why the header has to state which one it uses. And <code>data &lt;= node-&gt;data</code> sends equal keys left, so his tree keeps duplicates where yours refuses them. <code>printTree</code> is your in-order print: recur left, print, recur right.</p></li>
+    <li><p><strong>Theory, no code.</strong> Jessica Su, <a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture8.pdf">CS161 Lecture 8, Binary Search Trees</a> (Stanford, PDF, notes after CLRS). Sections 1 to 1.1 only, about three pages. It states the BST property, shows that an in-order walk prints the keys in sorted order and proves the walk is linear time, and puts every operation at O(h) for height h, with the sorted-input chain as the worst case. Pseudocode only. It does not fix the height of an empty tree; that convention stays with the inline citation in the height paragraph above.</p></li>
+  </ol>
+  <p>CS107 does not cover trees, so there is nothing to point at there yet. The invariant, running-time and height-convention sentences above still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/32bst/">3.2</a>, <a href="https://algs4.cs.princeton.edu/32bst/BST.java.html">BST.java</a>), and the rule behind experiment 3 cites cppreference <a href="https://en.cppreference.com/w/c/memory/free">free</a>. Treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/bst.html">cheat sheet</a> for lookup.</p>
   <div class="ask"><strong>Ask your teacher.</strong> If a recursive helper ever needs to change a pointer that lives in its caller, stop and ask whether it should receive the slot. If a function returns a pointer into a structure, ask who owns the bytes and when they die. Both questions have short answers; guessing them has long ones.</div>
 </section>
 
 <footer>
   <div class="next">
-    <span><a href="0009-head-and-tail.html">Previous: Lesson 9, Head and Tail</a> · <a href="../reference/bst.html">Reference: BST cheat sheet</a></span>
-    <span><a href="../NOTES.md">Lesson 11: Hashmap (not yet issued)</a></span>
+    <span><a href="0011-head-and-tail.html">Previous: Lesson 11, Head and Tail</a> · <a href="../reference/bst.html">Reference: BST cheat sheet</a></span>
+    <span><a href="0013-hash-then-chain.html">Next: Lesson 13, Hash, Then Chain</a></span>
   </div>
 </footer>
 </article>
 <script>
 (function(){
-  var KEY='brushup-c-lesson-0010-steps';
+  var KEY='brushup-c-lesson-0012-steps';
   var saved={};
   try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
   document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){

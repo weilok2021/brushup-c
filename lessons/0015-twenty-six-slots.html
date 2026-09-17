@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 15 · Twenty-Six Slots</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+pre.diagram{background:#fff;border:1px solid var(--rule);line-height:1.35}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}pre.diagram{white-space:pre}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 15 · Optional · DSA in C</p>
+  <h1>Twenty-Six Slots</h1>
+  <p class="subtitle">A trie is a tree whose every node holds twenty-six pointer slots, one per lowercase letter. Insert walks the slots and allocates through them; free visits all twenty-six before the node goes.</p>
+  <div class="meta">
+    <span>About 40 minutes</span>
+    <span>Where: WSL, <code>exercises/15-trie/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/trie.html">Cheat sheet</a> · <a href="0014-mark-then-visit.html">Lesson 14</a></span>
+  </div>
+  <p>The mission's required list ended with lesson 14. Stack, list, queue, tree, hashmap and graph are done, and CS107 asks for nothing more. This lesson is extra practice on two things you already own: the slot pattern from lessons 10 and 12, and the recursive post-order free from lesson 12. Skip it without guilt. Do it if you want those two patterns to sit deeper.</p>
+  <div class="win"><strong>Your win today.</strong> Ship <code>trie_t</code> as an opaque ADT: insert through a <code>struct node**</code> slot chosen by subtraction, answer “whole word” and “prefix” with one shared finder and one flag test, and free seventeen nodes in post-order with a loop inside the recursion. Then read what UBSan, ASan and gcc say when the index, the flag and the free order go wrong.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c trie.c
+
+trie: $(SRC) trie.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o trie $(SRC)
+
+trie-plain: $(SRC) trie.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o trie-plain $(SRC)
+
+.PHONY: check clean
+check: trie-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./trie-plain
+clean:
+<span class="tab">⇥</span>rm -f trie trie-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>A letter is a small number, so it can be an index</h2>
+  <p>Take the letter <code>'c'</code>. Your machine stores it as the number 99, and it stores <code>'a'</code> as 97. Subtract: 99 - 97 = 2. So <code>'c'</code> selects slot 2 of an array of 26, counting from 0. <code>'a'</code> selects slot 0, <code>'b'</code> slot 1, and <code>'z'</code>, which is 122, selects 122 - 97 = 25. In C that subtraction is written <code>c - 'a'</code>, and it is ordinary integer arithmetic, because a <code>char</code> is an integer. Beej: “Deep down, <code>char</code> is just a small <code>int</code>”, and a character constant “will be converted to a <code>char</code> whose value is the same as the ASCII value”<a href="https://beej.us/guide/bgc/html/split/types-ii-way-more-types.html#character-types">*</a>. No table and no function call: the letter is the index.</p>
+  <table>
+    <tr><th>Letter</th><th>Stored as</th><th><code>c - 'a'</code></th><th>Slot</th></tr>
+    <tr><td><code>'a'</code></td><td>97</td><td>0</td><td>first</td></tr>
+    <tr><td><code>'c'</code></td><td>99</td><td>2</td><td>third</td></tr>
+    <tr><td><code>'p'</code></td><td>112</td><td>15</td><td>sixteenth</td></tr>
+    <tr><td><code>'z'</code></td><td>122</td><td>25</td><td>last</td></tr>
+    <tr><td><code>'A'</code></td><td>65</td><td>-32</td><td>256 bytes before the array</td></tr>
+    <tr><td><code>'{'</code></td><td>123</td><td>26</td><td>one past the end</td></tr>
+  </table>
+  <p>The last two rows are the trouble. <code>'A'</code> gives -32 and <code>'{'</code> gives 26: one addresses memory before the array, the other addresses the slot one past its end. This trie accepts only <code>'a'</code> to <code>'z'</code>, so every walk checks the letter before it indexes. Experiment 1 drops the subtraction and shows what an index of 97 does.</p>
+</section>
+
+<section>
+  <h2>One node, twenty-six slots</h2>
+  <p>Each node is one heap block holding 26 pointers and a flag. The trie struct holds the root and a count:</p>
+  <pre><code>#define ALPHABET 26
+
+struct node {
+    struct node* child[ALPHABET];   /* slot i leads to the node for letter 'a' + i, or NULL */
+    int is_end;                     /* 1 if a whole word ends at this node */
+};
+
+struct trie {
+    struct node* root;              /* a live node even when the trie is empty */
+    size_t count;                   /* whole words */
+};</code></pre>
+  <p>26 pointers of 8 bytes is 208 bytes. The <code>int</code> adds 4, and 4 bytes of padding bring the total to 216<a class="sn-ref" href="#sn1"></a>. The header says only <code>typedef struct trie trie_t;</code>; both structs live in <code>trie.c</code>, the opaque shape of lessons 9 to 12. <code>struct node</code> is spelled out as in lessons 11 and 12; lesson 10's <code>typedef struct node node_t;</code> names the same kind of private struct and is equally fine.</p>
+  <span class="sidenote" id="sn1">The test program prints <code>node: 216 bytes</code> from <code>sizeof(struct node)</code> through a one-line accessor, because <code>main.c</code> cannot take <code>sizeof</code> an opaque type. <code>sizeof</code> rounds a struct up to a multiple of its strictest member alignment, 8 here, so 212 becomes 216. The number 216 comes back in every sanitizer report below as the size of the region.</span>
+  <p>Insert <code>"app"</code>, then <code>"apple"</code>, into an empty trie. Give the blocks pretend addresses. Slot <code>i</code> of a node at address <code>N</code> lives at <code>N + 8i</code>, ordinary pointer arithmetic on the <code>child</code> array:</p>
+  <pre class="diagram"><code>t ──▶ struct trie { root ──▶ 0x1000, count 2 }
+
+0x1000  root           child[0]  ('a')  at 0x1000 ──▶ 0x2000
+0x2000  after "a"      child[15] ('p')  at 0x2078 ──▶ 0x3000
+0x3000  after "ap"     child[15] ('p')  at 0x3078 ──▶ 0x4000
+0x4000  after "app"    is_end 1         child[11] ('l') at 0x4058 ──▶ 0x5000
+0x5000  after "appl"   child[4]  ('e')  at 0x5020 ──▶ 0x6000
+0x6000  after "apple"  is_end 1         all 26 slots NULL</code></pre>
+  <p>Six blocks, 26 slots each, 156 slots in all, and five of them are not <code>NULL</code>. A word is not a node. A word is a path from the root, and the flag on the last node says whether that path is a whole word. <code>"app"</code> and <code>"apple"</code> share three nodes, and the node at <code>0x4000</code> is both the end of one word and the middle of the other. Doug Lloyd makes the same point in the CS50 short with <code>bat</code> inside <code>batch</code><a href="https://video.cs50.io/MC-iQHFdEDI">*</a>.</p>
+  <p>Ownership is lesson 12's, widened. The trie owns the root node, and every node owns the nodes its 26 slots address. <code>NULL</code> owns nothing. The six test words make 16 letter nodes plus the root: 17 nodes and one trie struct, 18 heap blocks, one <code>trie_free</code>.</p>
+  <p><strong>Why <code>calloc</code>.</strong> <code>new_node</code> calls <code>calloc(1, sizeof(struct node))</code>, not <code>malloc</code>. cppreference: <code>calloc</code> “initializes all bytes in the allocated storage to zero”<a href="https://en.cppreference.com/w/c/memory/calloc">*</a>. A zero pointer is <code>NULL</code> and a zero <code>int</code> is “not a word end”, which together are exactly the empty node. <code>malloc</code> would hand back 26 slots holding whatever the block held before, and the first walk would follow one of them as if it were a child. Lesson 3 used <code>calloc</code> for zeroed ints; here the zero is the structure's invariant. Swap in <code>malloc</code> and the sanitizer build dies on the first insert: UBSan reports <code>member access within misaligned address 0xbebebebebebebebe for type 'struct node'</code>, because ASan fills fresh <code>malloc</code> bytes with <code>0xbe</code> and the walk then follows that pattern as a pointer. Valgrind on the plain build says <code>Conditional jump or move depends on uninitialised value(s)</code> in <code>trie_insert</code>. Not one of the three experiments below, but worth one look if you have time.</p>
+</section>
+
+<section>
+  <h2>Insert: walk the slots, allocate through them</h2>
+  <p>Inserting <code>"apple"</code> after <code>"app"</code> is the walk in the diagram: three slots already lead somewhere, two hold <code>NULL</code>. For every letter the code takes the address of the slot, and when the slot holds <code>NULL</code> it writes a new node through it. That is lesson 10's <code>node_t** link</code> and lesson 12's <code>insert_at(struct node** slot, ...)</code>, with the branch chosen by subtraction instead of a comparison:</p>
+  <pre><code>int trie_insert(trie_t* t, const char* word) {
+    struct node* cur = t-&gt;root;
+    for (const char* p = word; *p != '\0'; p++) {
+        int i = slot_index(*p);                  /* c - 'a', or -1 outside 'a'..'z' */
+        if (i &lt; 0) {
+            return -1;
+        }
+        struct node** slot = &amp;cur-&gt;child[i];     /* the address of the pointer to change */
+        if (*slot == NULL) {
+            *slot = new_node();                  /* write through the slot */
+            if (*slot == NULL) {
+                return -1;
+            }
+        }
+        cur = *slot;
+    }
+    if (cur-&gt;is_end) {
+        return 0;                                /* already a whole word: nothing changed */
+    }
+    cur-&gt;is_end = 1;
+    t-&gt;count++;
+    return 1;
+}</code></pre>
+  <pre class="diagram"><code>*p    i    slot                     *slot before   action
+'a'   0    &amp;root-&gt;child[0]          0x2000         follow
+'p'   15   &amp;(0x2000)-&gt;child[15]     0x3000         follow
+'p'   15   &amp;(0x3000)-&gt;child[15]     0x4000         follow
+'l'   11   &amp;(0x4000)-&gt;child[11]     NULL           calloc 0x5000, write it into the slot
+'e'   4    &amp;(0x5000)-&gt;child[4]      NULL           calloc 0x6000, write it into the slot
+'\0'       stop: cur is 0x6000, is_end 0, so set it, count becomes 2, return 1</code></pre>
+  <p>The loop stops at the string's terminator. Beej: a C string is “a pointer to the first character” plus “a zero-valued byte (or NUL character) somewhere in memory after the pointer that indicates the end of the string”<a href="https://beej.us/guide/bgc/html/split/strings.html#string-termination">*</a>. No <code>strlen</code>, no <code>strcmp</code>: the trie reads one <code>char</code> at a time and needs nothing from <code>&lt;string.h&gt;</code> at all. The <code>static</code> helper <code>slot_index</code> holds the range check from the table and returns <code>c - 'a'</code>, or -1.</p>
+  <p><strong>Three return values, one honest contract.</strong> 1 means inserted. 0 means the word was already there: a duplicate, nothing changed, as in lesson 12. -1 means a letter outside <code>'a'..'z'</code> or a failed <code>calloc</code>. On -1 no word is counted, but the nodes created for the letters before the bad one stay in the trie. They are owned like every other node and <code>trie_free</code> releases them, so nothing leaks; the header says exactly that instead of promising “unchanged”. If “unchanged” matters to a caller, run a validating loop over the word before the inserting one. The exercise leaves that choice to you.</p>
+</section>
+
+<section>
+  <h2>One finder, two questions</h2>
+  <p><code>trie_contains</code> and <code>trie_starts_with</code> walk the same path and differ only in the last test. So one <code>static</code> helper does the walk and returns the node it reaches, or <code>NULL</code> if the path ends early:</p>
+  <pre><code>static const struct node* find_node(const struct node* root, const char* s) {
+    const struct node* cur = root;
+    for (const char* p = s; *p != '\0' &amp;&amp; cur != NULL; p++) {
+        int i = slot_index(*p);
+        if (i &lt; 0) {
+            return NULL;
+        }
+        cur = cur-&gt;child[i];
+    }
+    return cur;                                  /* the node at the end of s, or NULL */
+}
+
+int trie_contains(const trie_t* t, const char* word) {
+    const struct node* n = find_node(t-&gt;root, word);
+    return n != NULL &amp;&amp; n-&gt;is_end;             /* is_end is read only when n is live */
+}
+
+int trie_starts_with(const trie_t* t, const char* prefix) {
+    return find_node(t-&gt;root, prefix) != NULL;
+}</code></pre>
+  <p>Three lookups on the diagram above. <code>"ap"</code>: <code>'a'</code> leads to <code>0x2000</code>, <code>'p'</code> to <code>0x3000</code>, the string ends, and <code>find_node</code> returns <code>0x3000</code>. Its <code>is_end</code> is 0, so <code>contains</code> says 0 and <code>starts_with</code> says 1. <code>"cat"</code>: <code>root-&gt;child[2]</code> is <code>NULL</code>, so <code>cur</code> becomes <code>NULL</code>, the loop condition fails, and both say 0. <code>""</code>: the loop never runs and <code>find_node</code> returns the root, so <code>starts_with("")</code> is 1 for every trie, and <code>contains("")</code> is 1 only if the empty word was inserted, which this test never does.</p>
+  <p>The cost of any lookup is the length of the string, not the number of words stored. algs4's <code>TrieST</code> states it for its 256-way version: put, contains and delete “take time proportional to the length of the key (in the worst case)”<a href="https://algs4.cs.princeton.edu/52trie/TrieST.java.html">*</a>. Six words or six million, <code>"apple"</code> is five steps from the root.</p>
+</section>
+
+<section>
+  <h2>Free: twenty-six children, then the node</h2>
+  <pre><code>static void free_nodes(struct node* n) {
+    if (n == NULL) {
+        return;
+    }
+    for (int i = 0; i &lt; ALPHABET; i++) {
+        free_nodes(n-&gt;child[i]);
+    }
+    free(n);                                     /* last: every slot has been read */
+}</code></pre>
+  <p>This is lesson 12's post-order free with a loop where the BST had two calls, and the rule is the same: the slots live inside the node's block, so the node is freed only after all 26 have been read. Free it first and the loop reads <code>child[0]</code> out of a dead block. Experiment 3 does that, and gcc 13 sees it coming.</p>
+  <p>Count the calls. Every node makes 26, so 17 nodes make 442. Of those, 425 meet <code>NULL</code> and return at once; 17 do the work. That is the price of a slot for every letter, used or not. Now count the frames. The recursion goes one frame deeper per letter, so the deepest point of this run is inside <code>"bandana"</code>: the root frame plus seven, eight frames, each holding its <code>n</code> and its <code>i</code>. In lesson 12 the depth was the tree's height and depended on insertion order. Here it is the length of the longest word and nothing else<a class="sn-ref" href="#sn2"></a>.</p>
+  <span class="sidenote" id="sn2">The six words hold 30 letters between them. The trie stores them in 16 letter nodes, because shared prefixes share nodes, plus the root: 17 nodes at 216 bytes is 3,672 bytes, and of the 442 slots, 16 are in use. algs4's <code>TrieST</code> widens the array to <code>R = 256</code> (“extended ASCII”) and every node still carries all 256 references<a href="https://algs4.cs.princeton.edu/52trie/TrieST.java.html">*</a>. Doug Lloyd closes the CS50 short on that trade: near-constant-time insert and lookup, paid for with “a lot of space and memory”<a href="https://video.cs50.io/MC-iQHFdEDI">*</a>. That is why the trie is optional here: the pointer work is lessons 10 and 12 again, and the structure itself is a memory trade worth knowing the price of.</span>
+  <p><code>trie_free</code> calls <code>free_nodes(t-&gt;root)</code> and then <code>free(t)</code>. 17 node frees and one struct free is 18. valgrind will report 19 and 19; the nineteenth is <code>printf</code>'s buffer.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">trie.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+typedef struct trie trie_t;
+
+/* Create an empty trie (one root node) on the heap. Returns NULL on allocation failure. */
+trie_t* trie_new(void);
+
+/* Free every node, children before parent, then the trie. Consumes ownership.
+   trie_free(NULL) does nothing. */
+void trie_free(trie_t* t);
+
+/* Insert word, lowercase 'a' to 'z' only. Returns 1 if inserted, 0 if word was already
+   present, -1 on a character outside 'a'..'z' or on allocation failure. On -1 no word is
+   counted, but nodes for a prefix of word may remain; the trie owns them and trie_free
+   releases them. */
+int trie_insert(trie_t* t, const char* word);
+
+/* Return 1 if word was inserted as a whole word, else 0. */
+int trie_contains(const trie_t* t, const char* word);
+
+/* Return 1 if the trie holds the path spelled by prefix, else 0. Every inserted word
+   leaves its prefixes as paths, and "" is the root, so "" always answers 1. */
+int trie_starts_with(const trie_t* t, const char* prefix);
+
+/* Return the number of whole words in the trie. */
+size_t trie_count(const trie_t* t);
+
+/* Size in bytes of one private node, for the test program to report. */
+size_t trie_node_size(void);</code></pre>
+  <p>Two functions take <code>trie_t*</code> because they change the trie. Three take <code>const trie_t*</code> because they only read, and <code>find_node</code> behind them takes <code>const struct node*</code> for the same reason. No pointer into a node ever crosses the header: every answer is an <code>int</code> or a <code>size_t</code>, so no caller can hold a node after <code>trie_free</code>.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create and enter the exercise folder:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/15-trie &amp;&amp; cd exercises/15-trie</code></pre>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>trie.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>trie.c</code>: <code>ALPHABET</code>, the two private structs, <code>static</code> helpers <code>slot_index</code>, <code>new_node</code> (with <code>calloc</code>), <code>free_nodes</code> and <code>find_node</code>, then the seven public functions. Close this page first and write from three shapes: check the range, then index by subtraction; take the address of the slot and write through it; read all 26 slots before <code>free(n)</code>. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the words once, as a named constant array of seven <code>const char*</code> in this order: <code>"apple"</code>, <code>"app"</code>, <code>"apply"</code>, <code>"banana"</code>, <code>"band"</code>, <code>"bandana"</code>, <code>"app"</code>. The second <code>"app"</code> is on purpose. Print the node size line first. Create a trie and check it. Insert the seven words in a loop; on -1 free the trie and return 1, otherwise add the return value to an <code>int inserted</code>. Then print, in this order: the inserted count, the count, five <code>contains</code> lines for <code>"app"</code>, <code>"ap"</code>, <code>"apple"</code>, <code>"bandana"</code>, <code>"cat"</code>, four <code>starts_with</code> lines for <code>"ap"</code>, <code>"ban"</code>, <code>"c"</code>, <code>""</code>, and the count again. Print each string inside double quotes (<code>\"%s\"</code>), so the empty prefix shows as <code>""</code>. Free the trie and return 0. Expected:</p>
+      <pre><code>node: 216 bytes
+inserted: 6 of 7
+count: 6
+contains "app": yes
+contains "ap": no
+contains "apple": yes
+contains "bandana": yes
+contains "cat": no
+starts_with "ap": yes
+starts_with "ban": yes
+starts_with "c": no
+starts_with "": yes
+count: 6</code></pre>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./trie</code>, and <code>make check</code>. Require no warnings, the exact thirteen lines, and valgrind's <code>19 allocs, 19 frees</code> with no errors.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong></p>
+      <ol>
+        <li><strong>Forget the subtraction.</strong> In <code>slot_index</code>, return <code>c</code> instead of <code>c - 'a'</code>. Build: no warning. Run <code>./trie</code>: the first line comes from UBSan, the rest from ASan. Read the offset after the region and who allocated it. Restore the subtraction.</li>
+        <li><strong>Path is not word.</strong> In <code>trie_contains</code>, return <code>n != NULL</code> and drop the <code>is_end</code> test. Build and run <code>./trie</code>: compare the thirteen lines with the expected ones. Run <code>make check</code>: read the error summary. Restore the test.</li>
+        <li><strong>Parent before children.</strong> In <code>free_nodes</code>, move <code>free(n)</code> above the loop. Build: read the gcc warning. Run <code>./trie</code>: read the report, in particular the byte offset and how many <code>free_nodes</code> frames sit in the “freed by” column. Restore post-order.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 15 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the three reports</h2>
+  <p><strong>Experiment 1, index 97.</strong> The first word is <code>"apple"</code> and its first letter is <code>'a'</code>, 97. The build has <code>-fsanitize=undefined</code> as well as <code>address</code>, and <code>child</code> is declared with 26 elements, so the undefined-behaviour sanitizer speaks first, before any memory is touched (paths and line numbers trimmed):</p>
+  <pre><code>trie.c:67:41: <strong>runtime error: index 97 out of bounds for type 'node *[26]'</strong>
+=================================================================
+ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x511000000348
+READ of size 8 at 0x511000000348 thread T0
+    #0 in trie_insert trie.c:68
+    #1 in main main.c:24
+0x511000000348 is located <strong>560 bytes after 216-byte region</strong> [0x511000000040,0x511000000118)
+allocated by thread T0 here:
+    #0 in calloc
+    #1 in new_node trie.c:25
+    #2 in trie_new trie.c:33
+    #3 in main main.c:17</code></pre>
+  <p>Do the arithmetic the report did. Slot 97 lives at offset 97 × 8 = 776 from the node's start. The node is 216 bytes, and 776 - 216 = 560: the read landed 560 bytes past the end of the block. The block was allocated by <code>new_node</code> under <code>trie_new</code>, so it is the root, and the first letter of the first word already missed the array. Under the plain build the same read returns whatever sits 560 bytes past the root and the walk follows it; nothing reports anything until the program crashes somewhere else.</p>
+  <p><strong>Experiment 2, path is not word.</strong> Nothing crashes and nothing leaks. The output is the only evidence, and one line is wrong:</p>
+  <pre><code>contains "app": yes
+contains "ap": <strong>yes</strong>
+contains "apple": yes
+...
+==12345== total heap usage: 19 allocs, 19 frees, 7,784 bytes allocated
+==12345== ERROR SUMMARY: 0 errors from 0 contexts</code></pre>
+  <p>The path <code>a</code>, <code>p</code> exists because <code>"app"</code> and <code>"apple"</code> pass through it. Reading a live node's <code>is_end</code>, or not reading it, is legal C either way, so no sanitizer has anything to say. The expected-output check is the only tool that catches a wrong answer, which is why every lesson ships one.</p>
+  <p><strong>Experiment 3, parent before children.</strong> gcc 13 warns at build time. Note the wording: “may be”, not “is”, because the read sits inside a loop and the compiler is less sure than it was in lesson 12:</p>
+  <pre><code>trie.c: In function ‘free_nodes’:
+trie.c:48:9: <strong>warning: pointer ‘n’ may be used after ‘free’</strong> [-Wuse-after-free]
+   48 |         free_nodes(n-&gt;child[i]);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~
+trie.c:46:5: note: call to ‘free’ here
+   46 |     free(n);</code></pre>
+  <p>Run it anyway and the thirteen lines print, because the bug is in <code>trie_free</code>, and then:</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-use-after-free</strong> on address 0x511000000040
+READ of size 8 at 0x511000000040 thread T0
+    #0 in free_nodes trie.c:48
+    #1 in trie_free trie.c:56
+    #2 in main main.c:45
+0x511000000040 is located <strong>0 bytes inside of 216-byte region</strong> [0x511000000040,0x511000000118)
+freed by thread T0 here:
+    #0 in free
+    #1 in free_nodes trie.c:46
+    #2 in trie_free trie.c:56
+previously allocated by thread T0 here:
+    #0 in calloc
+    #1 in new_node trie.c:25
+    #2 in trie_new trie.c:33</code></pre>
+  <p>“0 bytes inside” is <code>child[0]</code>, the first slot the loop reads. Only one <code>free_nodes</code> frame sits in the “freed by” column: the root was freed on the very first call, before any recursion happened, and the loop then read its first slot out of the dead block. In lesson 12 the same mistake read <code>left</code> at offset 8; here the first read is at offset 0 because the slots come first in the struct.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C-based teaching or has no code at all. Read in this order; the first item is a video, because no C source file for a trie exists in the sources this course uses.</p>
+  <ol class="reading">
+    <li><p><strong>Watch first: the structure, hand-traced in C terms.</strong> CS50 Shorts, Doug Lloyd, <a href="https://video.cs50.io/MC-iQHFdEDI">Tries</a>; the <a href="https://cs50.harvard.edu/x/2025/shorts/tries/">CS50x page for the short</a> carries a transcript. He builds a ten-way trie keyed by the digits of a year, so every node holds ten pointers instead of your twenty-six, and he names the 26-way version as the dictionary case. Watch for three moments. When a path is null he says “I have to malloc a new node, have 1 point there”: that is your <code>*slot = new_node()</code>, with the slot chosen by a digit instead of <code>c - 'a'</code>. He keeps a global <code>root</code> that is set once and “never touched again”; your <code>root</code> lives inside the opaque struct, set once by <code>trie_new</code>. And he ends on the trade, near-constant-time insert and lookup for “a lot of space and memory”, which is the sidenote's 3,672 bytes for 30 letters. No code listing and no free; every node he mallocs is yours to free in post-order.</p></li>
+    <li><p><strong>The first-course version, in two pictures.</strong> CS50x notes, <a href="https://cs50.harvard.edu/x/notes/5/#tries">Week 5, Tries</a>. Four sentences and two drawings of a 26-way trie holding <code>Toad</code> and then <code>Tom</code>. Their “26 × 4 = 104 nodes just to store Toad” is counting slots: four nodes of 26 slots each, and your test program's 17 nodes hold 442 of them. Their “search time of O(1)” means what the lookup paragraph above means: the cost is the length of the key, and does not grow with the number of words stored.</p></li>
+    <li><p><strong>The two type facts the walk depends on.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/types-ii-way-more-types.html#character-types">14.2 Character Types</a>: “Deep down, <code>char</code> is just a small <code>int</code>”, and “<code>char</code> is actually a number, so can we do math on it? Yup!” That is the whole justification for <code>c - 'a'</code>. Then <a href="https://beej.us/guide/bgc/html/split/strings.html#string-termination">7.6 String Termination</a>, for the <code>'\0'</code> every walk in <code>trie.c</code> stops on, and for why no <code>&lt;string.h&gt;</code> call was needed: the terminator is the length.</p></li>
+    <li><p><strong>The one library rule behind <code>new_node</code>.</strong> cppreference, <a href="https://en.cppreference.com/w/c/memory/calloc">calloc</a>, first sentence: it “initializes all bytes in the allocated storage to zero”. Twenty-six <code>NULL</code> slots and a clear flag, for the price of one word changed from <code>malloc</code>.</p></li>
+  </ol>
+  <p><strong>Where this lands in CS107.</strong> Nowhere by name. The <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">calendar</a> has no lecture that mentions tries, and the <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/syllabus.html">syllabus</a> prerequisite asks for “dynamic data structures (pointers, linked lists, trees, graphs)”, which lessons 10 to 14 covered. That is why this lesson is optional. Its lecture 4 on <code>char</code> and <code>char *</code> and null termination is where the <code>c - 'a'</code> arithmetic and the <code>'\0'</code> stop will come back.</p>
+  <p>Weiss's DSAA-in-C source files and Skiena's Algorithm Design Manual programs page have no trie file (checked 2026-09-12; Weiss stops at <code>tree.c</code> and <code>avltree.c</code>, Skiena at <code>tree-demo.c</code>). The 256-way node and the cost sentence above cite algs4's <a href="https://algs4.cs.princeton.edu/52trie/TrieST.java.html">TrieST.java</a> (Java). Treat that link as evidence for a sentence, not as reading. Keep the <a href="../reference/trie.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If an index is ever computed from data, ask what range the data can take and what stops it before the array does; UBSan caught it here only because the array bound was visible in the declaration. And since lesson 14 was the last lesson the mission requires, one more question for me: which of the six required structures would you least like to rewrite from a blank file tomorrow? That one gets a second exercise before CS107 starts.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0014-mark-then-visit.html">Previous: Lesson 14, Mark, Then Visit</a> · <a href="../reference/trie.html">Reference: trie cheat sheet</a></span>
+    <span><a href="../NOTES.md">End of the planned sequence</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0015-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"trie_insert reaches &cur->child[c - 'a'] and the slot holds NULL. What does the code do?",opts:["calloc a node into that slot","return 0, the word is absent","malloc a node into cur itself","skip the letter and move on"],a:0,why:"The slot is the parent's pointer for that letter. *slot = new_node() writes the fresh node where the next walk will find it, and calloc leaves its 26 slots NULL."},
+    {q:"Why does new_node call calloc and not malloc?",opts:["the 26 slots must start NULL","calloc is faster for big blocks","malloc cannot hand back 216 bytes","the count must start at zero"],a:0,why:"A walk follows any non-NULL slot. malloc leaves the 26 slots holding old bytes, and the first insert would treat one of them as a child. calloc zeroes the block, and zero is NULL."},
+    {q:"After inserting \"app\" and \"apple\", what happens inside trie_contains(t, \"ap\")?",opts:["the path exists, is_end is 0","the walk hits NULL, returns 0","the path exists, is_end is 1","the walk hits NULL, returns 1"],a:0,why:"a then p both exist because app passes through them. The node at the end of ap was never marked as a word end, so contains answers 0 while starts_with answers 1."},
+    {q:"free_nodes on the root, six test words. How many frames are alive at the deepest point?",opts:["eight: the root plus seven letters","seventeen: one frame per node stored","twenty-six: one frame per slot read","two: the root and one child"],a:0,why:"Depth is the longest path. bandana is seven letters, so the stack holds the root frame plus seven. Every deeper call has returned before the loop moves to the next slot."},
+    {q:"slot_index returns c instead of c - 'a'. On the sanitizer build, what reports it first?",opts:["UBSan: index 97 out of bounds","gcc: array subscript out of range","valgrind: invalid read of size 8","nothing at all, the read succeeds"],a:0,why:"child is declared with 26 elements, so -fsanitize=undefined checks the subscript before the read. gcc cannot see the value at compile time. ASan then reports the read 560 bytes after the 216-byte region."},
+    {q:"free(n) is moved above the loop over n->child[i]. What does ASan report?",opts:["heap-use-after-free, READ of size 8","heap-buffer-overflow, READ of size 8","double-free on the root node","stack-overflow in a free_nodes column"],a:0,why:"The slots live inside the freed block. The loop's first read is child[0], 0 bytes inside the 216-byte region, and the freed-by column shows a single free_nodes frame: the root died on the first call."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the slot walk for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

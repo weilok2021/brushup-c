@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 14 · Mark, Then Visit</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 14 · DSA in C</p>
+  <h1>Mark, Then Visit</h1>
+  <p class="subtitle">A graph is an array of linked lists. Breadth-first search walks it with lesson 11's queue, depth-first search walks it with the C stack, and both finish for one reason: a vertex is marked the moment it is found, not the moment it is visited.</p>
+  <div class="meta">
+    <span>About 45 minutes</span>
+    <span>Where: WSL, <code>exercises/14-graph/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/graph.html">Cheat sheet</a> · <a href="0013-hash-then-chain.html">Lesson 13</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> Ship <code>graph_t</code> as an opaque ADT: adjacency lists built by front insertion, a breadth-first search that borrows your own queue module from lesson 11, a recursive depth-first search, and connected components. With that, every structure on the mission's success list exists in your repo.</div>
+</header>
+
+<section>
+  <div class="paste">
+    <p class="label">Setup · paste once · not something to learn</p>
+    <p>Put this <code>Makefile</code> in the exercise folder. The <span class="tab">⇥</span> marks must be real tabs. <code>queue.h</code> and <code>queue.c</code> are your lesson 11 files, copied unchanged (step 1 below), so the build compiles three <code>.c</code> files.</p>
+    <pre><code>CC     = gcc
+CFLAGS = -std=gnu11 -Wall -Wextra -g
+SAN    = -fsanitize=address,undefined
+SRC    = main.c graph.c queue.c
+
+graph: $(SRC) graph.h queue.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) $(SAN) -o graph $(SRC)
+
+graph-plain: $(SRC) graph.h queue.h
+<span class="tab">⇥</span>$(CC) $(CFLAGS) -o graph-plain $(SRC)
+
+.PHONY: check clean
+check: graph-plain
+<span class="tab">⇥</span>valgrind --leak-check=full --error-exitcode=1 ./graph-plain
+clean:
+<span class="tab">⇥</span>rm -f graph graph-plain</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Six edges, twelve nodes</h2>
+  <p>Create a graph with 8 vertices, numbered 0 to 7. Add the edges <code>0-1, 0-2, 1-3, 2-3, 3-4, 5-6</code> in that order. Vertex 7 gets no edge. Afterwards the memory looks like this:</p>
+  <pre><code>main's stack     heap
+g ──────────▶ struct graph { n 8, adj ──▶ 0x100 }             16 bytes
+
+0x100  adj[0] ──▶ [2|·]──▶[1|NULL]          adj[4] ──▶ [3|NULL]
+       adj[1] ──▶ [3|·]──▶[0|NULL]          adj[5] ──▶ [6|NULL]
+       adj[2] ──▶ [3|·]──▶[0|NULL]          adj[6] ──▶ [5|NULL]
+       adj[3] ──▶ [4|·]──▶[2|·]──▶[1|NULL]   adj[7]     NULL
+       (the array: 8 slots of 8 bytes)      each [to|next] box: one 16-byte heap block</code></pre>
+  <p>Count the heap blocks: one <code>struct graph</code>, one array of 8 pointers, and twelve edge nodes. Twelve, not six. An undirected edge <code>0-1</code> is stored twice: a node holding 1 in 0's list and a node holding 0 in 1's list. The list hanging off <code>adj[u]</code> is u's <em>adjacency list</em>: the vertices that share an edge with u. Sedgewick and Wayne call the whole shape the adjacency-lists representation, “a vertex-indexed array of lists of the vertices connected by an edge to each vertex”<a href="https://algs4.cs.princeton.edu/41graph/">*</a>, and their <code>Graph.java</code> states its space as proportional to <code>E + V</code><a href="https://algs4.cs.princeton.edu/41graph/Graph.java.html">*</a>: one slot per vertex, two nodes per edge<a class="sn-ref" href="#sn1"></a>.</p>
+  <span class="sidenote" id="sn1">One edge node is 16 bytes on your machine: a 4-byte <code>int</code>, 4 bytes of padding, an 8-byte pointer. <code>struct graph</code> is also 16: a <code>size_t</code> and a pointer. The experiments later name a “32-byte region”. That is neither of these. It is <code>main</code>'s <code>order</code> array, eight ints.</span>
+  <p>In C both structs are private to <code>graph.c</code>. The header says only <code>typedef struct graph graph_t;</code>, as the stack, list, queue, tree and hashmap did. The node type is spelled <code>struct edge</code> with no typedef, like lesson 11's <code>struct node</code>; lesson 10's <code>typedef struct node node_t;</code> names the same kind of private struct and is equally fine:</p>
+  <pre><code>struct edge {
+    int to;                /* the neighbour at the other end */
+    struct edge* next;
+};
+
+struct graph {
+    size_t n;              /* vertices are 0 .. n-1 */
+    struct edge** adj;     /* adj[u] is the head of u's list, NULL when u has no edge */
+};</code></pre>
+  <p>Ownership runs top down. <code>main</code> owns the <code>struct graph</code> through <code>g</code>. The struct owns the array; <code>graph_new</code> gets it from <code>calloc</code>, which “initializes all bytes in the allocated storage to zero”<a href="https://en.cppreference.com/w/c/memory/calloc">*</a>, so every list starts as <code>NULL</code> without a loop. Each slot <code>adj[u]</code> owns the nodes of u's list. <code>graph_free</code> walks all <code>n</code> lists with lesson 11's saved-next walk, frees the array, then frees the struct: fourteen frees for fourteen blocks.</p>
+</section>
+
+<section>
+  <h2>Add an edge: front insert, twice</h2>
+  <p>Watch <code>adj[3]</code> as the edges that touch 3 arrive:</p>
+  <pre><code>after 1-3     adj[3] ──▶ [1|NULL]
+after 2-3     adj[3] ──▶ [2|·]──▶[1|NULL]
+after 3-4     adj[3] ──▶ [4|·]──▶[2|·]──▶[1|NULL]</code></pre>
+  <p>Each arrival is two pointer writes on a slot: <code>e-&gt;next = g-&gt;adj[u]; g-&gt;adj[u] = e;</code>. The slot <code>adj[u]</code> has type <code>struct edge*</code>, exactly lesson 10's <code>head</code>. Nothing walks the list. The newest neighbour is always first, so a list reads in <em>reverse insertion order</em>: 3's list prints <code>4 2 1</code>, not <code>1 2 4</code>. Every expected line in this lesson depends on that order. algs4's <code>Graph</code> has the same shape: <code>addEdge</code> does <code>adj[v].add(w); adj[w].add(v);</code><a href="https://algs4.cs.princeton.edu/41graph/Graph.java.html">*</a>, and <code>Bag.add</code> links the new node in front of the old first node<a href="https://algs4.cs.princeton.edu/13stacks/Bag.java.html">*</a>. Skiena's C version comments the same line “insert at head of list”, then calls itself once more with the ends swapped<a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/graph.c">*</a>.</p>
+  <pre><code>int graph_add_edge(graph_t* g, int u, int v) {
+    if (!is_vertex(g, u) || !is_vertex(g, v)) {
+        return 0;
+    }
+    struct edge* uv = malloc(sizeof *uv);      /* allocate both before linking either */
+    struct edge* vu = malloc(sizeof *vu);
+    if (uv == NULL || vu == NULL) {
+        free(uv);                              /* free(NULL) is allowed */
+        free(vu);
+        return 0;                              /* graph unchanged */
+    }
+    uv-&gt;to = v;
+    uv-&gt;next = g-&gt;adj[u];                      /* front insert: two pointer writes */
+    g-&gt;adj[u] = uv;
+    vu-&gt;to = u;
+    vu-&gt;next = g-&gt;adj[v];
+    g-&gt;adj[v] = vu;
+    return 1;
+}</code></pre>
+  <p>Both nodes are allocated before either is linked. If the second <code>malloc</code> fails, the first node is freed and the graph is exactly as it was: the “unchanged on 0” contract from lessons 4, 9 and 11. <code>is_vertex</code> is a two-line <code>static</code> helper: <code>v &gt;= 0 &amp;&amp; (size_t)v &lt; g-&gt;n</code>. Vertex ids are <code>int</code> because the queue carries ints; the cast is the one place the two types meet.</p>
+</section>
+
+<section>
+  <h2>Breadth-first: mark when enqueued</h2>
+  <p>Breadth-first search from 0 visits 0, then every vertex one edge away, then two edges away, and so on. The queue holds vertices that have been found but whose lists have not been read yet. <code>marked</code> is an array of eight ints from <code>calloc</code>, all 0. “Visit” means: dequeue and append to <code>order[]</code>. Trace it on the graph, reading each list in its stored order:</p>
+  <table>
+    <tr><th>Step</th><th>Dequeue</th><th>order[] so far</th><th>Its list</th><th>Unmarked: mark and enqueue</th><th>Queue after</th></tr>
+    <tr><td>start</td><td></td><td></td><td></td><td>0</td><td>0</td></tr>
+    <tr><td>1</td><td>0</td><td>0</td><td>2 1</td><td>2, 1</td><td>2 1</td></tr>
+    <tr><td>2</td><td>2</td><td>0 2</td><td>3 0</td><td>3</td><td>1 3</td></tr>
+    <tr><td>3</td><td>1</td><td>0 2 1</td><td>3 0</td><td>none</td><td>3</td></tr>
+    <tr><td>4</td><td>3</td><td>0 2 1 3</td><td>4 2 1</td><td>4</td><td>4</td></tr>
+    <tr><td>5</td><td>4</td><td>0 2 1 3 4</td><td>3</td><td>none</td><td>empty</td></tr>
+  </table>
+  <p>Five visits, five enqueues, five dequeues. Sedgewick and Wayne state the loop body in one sentence: “Put onto the queue all unmarked vertices that are adjacent to v and mark them”<a href="https://algs4.cs.princeton.edu/41graph/">*</a>. The mark and the enqueue happen together, at step 3 of the table, not at step 4. Their <code>BreadthFirstPaths.java</code> has the two lines side by side: <code>marked[w] = true; queue.enqueue(w);</code><a href="https://algs4.cs.princeton.edu/41graph/BreadthFirstPaths.java.html">*</a>.</p>
+  <p>Now move the mark to the other side, a natural mistake: mark a vertex when you visit it, right after the dequeue. Same graph, same lists:</p>
+  <table>
+    <tr><th>Step</th><th>Dequeue, mark</th><th>order[] so far</th><th>Its list</th><th>Unmarked: enqueue</th><th>Queue after</th></tr>
+    <tr><td>1</td><td>0</td><td>0</td><td>2 1</td><td>2, 1</td><td>2 1</td></tr>
+    <tr><td>2</td><td>2</td><td>0 2</td><td>3 0</td><td>3</td><td>1 3</td></tr>
+    <tr><td>3</td><td>1</td><td>0 2 1</td><td>3 0</td><td><strong>3 again</strong>: queued, not yet marked</td><td>3 3</td></tr>
+    <tr><td>4</td><td>3</td><td>0 2 1 3</td><td>4 2 1</td><td>4</td><td>3 4</td></tr>
+    <tr><td>5</td><td>3 again</td><td>0 2 1 3 <strong>3</strong></td><td>4 2 1</td><td><strong>4 again</strong></td><td>4 4</td></tr>
+    <tr><td>6</td><td>4</td><td>0 2 1 3 3 4</td><td>3</td><td>none</td><td>4</td></tr>
+    <tr><td>7</td><td>4 again</td><td>0 2 1 3 3 4 <strong>4</strong></td><td>3</td><td>none</td><td>empty</td></tr>
+  </table>
+  <p>At step 3, vertex 1 reads its list while 3 is sitting in the queue unmarked, so 3 is enqueued a second time. Every duplicate dequeue is one extra write into <code>order[]</code>, and each one reads its list again and can enqueue further duplicates: 4 goes in twice because 3 came out twice. Seven writes for a component of five vertices, and <code>graph_bfs</code> returns 7. On this graph 7 fits inside <code>main</code>'s block of 8 ints, so nothing crashes and the wrong answer prints. Add one more edge, <code>1-2</code>, and the same code writes nine ints into eight slots; AddressSanitizer stops it. You will do both in the experiments.</p>
+  <p>The rule, and the title: a mark means “already found: in the queue or out of it”. It never means “already visited”. Mark when you enqueue, visit when you dequeue<a class="sn-ref" href="#sn-lazy"></a>.</p>
+  <span class="sidenote" id="sn-lazy">There is a second correct form: leave the mark on the dequeue side, but skip any vertex that is already marked when it comes out. Aspnes describes search that way, as a bucket of edges where an edge whose far end is already in the tree is thrown away when it is popped<a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#graphSearch">*</a>. It is correct, and its queue can grow to one entry per edge instead of one per vertex. Every implementation this lesson cites uses the form above. The bug in experiment 1 is the dequeue-side mark <em>without</em> the skip.</span>
+  <pre><code>size_t graph_bfs(const graph_t* g, int start, int* order) {
+    if (!is_vertex(g, start)) {
+        return 0;
+    }
+    int* marked = calloc(g-&gt;n, sizeof *marked);       /* all 0: nothing found yet */
+    if (marked == NULL) {
+        return 0;
+    }
+    queue_t* q = queue_new();                          /* lesson 11, unchanged */
+    if (q == NULL) {
+        free(marked);
+        return 0;
+    }
+    size_t count = 0;
+    marked[start] = 1;                                 /* mark when enqueued */
+    int ok = queue_enqueue(q, start);
+    int v;
+    while (ok &amp;&amp; queue_dequeue(q, &amp;v)) {
+        order[count++] = v;                            /* visit when dequeued */
+        for (const struct edge* e = g-&gt;adj[v]; ok &amp;&amp; e != NULL; e = e-&gt;next) {
+            if (!marked[e-&gt;to]) {
+                marked[e-&gt;to] = 1;                     /* mark when enqueued */
+                ok = queue_enqueue(q, e-&gt;to);
+            }
+        }
+    }
+    queue_free(q);
+    free(marked);
+    return count;
+}</code></pre>
+  <p>Three heap blocks take part, and three different owners. <code>marked</code> is created by <code>graph_bfs</code> and freed by <code>graph_bfs</code> before it returns. The queue is created by <code>queue_new</code> inside <code>graph_bfs</code> and freed by <code>queue_free</code> before it returns; the graph never stores it. The queue is a borrowed tool for the length of one call, and lesson 11's header is all <code>graph.c</code> knows about it. <code>order</code> belongs to the caller, who promised room for <code>n</code> ints<a class="sn-ref" href="#sn2"></a>.</p>
+  <span class="sidenote" id="sn2"><code>queue_enqueue</code> returns 0 when its <code>malloc</code> fails. The <code>ok</code> flag stops both loops, and the two frees still run, so the function returns a partial count and leaks nothing. An early <code>return</code> is fine too, as long as it frees both blocks first. Two exits, both clean, is the habit that matters.</span>
+</section>
+
+<section>
+  <h2>Depth-first: mark on entry, recurse on the C stack</h2>
+  <p>Depth-first search takes the first unmarked neighbour and goes deeper before it looks at the second. No queue: the C stack remembers where to come back to. From 0 on the same graph, reading each list in stored order:</p>
+  <pre><code>dfs_visit(0)     mark 0, order: 0          list 2 1.   2 unmarked:
+  dfs_visit(2)     mark 2, order: 0 2        list 3 0.   3 unmarked:
+    dfs_visit(3)     mark 3, order: 0 2 3      list 4 2 1. 4 unmarked:
+      dfs_visit(4)     mark 4, order: 0 2 3 4    list 3: marked. return
+    2 marked, 1 marked. return
+  0 marked. return
+                                              1 unmarked:
+  dfs_visit(1)     mark 1, order: 0 2 3 4 1  list 3 0: both marked. return</code></pre>
+  <p>Four frames are alive at the deepest point, one each for 0, 2, 3 and 4. Each frame holds five arguments and no node pointer, unlike lesson 12: a vertex is a number, and the number is its position in <code>adj</code>. The visit count travels as <code>size_t* count</code> because every frame appends to the same <code>order[]</code> and must see the same counter. A <code>size_t</code> copy would die with its frame, the same way lesson 12's <code>insert_at</code> on a copy lost its node. Sedgewick and Wayne describe the visit in two lines: “Mark it as having been visited. Visit (recursively) all the vertices that are adjacent to it and that have not yet been marked”<a href="https://algs4.cs.princeton.edu/41graph/">*</a>, and <code>marked[v] = true</code> is the first line of their <code>dfs</code><a href="https://algs4.cs.princeton.edu/41graph/DepthFirstSearch.java.html">*</a>:</p>
+  <pre><code>static void dfs_visit(const graph_t* g, int v, int* marked, int* order, size_t* count) {
+    marked[v] = 1;                             /* mark on entry, before the loop */
+    order[(*count)++] = v;
+    for (const struct edge* e = g-&gt;adj[v]; e != NULL; e = e-&gt;next) {
+        if (!marked[e-&gt;to]) {
+            dfs_visit(g, e-&gt;to, marked, order, count);
+        }
+    }
+}
+
+size_t graph_dfs(const graph_t* g, int start, int* order) {
+    /* is_vertex check, calloc marked, count = 0 */
+    dfs_visit(g, start, marked, order, &amp;count);
+    free(marked);
+    return count;
+}</code></pre>
+  <p>The mark is the first line. Move it below the loop, as if it were a post-order step like lesson 12's <code>free_nodes</code>, and the edge <code>3-4</code> becomes a loop: 3 enters 4, 4 finds 3 unmarked and enters 3, 3 finds 4 unmarked and enters 4. No frame ever reaches its mark, so no base case ever fires. The C stack fills and AddressSanitizer reports <code>stack-overflow</code> under a column of <code>dfs_visit</code> frames. With the mark on entry, the deepest possible stack is one frame per vertex: a path <code>0-1-2-...</code> started at 0 puts <code>n</code> frames on the stack, and the frames are small, so the default 8 MB stack holds anything this course builds.</p>
+</section>
+
+<section>
+  <h2>Components: the label is the mark</h2>
+  <p>A connected component is a set of vertices with a path between every two of them. Sedgewick and Wayne: a graph that is not connected “consists of a set of connected components, which are maximal connected subgraphs”<a href="https://algs4.cs.princeton.edu/41graph/">*</a>. This graph has three: <code>{0, 1, 2, 3, 4}</code>, <code>{5, 6}</code> and <code>{7}</code>. One loop finds them. For <code>v</code> from 0 to <code>n - 1</code>: if <code>v</code> has no label yet, run a depth-first walk from <code>v</code> and give everything it reaches the next id. <code>CC.java</code> does exactly this with a <code>marked[]</code> and an <code>id[]</code> side by side, and bumps <code>count</code> after each walk<a href="https://algs4.cs.princeton.edu/41graph/CC.java.html">*</a>. Skiena's <code>connected.c</code> runs his <code>bfs</code> from every vertex not yet discovered<a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/connected.c">*</a>. Here the label array <em>is</em> the mark: <code>component[v] == -1</code> means not yet found.</p>
+  <pre><code>static void label_visit(const graph_t* g, int v, int* component, int id) {
+    component[v] = id;                         /* the label is the mark */
+    for (const struct edge* e = g-&gt;adj[v]; e != NULL; e = e-&gt;next) {
+        if (component[e-&gt;to] == -1) {
+            label_visit(g, e-&gt;to, component, id);
+        }
+    }
+}
+
+/* graph_components: fill component[] with -1; then for each v with component[v] == -1,
+   label_visit(g, v, component, id) and id++; return id. */</code></pre>
+  <p>Fill the array with <code>-1</code> first. The first component gets id 0, so a zero from <code>calloc</code> would read as “already in component 0” and the loop would label nothing. The result for this graph is <code>0 0 0 0 0 1 1 2</code> and a count of 3. Vertex 7 has an empty list, so its walk marks one vertex and returns.</p>
+  <p>Count the work in any of the three walks: each vertex is entered once, because the mark stops a second entry, and each list is read once, when its vertex is entered. That is proportional to <code>V + E</code>. algs4 states it for both: BFS “takes time proportional to V + E in the worst case”, and DFS “marks all the vertices connected to a given source in time proportional to the sum of their degrees”<a href="https://algs4.cs.princeton.edu/41graph/">*</a>. Without the mark the same code walks a cycle forever. That is the whole lesson in one sentence.</p>
+</section>
+
+<section>
+  <h2>Where every byte lives</h2>
+  <table>
+    <tr><th>Bytes</th><th>Where</th><th>Owner</th><th>Freed by</th></tr>
+    <tr><td><code>struct graph</code>, 16</td><td>heap</td><td><code>main</code>, through <code>g</code></td><td><code>graph_free</code>, last</td></tr>
+    <tr><td><code>adj</code>, <code>n</code> pointers</td><td>heap</td><td>the <code>struct graph</code></td><td><code>graph_free</code>, after the lists</td></tr>
+    <tr><td>edge nodes, 16 each, two per edge</td><td>heap</td><td>the slot they hang from</td><td><code>graph_free</code>, saved-next walk per list</td></tr>
+    <tr><td><code>marked</code>, <code>n</code> ints</td><td>heap</td><td><code>graph_bfs</code> or <code>graph_dfs</code></td><td>the same function, before it returns</td></tr>
+    <tr><td>queue struct and its nodes</td><td>heap</td><td><code>graph_bfs</code>, for one call</td><td><code>queue_free</code>, before it returns</td></tr>
+    <tr><td><code>order</code>, <code>component</code>, <code>n</code> ints each</td><td>heap</td><td><code>main</code></td><td><code>main</code></td></tr>
+    <tr><td><code>dfs_visit</code> frames, five arguments each</td><td>C stack</td><td>the call itself</td><td><code>return</code>; at most <code>n</code> alive at once</td></tr>
+  </table>
+  <p>Add them up for the test program: 14 graph blocks, 3 <code>marked</code> arrays (two BFS calls and one DFS), 2 queue structs, 10 queue nodes (one per enqueue, five per BFS), 2 arrays in <code>main</code>, and <code>printf</code>'s buffer: 32 allocations, 32 frees. <code>make check</code> will show exactly that.</p>
+</section>
+
+<section>
+  <h2>The interface</h2>
+  <p class="filename">graph.h</p>
+  <pre><code>#pragma once
+
+#include &lt;stddef.h&gt;
+
+typedef struct graph graph_t;
+
+/* Create a graph with vertices 0 .. vertex_count-1 and no edges. NULL on allocation failure. */
+graph_t* graph_new(size_t vertex_count);
+
+/* Free every edge node, the array of lists, then the graph. NULL is fine. */
+void graph_free(graph_t* g);
+
+/* Add the undirected edge u-v: v joins u's list and u joins v's list.
+   Returns 1, or 0 on a bad vertex or allocation failure. On 0 the graph is unchanged. */
+int graph_add_edge(graph_t* g, int u, int v);
+
+/* Number of vertices. */
+size_t graph_vertex_count(const graph_t* g);
+
+/* Number of neighbours in v's list. 0 for a bad vertex. */
+size_t graph_degree(const graph_t* g, int v);
+
+/* One line per vertex: "v:" then each neighbour preceded by one space, then a newline. */
+void graph_print(const graph_t* g);
+
+/* Breadth-first from start. Writes the visit order into order[], which must hold
+   at least graph_vertex_count(g) ints. Returns how many vertices were visited. */
+size_t graph_bfs(const graph_t* g, int start, int* order);
+
+/* Depth-first from start, recursive. Same contract as graph_bfs. */
+size_t graph_dfs(const graph_t* g, int start, int* order);
+
+/* Label every vertex: component[v] = id of its connected component, ids 0, 1, ...
+   in order of the smallest vertex in each. Returns the number of components. */
+size_t graph_components(const graph_t* g, int* component);</code></pre>
+  <p>One function changes the graph and takes <code>graph_t*</code>. Six only read it and take <code>const graph_t*</code>, including the three walks: they write their own arrays, never the graph. <code>queue.h</code> is included by <code>graph.c</code> only. <code>main.c</code> never sees a queue.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>Create the exercise folder and bring in your queue module:</p>
+      <pre><code>cd ~/workspace/brushup-c
+mkdir -p exercises/14-graph &amp;&amp; cd exercises/14-graph
+cp ../09-queue/queue.h ../09-queue/queue.c .</code></pre>
+      <p>Do not edit the two copies. If <code>graph.c</code> needs something the queue does not offer, the graph is asking the wrong question.</p>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>Create <code>graph.h</code> exactly as shown. Paste the setup <code>Makefile</code>.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Write <code>graph.c</code>: the two private structs, a <code>static int is_vertex</code>, the six plain functions, then <code>graph_bfs</code>, <code>static dfs_visit</code> with its wrapper, and <code>static label_visit</code> with <code>graph_components</code>. Close this page first and write from four facts: front insert is two pointer writes on <code>adj[u]</code>; both nodes before either link; mark when enqueued, visit when dequeued; mark on entry in the recursive helpers. Reopen only if you are stuck for more than a few minutes.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>main.c</code>. Declare the edges once, as a <code>static const int EDGES[][2]</code> of six pairs in this order: <code>0-1, 0-2, 1-3, 2-3, 3-4, 5-6</code>, and the vertex count 8 as a named constant. Add a small <code>static</code> helper that prints a label, then <code>n</code> ints each with a leading space, then a newline. In <code>main</code>: create the graph and check it. Add the six edges in a loop, freeing the graph and returning 1 if any call returns 0. Print the lists with <code>graph_print</code>. Print the degree of 3 with <code>%zu</code>. Allocate two heap arrays of <code>graph_vertex_count(g)</code> ints, <code>order</code> and <code>component</code>, checking both. Then, in this order: BFS from 0 and its count on a <code>visited:</code> line; DFS from 0 and its count; BFS from 4 and its count; the components line for all 8 vertices and the component count. Free the two arrays, free the graph, return 0. Expected, exactly:</p>
+      <pre><code>0: 2 1
+1: 3 0
+2: 3 0
+3: 4 2 1
+4: 3
+5: 6
+6: 5
+7:
+degree 3: 3
+bfs from 0: 0 2 1 3 4
+visited: 5
+dfs from 0: 0 2 3 4 1
+visited: 5
+bfs from 4: 4 3 2 1 0
+visited: 5
+components: 0 0 0 0 0 1 1 2
+component count: 3</code></pre>
+      <p>The BFS from 4 is not decoration. It starts at the far end of the component, and it is the only line that can tell an undirected graph from a directed one built by mistake.</p>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./graph</code>, and <code>make check</code>. Require no warnings, the exact seventeen lines, and valgrind's <code>32 allocs, 32 frees</code> with no errors.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p><strong>Break it three ways, one at a time.</strong></p>
+      <ol>
+        <li><strong>Mark on dequeue.</strong> In <code>graph_bfs</code>, delete <code>marked[start] = 1;</code> and the <code>marked[e-&gt;to] = 1;</code> inside the loop, and add <code>marked[v] = 1;</code> as the first line of the <code>while</code> body. Build: no warning. Run <code>./graph</code> and compare the two BFS lines and their counts with the expected ones. Then add a seventh pair <code>{1, 2}</code> to <code>EDGES</code> in <code>main.c</code>, build, run, and read the AddressSanitizer report: which line wrote, which line allocated, and how big the region was. Remove the pair and restore the marks.</li>
+        <li><strong>Mark after the loop.</strong> In <code>dfs_visit</code>, move the two lines above the <code>for</code> loop to below it. Build: no warning. Run. Read the first few frames of the report, then the summary line. Restore the order.</li>
+        <li><strong>Directed by mistake.</strong> In <code>graph_add_edge</code>, delete the second node: allocate only <code>uv</code> and link it into <code>adj[u]</code>. Build and run. Nothing crashes. Read all seventeen lines and mark which ones changed. Run <code>make check</code>: it passes. Restore the second node.</li>
+      </ol>
+      <p><em>Optional, a fourth.</em> Delete <code>queue_free(q);</code> in <code>graph_bfs</code>. Run <code>make check</code> and read how many bytes are lost, in how many blocks, and which three functions are in the trace. Restore it.</p>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 14 done</em>.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the reports</h2>
+  <p><strong>Experiment 1, first run: the duplicate visits.</strong> The program completes and prints the wrong answer. Two lines differ from the expected output, and both counts are too high:</p>
+  <pre><code>bfs from 0: 0 2 1 3 <strong>3</strong> 4 <strong>4</strong>
+visited: <strong>7</strong>
+...
+bfs from 4: 4 3 2 1 0 <strong>0</strong>
+visited: <strong>6</strong></code></pre>
+  <p>Those are the table's steps 5 and 7. DFS and the components are untouched, because their helpers mark on entry. <code>make check</code> passes on this run: 35 allocations, 35 frees, three extra queue nodes for the three duplicates. A count above the number of reachable vertices is the only evidence, and a test that did not print the count would miss it.</p>
+  <p><strong>Experiment 1, second run: with the edge 1-2.</strong> The triangle <code>0-1-2</code> produces more duplicates, and the ninth write lands past the end of <code>main</code>'s block (paths trimmed; your line numbers will differ):</p>
+  <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x503000000060
+<strong>WRITE of size 4</strong> at 0x503000000060 thread T0
+    #0 in <strong>graph_bfs graph.c:113</strong>                ← order[count++] = v
+    #1 in main main.c:42
+
+0x503000000060 is located <strong>0 bytes after 32-byte region</strong> [0x503000000040,0x503000000060)
+allocated by thread T0 here:
+    #0 in malloc
+    #1 in <strong>main main.c:33</strong>                      ← the malloc of order</code></pre>
+  <p>Size 4 is one <code>int</code>. The 32-byte region is <code>order</code>, eight ints, allocated in <code>main</code>. “0 bytes after” is the ninth slot. The same bug printed a wrong answer on the first graph and overran a heap block on the second. That is why the header's contract on <code>order[]</code> is “at least <code>graph_vertex_count(g)</code> ints”, and why the contract only holds if no vertex is written twice.</p>
+  <p><strong>Experiment 2, the mark after the loop.</strong> The report starts with a signal, then a column of identical frames:</p>
+  <pre><code>AddressSanitizer:DEADLYSIGNAL
+ERROR: AddressSanitizer: <strong>stack-overflow</strong> on address 0x7ffea5a45ff8
+    #0 in dfs_visit graph.c:126
+    #1 in dfs_visit graph.c:129
+    #2 in dfs_visit graph.c:129
+    #3 in dfs_visit graph.c:129
+    ... (the same frame, thousands of times)</code></pre>
+  <p>Line 129 is the recursive call; every frame in the column is a call that never returned. The graph has 8 vertices, so more than 8 <code>dfs_visit</code> frames alive at once is already proof that a vertex was entered twice. Lesson 12 produced the same report with 40,000 sorted keys and a 1 MB stack. That one was a deep tree; this one is a cycle with no mark, and no stack size would save it.</p>
+  <p><strong>Experiment 3, the directed graph.</strong> No report at all: <code>make check</code> passes with 22 allocations and 22 frees, six edge nodes fewer and four queue nodes fewer. The output is the evidence, and only some lines change:</p>
+  <pre><code>0: 2 1
+1: 3
+2: 3
+3: 4
+4:
+5: 6
+6:
+7:
+degree 3: <strong>1</strong>
+bfs from 0: 0 2 1 3 4
+visited: 5
+dfs from 0: 0 2 3 4 1
+visited: 5
+bfs from 4: <strong>4</strong>
+visited: <strong>1</strong>
+components: 0 0 0 0 0 1 1 2
+component count: 3</code></pre>
+  <p>Both walks from 0 and the component labels are unchanged. Every edge in the test data goes from a smaller vertex to a larger one, so 0 can still reach its whole component along the one-way lists, and <code>graph_components</code> starts each walk from the smallest vertex, which is exactly the one that can reach the rest. Only the walk from 4 shows the truth: 4's list is empty. A test that only searches from vertex 0 would call this graph correct.</p>
+  <p><strong>Experiment 4, the missing <code>queue_free</code>.</strong> valgrind counts 32 allocations and 30 frees, then names both losses:</p>
+  <pre><code>==12345== <strong>24 bytes in 1 blocks are definitely lost</strong> in loss record 1 of 2
+==12345==    by 0x...: queue_new (queue.c:16)
+==12345==    by 0x...: graph_bfs (graph.c:103)
+==12345==    by 0x...: main (main.c:42)
+==12345== 24 bytes in 1 blocks are definitely lost in loss record 2 of 2
+...
+==12345== LEAK SUMMARY:
+==12345==    definitely lost: <strong>48 bytes in 2 blocks</strong></code></pre>
+  <p>24 bytes is one <code>struct queue</code>, and there are two because <code>main</code> calls <code>graph_bfs</code> twice. The nodes are not in the list: every enqueued vertex was dequeued, and <code>queue_dequeue</code> freed each node on the way out. Only the empty shell leaked. The trace reads bottom up through three files: <code>main</code> asked <code>graph_bfs</code>, which asked <code>queue_new</code>. The function that allocated is not the one that forgot; the one that forgot is the one in the middle.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C or language-free theory. Read in this order; the first two items are short source files, not chapters.</p>
+  <ol class="reading">
+    <li><p><strong>The same graph in Skiena's C.</strong> Steven Skiena, <em>The Algorithm Design Manual</em>, 2nd ed., the author's <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/">program files</a>: <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/graph.h">graph.h</a>, <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/graph.c">graph.c</a>, <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/bfs-dfs.c">bfs-dfs.c</a> and <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/connected.c">connected.c</a>. His <code>edgenode</code> is your <code>struct edge</code> with a <code>weight</code> added, and <code>edges[]</code> is your <code>adj</code>. Read <code>insert_edge</code> first: <code>p-&gt;next = g-&gt;edges[x]; g-&gt;edges[x] = p;</code> under the comment “insert at head of list”, then one call to itself with <code>x</code> and <code>y</code> swapped for the undirected case. Then <code>bfs</code>: <code>enqueue(&amp;q,y); discovered[y] = TRUE;</code> are adjacent lines, the rule of this lesson; <code>processed[v]</code> is a second mark set on dequeue that you did not need. Then <code>dfs</code>: <code>discovered[v] = TRUE</code> before the loop. <code>connected_components</code> is your <code>graph_components</code> with <code>bfs</code> in place of the recursive helper. Read for the shape, not the style: vertices are numbered from 1, the graph is one fixed-size struct with <code>MAXV</code> of 100, <code>discovered</code> and <code>processed</code> are global arrays instead of a heap block owned by the search, the queue in <a href="https://www3.cs.stonybrook.edu/~skiena/algorist/book/programs/queue.c">queue.c</a> is a fixed array of 1000 ints, and the functions are written in the pre-C99 form with no return type. gcc 13 still builds the four files under your flags, but with a screen of warnings: <code>return type defaults to ‘int’</code>, an implicit <code>printf</code>, <code>control reaches end of non-void function</code>. The algorithm underneath is the one you just wrote.</p></li>
+    <li><p><strong>A search in C where the parent is the mark.</strong> James Aspnes, <em>Notes on Data Structures and Programming Techniques</em> (Yale CPSC 223), section <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#graphs">5.14 Graphs</a>: read <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#Representations_of_graphs">5.14.4, Representations of graphs</a> and <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#graphSearchImplementation">5.14.5.1, Implementation of depth-first and breadth-first search</a>, which is the file <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/examples/graphSearch/search.c">search.c</a>. Each vertex keeps a <code>parent</code>, and <code>VERTEX_NULL</code> in that slot means unvisited, so one array does the job of your <code>marked</code> and of your component label; the root's parent is itself. His <code>dfsHelper</code> tests the slot on entry and writes it before its loop, under the comment “this uses a recursive algorithm and will not work on large graphs!”: your stack-depth limit, in someone else's words. His <code>bfs</code> writes <code>g-&gt;v[nbr].parent = current; q[tail++] = nbr;</code>, mark then enqueue, and its queue is a plain array of <code>n</code> ints with a <code>head</code> and a <code>tail</code> index, which is enough because a vertex is enqueued at most once. Neighbours there are a <code>VERTEX_NULL</code>-terminated array rather than a list. Skip <code>graphForeach</code> in his <code>graph.h</code> under 5.14.4: it takes a function pointer, which is CS107 lecture 9 material.</p></li>
+    <li><p><strong>Theory, no code.</strong> Jessica Su, CS161 lecture notes (Stanford, PDF, after CLRS): <a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture10.pdf">Lecture 10, Depth First Search</a>, sections 1.1.2 and 2 to 2.2, pages 3 to 7; then <a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture11.pdf">Lecture 11, BFS</a>, section 3 to 3.0.3, pages 6 to 9. Pseudocode with three colours where you have one mark: white is unmarked, grey and black are both marked. The DFS pseudocode paints <code>u</code> grey as its first line, and the running-time argument rests on it: “DFSVisit is called exactly once for each vertex ... since the vertex on which DFSVisit is invoked must be white, and the first thing DFSVisit does is paint that vertex grey.” The BFS argument is the same sentence for the queue: “we only add white vertices to the queue (and mark them grey when they are added) ... it follows that we only add a vertex to the queue at most once.” Both put the cost at Θ(m + n); her <code>m</code> and <code>n</code> are algs4's <code>E</code> and <code>V</code>. Stop before 2.3 in lecture 10 (the parenthesis theorem and topological sort) and before section 4 in lecture 11 (Dijkstra).</p></li>
+  </ol>
+  <p>The representation, invariant and cost sentences in the body still cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/41graph/">4.1</a>, <a href="https://algs4.cs.princeton.edu/41graph/Graph.java.html">Graph.java</a>, <a href="https://algs4.cs.princeton.edu/41graph/BreadthFirstPaths.java.html">BreadthFirstPaths.java</a>, <a href="https://algs4.cs.princeton.edu/41graph/DepthFirstSearch.java.html">DepthFirstSearch.java</a>, <a href="https://algs4.cs.princeton.edu/41graph/CC.java.html">CC.java</a>, <a href="https://algs4.cs.princeton.edu/13stacks/Bag.java.html">Bag.java</a>), and the zero-fill sentence cites cppreference <a href="https://en.cppreference.com/w/c/memory/calloc">calloc</a>. Treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/graph.html">cheat sheet</a> for lookup.</p>
+  <p>This is the last lesson the mission requires: the success list in <a href="../MISSION.md">MISSION.md</a> ends with “an adjacency-list graph with BFS and DFS”, and once step 7 is done that graph exists in your repo next to the other five structures. Lesson 15, the trie, is optional.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If a search ever visits a vertex twice, ask where the mark is written and whether anything can read the vertex between “found” and “marked”. If a function creates a helper structure, ask who frees it and on which exit paths. Both questions have one-line answers; the experiments above are what happens when they go unasked.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0013-hash-then-chain.html">Previous: Lesson 13, Hash, Then Chain</a> · <a href="../reference/graph.html">Reference: graph cheat sheet</a></span>
+    <span><a href="0015-twenty-six-slots.html">Next: Lesson 15 (optional), Twenty-Six Slots</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0014-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"graph_bfs reads neighbour w of v and finds marked[w] == 0. When does it write marked[w] = 1?",opts:["when w is enqueued","when w is dequeued","when w is printed","when the queue empties"],a:0,why:"A mark means already found, in the queue or out of it. Marking on dequeue leaves a window in which a second neighbour can enqueue w again."},
+    {q:"Mark on dequeue instead. What goes wrong on the cycle 0-1-3-2-0?",opts:["a vertex is queued twice","a vertex is never queued","the queue is freed twice","the queue is never freed"],a:0,why:"1 reads its list while 3 is queued but not yet marked, so 3 is enqueued a second time. Each duplicate is one extra write into order[] and one extra pass over a list."},
+    {q:"dfs_visit marks v after its loop instead of before. What happens on the edge 3-4?",opts:["3 and 4 recurse forever","3 and 4 print twice","4 is visited exactly once","3 is skipped by 4"],a:0,why:"4 finds 3 unmarked and enters it; 3 finds 4 unmarked and enters it. No frame reaches its mark, so no base case fires. AddressSanitizer reports stack-overflow under a column of dfs_visit frames."},
+    {q:"graph_add_edge(g, 1, 3), then (g, 2, 3), then (g, 3, 4). What does adj[3] read as?",opts:["4 2 1","1 2 4","4 1 2","2 1 4"],a:0,why:"Each insert writes the new node in front of the old head: two pointer writes, no walk. So a list reads in reverse insertion order, and the expected output depends on it."},
+    {q:"Who frees the queue that graph_bfs uses?",opts:["graph_bfs, before it returns","graph_free, with the edges","main, after the traversal","queue_dequeue, node by node"],a:0,why:"graph_bfs calls queue_new and queue_free in the same function. The graph never stores the queue; it is a borrowed tool for one call. Forget the free and valgrind reports 24 bytes definitely lost per call."},
+    {q:"graph_components fills component[] with -1 before its loop. Why not keep calloc's zeros?",opts:["0 is a real component id","-1 is what calloc writes there","0 would overflow the int array","-1 marks the isolated vertex 7"],a:0,why:"The first component gets id 0. If 0 also meant not yet found, every vertex would look labelled before the loop started. The label is the mark, so the unvisited value must be one no component can have."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the two BFS tables for anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

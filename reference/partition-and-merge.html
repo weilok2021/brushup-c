@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Partition and Merge</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Partition and Merge</h1>
+  <p class="subtitle">The two loops under the recursive sorts: Hoare's two-scan partition with its one guard and its equal-key stops, and the merge that takes the smaller head. Paired with <a href="../lessons/0007-scan-stop-swap.html">Lesson 7</a>.</p>
+
+  <h2>Partition: the promise</h2>
+  <p>Precondition: <code>hi - lo &gt;= 1</code>. Postcondition: returns <code>p</code> with <code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code>. The pivot <code>a[p]</code> is in its final sorted place. Neither side is sorted.</p>
+  <pre><code>lo        lo+1 .. i-1        i .. j        j+1 .. hi-1
+[ pivot ] [ known &lt;= pivot ] [ unknown ] [ known &gt;= pivot ]      invariant during the scans</code></pre>
+  <pre><code>size_t partition(int* a, size_t lo, size_t hi) {
+    int pivot = a[lo];
+    size_t i = lo + 1;                       /* stops on &gt;= pivot */
+    size_t j = hi - 1;                       /* stops on &lt;= pivot */
+    for (;;) {
+        while (i &lt; hi &amp;&amp; a[i] &lt; pivot) i++;  /* guard: pivot may be the largest */
+        while (a[j] &gt; pivot) j--;            /* no guard: a[lo] == pivot stops it */
+        if (i &gt;= j) break;                   /* crossed: unknown region empty */
+        swap_ints(&amp;a[i], &amp;a[j]);
+        i++; j--;
+    }
+    swap_ints(&amp;a[lo], &amp;a[j]);                /* pivot into its final slot */
+    return j;
+}</code></pre>
+  <table>
+    <tr><th>Detail</th><th>Rule</th><th>What breaks otherwise</th></tr>
+    <tr><td>Stop on equal keys</td><td><code>a[i] &lt; pivot</code> and <code>a[j] &gt; pivot</code> continue; equal stops.</td><td>All-equal input: pivot lands at the end, split is n-1 to 0, sort goes quadratic.</td></tr>
+    <tr><td><code>i &lt; hi</code> guard</td><td>Needed: nothing after a largest pivot stops the scan.</td><td>Read past the block: heap-buffer-overflow, 0 bytes after the region.</td></tr>
+    <tr><td>No <code>j &gt; lo</code> guard</td><td>Free only because the pivot sits at <code>a[lo]</code>.</td><td>Pivot chosen elsewhere: <code>j</code> wraps below <code>lo</code>.</td></tr>
+    <tr><td>Crossed test</td><td><code>i &gt;= j</code>, then swap pivot with <code>a[j]</code>.</td><td>Swapping with <code>a[i]</code> can put a larger value left of the pivot.</td></tr>
+  </table>
+  <pre><code>int is_partitioned(const int* a, size_t lo, size_t hi, size_t p) {
+    for (size_t k = lo; k &lt; p; k++)     if (a[k] &gt; a[p]) return 0;
+    for (size_t k = p + 1; k &lt; hi; k++) if (a[k] &lt; a[p]) return 0;
+    return 1;
+}</code></pre>
+  <p>Worked: <code>9 4 15 9 26 5 35 4</code>, pivot 9 → <code>5 4 4 9 26 9 35 15</code>, returns 3. Six 7s → returns 3 (middle) with the stops, 5 (end) without.</p>
+
+  <h2>Quicksort by hand, one level</h2>
+  <pre><code>[0, 8)  pivot 9   -&gt; 5 4 4 [9] 26 9 35 15   p = 3
+[4, 8)  pivot 26  -&gt; 15 9 [26] 35           p = 6
+[0, 3)  pivot 5   -&gt; 4 4 [5]                p = 2      lesson 8 recurses on [lo, p) and [p + 1, hi)</code></pre>
+
+  <h2>Merge: take the smaller head</h2>
+  <p>Precondition: <code>a[lo..mid)</code> and <code>a[mid..hi)</code> each sorted; <code>scratch</code> has room for index <code>hi - 1</code>. Invariant: <code>scratch[lo..k)</code> holds the <code>k - lo</code> smallest values of both runs, in order. Ties take the left run (stable).</p>
+  <pre><code>void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
+    size_t i = lo, j = mid, k = lo;
+    while (i &lt; mid &amp;&amp; j &lt; hi) {
+        if (a[j] &lt; a[i]) scratch[k++] = a[j++];
+        else             scratch[k++] = a[i++];   /* ties: left */
+    }
+    while (i &lt; mid) scratch[k++] = a[i++];        /* one of these two */
+    while (j &lt; hi)  scratch[k++] = a[j++];        /* copies the leftover run */
+    for (k = lo; k &lt; hi; k++) a[k] = scratch[k];  /* copy back exactly [lo, hi) */
+}</code></pre>
+  <p><code>merge</code> borrows <code>scratch</code>. The owner is whoever called <code>malloc</code>: <code>main</code> in lesson 7, the <code>merge_sort</code> wrapper in lesson 8.</p>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td><code>partitioned: yes</code> everywhere, pivot lands at the end on equal keys</td><td>A scan skips equal keys (<code>&lt;=</code> or <code>&gt;=</code> in a scan condition).</td></tr>
+    <tr><td>heap-buffer-overflow READ in <code>partition</code>, 0 bytes after the region</td><td>The <code>i &lt; hi</code> guard is missing and the pivot was the largest value.</td></tr>
+    <tr><td>heap-buffer-overflow READ, address <em>before</em> the region</td><td><code>j</code> walked below <code>lo</code>: the pivot is not at <code>a[lo]</code>, or the range was empty.</td></tr>
+    <tr><td>Merged line ends in <code>-1094795586</code> (ASan) or junk, <code>sorted: no</code>; Valgrind “uninitialised value” in <code>printf</code></td><td>A tail-copy loop is missing, so <code>scratch</code> slots were never written.</td></tr>
+    <tr><td>heap-buffer-overflow in <code>merge</code> on <code>scratch</code></td><td>Copy-back bound <code>k &lt;= hi</code>, or <code>scratch</code> smaller than <code>hi</code> ints.</td></tr>
+  </table>
+
+  <p class="foot">C readings: <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">Weiss, DSAA in C, sort.c (Qsort, Median3, Merge)</a> · <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">Aspnes, CPSC 223 notes, 5.3.4 Mergesort (merge)</a>. Language-free: <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia, Hoare and Lomuto partition schemes</a>. Evidence: <a href="https://algs4.cs.princeton.edu/23quicksort/">Sedgewick &amp; Wayne 2.3</a> · <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2</a></p>
+</article>
+</body>
+</html>

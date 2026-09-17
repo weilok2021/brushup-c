@@ -46,7 +46,7 @@ td:first-child code{white-space:nowrap}
     int x, y;          /* members */
     int w, h;
 };</code></pre>
-      <p class="filename">later, when a type must hide its members (lesson 7)</p>
+      <p class="filename">later, when a type must hide its members (lesson 9)</p>
       <pre><code>typedef struct stack stack;   /* header: name only  */
 struct stack { ... };         /* .c file: members   */</code></pre>
     </div>
@@ -85,7 +85,7 @@ if (a == b) ...                    /* not allowed:
     <tr><td><code>const struct rect *find(const struct rect *rs, size_t n)</code></td><td>Returns an address inside the caller's array. Valid until that array is freed. Never <code>free</code> the result.</td></tr>
     <tr><td><code>struct rect rect_make(int x, int y)</code></td><td>Returning by value is fine for small structs.</td></tr>
   </table>
-  <p>When to pass a pointer, per <a href="https://beej.us/guide/bgc/html/split/structs.html#passing-structs-to-functions">Beej §8.3</a>: the function must change the caller's struct, or the struct is large enough that copying it costs more than copying a pointer. In this course, also: every ADT from lesson 7 on lives on the heap and is only reached through a pointer.</p>
+  <p>When to pass a pointer, per <a href="https://beej.us/guide/bgc/html/split/structs.html#passing-structs-to-functions">Beej §8.3</a>: the function must change the caller's struct, or the struct is large enough that copying it costs more than copying a pointer. In this course, also: every ADT from lesson 9 on lives on the heap and is only reached through a pointer.</p>
 
   <h2>An array at a function call</h2>
   <p>An array expression, except as the operand of <code>sizeof</code> or <code>&amp;</code>, “undergoes an implicit conversion to the pointer to its first element” (<a href="https://en.cppreference.com/c/language/array#Array_to_pointer_conversion">cppreference</a>). Consequences:</p>

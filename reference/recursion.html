@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Recursion</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107</p>
+  <h1>Recursion</h1>
+  <p class="subtitle">Base case, shrink, trust: the two rules that keep a recursion finite, the four shapes over a half-open range, and what the reports look like when a rule breaks. Paired with <a href="../lessons/0006-shrink-then-trust.html">Lesson 6</a>.</p>
+
+  <h2>Two rules and one act of trust</h2>
+  <table>
+    <tr><th>Rule</th><th>Meaning</th><th>Test before running</th></tr>
+    <tr><td>Base case</td><td>Some range is answered without a call.</td><td>State it in one sentence: “the empty range sums to 0”.</td></tr>
+    <tr><td>Shrink</td><td>Every other call receives a strictly smaller range.</td><td>Point at the argument that is smaller. <code>[lo + 1, hi)</code>, <code>[lo, mid)</code>, <code>[mid + 1, hi)</code>.</td></tr>
+    <tr><td>Trust</td><td>Assume the call on the smaller range is correct; write one step that uses it.</td><td>Do not trace the inner call while writing the outer line.</td></tr>
+  </table>
+
+  <h2>Four shapes over <code>[lo, hi)</code></h2>
+  <table>
+    <tr><th>Shape</th><th>Base case</th><th>Call</th><th>Depth for n</th><th>Used again in</th></tr>
+    <tr><td>Shrink by one</td><td><code>lo == hi</code></td><td><code>[lo + 1, hi)</code></td><td><code>n</code></td><td>list walks (lesson 10, stretch)</td></tr>
+    <tr><td>Work after the call</td><td><code>lo == hi</code></td><td>call first, then act on <code>a[lo]</code></td><td><code>n</code></td><td>merge after both halves (8), post-order free (12)</td></tr>
+    <tr><td>Halve, use both</td><td><code>hi - lo == 1</code> (or <code>&lt; 2</code> if empty is legal)</td><td><code>[lo, mid)</code> and <code>[mid, hi)</code></td><td>about <code>log₂ n</code></td><td>merge sort (8), tree height (12)</td></tr>
+    <tr><td>Halve, keep one</td><td><code>lo == hi</code></td><td><code>[lo, mid)</code> or <code>[mid + 1, hi)</code></td><td>about <code>log₂ n</code></td><td>BST search and insert (12)</td></tr>
+  </table>
+  <pre><code>long sum_range(const int* a, size_t lo, size_t hi) {          /* shrink by one */
+    if (lo == hi) return 0;
+    return a[lo] + sum_range(a, lo + 1, hi);
+}
+void print_backwards(const int* a, size_t lo, size_t hi) {    /* work after the call */
+    if (lo == hi) return;
+    print_backwards(a, lo + 1, hi);
+    printf(" %d", a[lo]);
+}
+int max_range(const int* a, size_t lo, size_t hi) {           /* halve, use both */
+    if (hi - lo == 1) return a[lo];
+    size_t mid = lo + (hi - lo) / 2;
+    int l = max_range(a, lo, mid), r = max_range(a, mid, hi);
+    return l &gt; r ? l : r;
+}
+const int* search_range(const int* a, size_t lo, size_t hi, int t) { /* halve, keep one */
+    if (lo == hi) return NULL;
+    size_t mid = lo + (hi - lo) / 2;
+    if (a[mid] == t) return &amp;a[mid];
+    return t &lt; a[mid] ? search_range(a, lo, mid, t) : search_range(a, mid + 1, hi, t);
+}</code></pre>
+
+  <h2>Frames</h2>
+  <p>Every call is a new frame with its own copies of every parameter. Pointer copies share the block; index copies are private. Work placed after the call runs when the deeper frame returns, so the deepest frame acts first.</p>
+  <pre><code>(gdb) break sum_range if lo == 3      stop when a condition holds
+(gdb) run
+(gdb) backtrace                        one line per live frame, #0 newest
+(gdb) up                               move to the caller's frame
+(gdb) info frame                       addresses of the current frame
+(gdb) quit</code></pre>
+  <p>Depth is the cost: a chain of one frame per element overflows the 8 MB stack at about a hundred thousand elements; a halving tree needs about 20 frames for a million.</p>
+
+  <h2><code>size_t</code> rules for ranges</h2>
+  <table>
+    <tr><th>Write</th><th>Not</th><th>Because</th></tr>
+    <tr><td><code>hi - lo</code> for the count</td><td><code>lo - hi</code></td><td><code>lo &lt;= hi</code> always holds, so the difference cannot wrap.</td></tr>
+    <tr><td><code>[lo, mid)</code> to drop <code>mid</code> on the left</td><td><code>[lo, mid - 1]</code></td><td>No subtraction from an index that can be 0.</td></tr>
+    <tr><td><code>[mid + 1, hi)</code> to drop <code>mid</code> on the right</td><td><code>[mid, hi)</code></td><td>A one-element range would call itself unchanged.</td></tr>
+    <tr><td><code>lo + (hi - lo) / 2</code></td><td><code>(lo + hi) / 2</code></td><td>The sum can overflow; the difference cannot.</td></tr>
+  </table>
+
+  <h2>Reports and symptoms</h2>
+  <table>
+    <tr><th>Symptom</th><th>Likely mistake</th></tr>
+    <tr><td>ASan <strong>stack-overflow</strong>, a column of the same function at the same line</td><td>Rule 2 broken on that line: the call's range is the same as its caller's. Find what should be smaller.</td></tr>
+    <tr><td>Same column, but only for some inputs</td><td>The range shrinks on most calls and not on one, for example <code>[mid, hi)</code> with a one-element range. Add that input to the test.</td></tr>
+    <tr><td>gcc <code>infinite recursion detected [-Winfinite-recursion]</code></td><td>No path through the function returns without calling. The base case is missing.</td></tr>
+    <tr><td>heap-buffer-overflow under a column of frames</td><td>The range kept shrinking past the block because no base case stopped it at <code>hi</code>.</td></tr>
+    <tr><td>Output in the wrong order, no report</td><td>The work sits on the wrong side of the recursive call.</td></tr>
+  </table>
+
+  <p class="foot">C readings: <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#recursion">Aspnes, CPSC 223 notes, 5.3 Recursion</a> (5.3.1 examples, 5.3.2 common problems, 5.3.3.1 binary search) · <a href="https://cs50.harvard.edu/x/notes/3/#recursion">CS50x Week 3 notes, Recursion</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">CS107 GDB Guide</a> (backtrace, up, down) · <a href="https://beej.us/guide/bgc/html/split/functions.html">Beej 4.1 Passing by Value</a></p>
+</article>
+</body>
+</html>

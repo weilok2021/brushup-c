@@ -144,7 +144,7 @@ i=3   4  15  31 | 9 ...               9 &lt; 31 swap, 9 &lt; 15 swap, 9 &gt; 4 s
     }
 }</code></pre>
   <p><strong>Read the inner condition carefully.</strong> <code>j &gt; 0</code> comes first, so <code>a[j - 1]</code> is only evaluated when <code>j - 1</code> is a valid index. Writing <code>j &gt;= 0</code> with a <code>size_t</code> is always true, because an unsigned value cannot go below zero. gcc warns about it, and the run reads before the block.</p>
-  <p>Cost: on a random array, about <code>n²/4</code> compares and <code>n²/4</code> swaps. On an already sorted array, <code>n - 1</code> compares and zero swaps<a href="https://algs4.cs.princeton.edu/21elementary/">*</a>. That makes insertion sort the right tool for small or nearly sorted inputs, and the wrong tool for a million random ints. Lesson 6 fixes that with recursion.</p>
+  <p>Cost: on a random array, about <code>n²/4</code> compares and <code>n²/4</code> swaps. On an already sorted array, <code>n - 1</code> compares and zero swaps<a href="https://algs4.cs.princeton.edu/21elementary/">*</a>. That makes insertion sort the right tool for small or nearly sorted inputs, and the wrong tool for a million random ints. Lesson 8 fixes that with recursion.</p>
 </section>
 
 <section>
@@ -282,7 +282,7 @@ allocated by thread T0 here:
 <footer>
   <div class="next">
     <span><a href="../reference/sort-search.html">Reference: sort and search cheat sheet</a></span>
-    <span>Next: <a href="0006-halve-then-merge.html">Lesson 6, Halve, Then Merge</a></span>
+    <span>Next: <a href="0008-halve-then-merge.html">Lesson 8, Halve, Then Merge</a></span>
   </div>
 </footer>
 </article>

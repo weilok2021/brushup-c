@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat sheet · Trie</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.45}
+article{max-width:880px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.kicker{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .4rem}
+h1{font-size:2rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.1}
+.subtitle{font-style:italic;color:var(--muted);margin:0 0 1.5rem;border-bottom:1px solid var(--rule);padding-bottom:.75rem}
+h2{font-size:1.15rem;font-weight:600;margin:2rem 0 .6rem;letter-spacing:.01em}
+p{margin:0 0 .8rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.8rem 1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.filename{font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:0 0 1rem}
+th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.rule{border-left:3px solid var(--accent);padding:.4rem .9rem;background:#fbf3ea;margin:0 0 1rem}
+.foot{border-top:1px solid var(--rule);margin-top:2.5rem;padding-top:.8rem;font-size:.9rem;color:var(--muted)}
+@media print{@page{margin:1.4cm}html{font-size:10.5pt}body{background:#fff}article{padding:0}a{text-decoration:none}pre{white-space:pre-wrap}h2{break-after:avoid}table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<article>
+  <p class="kicker">Reference · DSA in C for CS107 · Optional</p>
+  <h1>Trie</h1>
+  <p class="subtitle">Opaque <code>trie_t</code>, one heap node per letter of every path, 26 child slots per node indexed by <code>c - 'a'</code>, insert through the slot, one finder for two questions, post-order free with a loop. Paired with <a href="../lessons/0015-twenty-six-slots.html">Lesson 15</a> (optional; the required sequence ended with lesson 14).</p>
+
+  <div class="rule"><strong>Invariant.</strong> Slot <code>i</code> of a node leads to the node for letter <code>'a' + i</code>, or holds <code>NULL</code>. A word is a path from the root, and <code>is_end</code> on the last node says the path is a whole word. <code>count</code> equals the number of nodes with <code>is_end</code> set. Every node is one <code>calloc</code>, so a fresh node has 26 <code>NULL</code> slots and <code>is_end</code> 0.</div>
+
+  <h2>Interface</h2>
+  <p class="filename">trie.h</p>
+  <pre><code>#pragma once
+#include &lt;stddef.h&gt;
+
+typedef struct trie trie_t;                            /* opaque: struct body lives in trie.c */
+
+trie_t* trie_new(void);                                /* empty trie (a root node), or NULL on failure */
+void    trie_free(trie_t* t);                          /* frees every node, children before parent, then t; NULL is fine */
+int     trie_insert(trie_t* t, const char* word);      /* 1 inserted, 0 already present, -1 bad char or alloc fail
+                                                          (on -1: no word counted; a partial path may remain, owned) */
+int     trie_contains(const trie_t* t, const char* word);      /* 1 if word was inserted as a whole word */
+int     trie_starts_with(const trie_t* t, const char* prefix); /* 1 if the path for prefix exists; "" is the root, so 1 */
+size_t  trie_count(const trie_t* t);                   /* number of whole words */
+size_t  trie_node_size(void);                          /* sizeof(struct node), for the test program: 216 */</code></pre>
+  <p>Every answer is an <code>int</code> or a <code>size_t</code>. No pointer into a node crosses the header, so no caller can hold a node after <code>trie_free</code>. No <code>&lt;string.h&gt;</code> function is needed: every walk reads one <code>char</code> at a time and stops at <code>'\0'</code>.</p>
+
+  <h2>Private layout</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">trie.c, top</p>
+      <pre><code>#define ALPHABET 26
+
+struct node {
+    struct node* child[ALPHABET]; /* 26 x 8 = 208 */
+    int is_end;                   /* +4, +4 padding */
+};                                /* 216 bytes */
+
+struct trie {
+    struct node* root;            /* always live */
+    size_t count;
+};                                /* 16 bytes */</code></pre>
+    </div>
+    <div>
+      <p class="filename">after "app", then "apple"</p>
+      <pre><code>t ─▶ { root ─▶ 0x1000, count 2 }
+
+0x1000 root     child[0]  'a' ─▶ 0x2000
+0x2000 "a"      child[15] 'p' ─▶ 0x3000
+0x3000 "ap"     child[15] 'p' ─▶ 0x4000
+0x4000 "app"    is_end 1, child[11] 'l' ─▶ 0x5000
+0x5000 "appl"   child[4]  'e' ─▶ 0x6000
+0x6000 "apple"  is_end 1, all slots NULL</code></pre>
+      <p>Slot <code>i</code> of the node at <code>N</code> lives at <code>N + 8i</code>. Six nodes, 156 slots, five in use.</p>
+    </div>
+  </div>
+  <p>Ownership: the trie owns the root; every node owns the nodes its 26 slots address; <code>NULL</code> owns nothing. The six test words (<code>apple app apply banana band bandana</code>) make 16 letter nodes plus the root: 17 nodes and one trie struct, 18 allocations and 18 frees. <code>make check</code> reports 19 and 19: the nineteenth is <code>printf</code>'s buffer.</p>
+
+  <h2>Letter to slot</h2>
+  <table>
+    <tr><th>Letter</th><th>Stored as</th><th><code>c - 'a'</code></th><th>Result</th></tr>
+    <tr><td><code>'a'</code></td><td>97</td><td>0</td><td>first slot</td></tr>
+    <tr><td><code>'c'</code></td><td>99</td><td>2</td><td>third slot</td></tr>
+    <tr><td><code>'p'</code></td><td>112</td><td>15</td><td>sixteenth slot</td></tr>
+    <tr><td><code>'z'</code></td><td>122</td><td>25</td><td>last slot</td></tr>
+    <tr><td><code>'A'</code></td><td>65</td><td>-32</td><td>before the array: reject with -1</td></tr>
+    <tr><td><code>'{'</code></td><td>123</td><td>26</td><td>one past the end: reject with -1</td></tr>
+  </table>
+  <p>A <code>char</code> is a small integer, so the subtraction is plain arithmetic. Check the range first, in one <code>static int slot_index(char c)</code> that returns the slot or -1; both the insert walk and the finder call it.</p>
+
+  <h2>The three shapes</h2>
+  <div class="grid">
+    <div>
+      <p class="filename">insert: address of the slot, write through it</p>
+      <pre><code>struct node* cur = t-&gt;root;
+for (const char* p = word; *p != '\0'; p++) {
+    int i = slot_index(*p);
+    if (i &lt; 0) return -1;
+    struct node** slot = &amp;cur-&gt;child[i];
+    if (*slot == NULL) {
+        *slot = new_node();        /* calloc */
+        if (*slot == NULL) return -1;
+    }
+    cur = *slot;
+}
+if (cur-&gt;is_end) return 0;
+cur-&gt;is_end = 1;
+t-&gt;count++;
+return 1;</code></pre>
+    </div>
+    <div>
+      <p class="filename">find: one walk, two questions</p>
+      <pre><code>static const struct node*
+find_node(const struct node* root, const char* s) {
+    const struct node* cur = root;
+    for (const char* p = s; *p != '\0' &amp;&amp; cur != NULL; p++) {
+        int i = slot_index(*p);
+        if (i &lt; 0) return NULL;
+        cur = cur-&gt;child[i];
+    }
+    return cur;   /* node at the end of s, or NULL */
+}
+/* contains:    n != NULL &amp;&amp; n-&gt;is_end */
+/* starts_with: n != NULL             */</code></pre>
+      <p class="filename">free: all 26 slots, then the node</p>
+      <pre><code>static void free_nodes(struct node* n) {
+    if (n == NULL) return;
+    for (int i = 0; i &lt; ALPHABET; i++)
+        free_nodes(n-&gt;child[i]);
+    free(n);
+}
+/* wrapper: free_nodes(t-&gt;root); free(t); */</code></pre>
+    </div>
+  </div>
+  <p>Lookups by hand on the diagram: <code>"ap"</code> reaches <code>0x3000</code>, <code>is_end</code> 0, so contains 0 and starts_with 1. <code>"cat"</code> meets <code>NULL</code> at <code>root-&gt;child[2]</code>: both 0. <code>""</code> reaches the root: starts_with 1 for every trie. Recursion depth of <code>free_nodes</code> is the longest word plus one: <code>bandana</code> gives eight frames. Each node makes 26 calls; 17 nodes make 442, and 425 of them meet <code>NULL</code>.</p>
+
+  <h2>Ownership of every returned pointer</h2>
+  <table>
+    <tr><th>Returns</th><th>Owner</th><th>Caller must</th></tr>
+    <tr><td><code>trie_new</code> gives <code>trie_t*</code></td><td>the caller</td><td>call <code>trie_free</code> exactly once</td></tr>
+    <tr><td><code>new_node</code> (private) gives <code>struct node*</code></td><td>the slot it is written into</td><td>write it through the slot at once; a node held only in a local is a leak</td></tr>
+    <tr><td><code>find_node</code> (private) gives <code>const struct node*</code></td><td>the trie</td><td>read <code>is_end</code> and drop it; never return it through the header</td></tr>
+  </table>
+
+  <h2>Cost</h2>
+  <table>
+    <tr><th>Operation</th><th>Cost</th><th>Why</th></tr>
+    <tr><td>insert, contains, starts_with</td><td>length of the string</td><td>One slot per letter, no comparison against other words. algs4's 256-way <code>TrieST</code> states it: “time proportional to the length of the key (in the worst case)”.</td></tr>
+    <tr><td>free</td><td>26 calls per node</td><td>Every slot is visited, used or not. Depth is the longest word plus one frame.</td></tr>
+    <tr><td>space</td><td>216 bytes per node, shared prefixes share nodes</td><td>Six words, 30 letters: 17 nodes, 3,672 bytes, 16 of 442 slots in use. That is the trade a trie makes.</td></tr>
+  </table>
+
+  <h2>Traps and their reports</h2>
+  <table>
+    <tr><th>Mistake</th><th>What you see</th></tr>
+    <tr><td>index with <code>c</code>, not <code>c - 'a'</code></td><td>No warning. UBSan first: <code>runtime error: index 97 out of bounds for type 'node *[26]'</code>. Then ASan: <code>heap-buffer-overflow</code>, READ of size 8, <code>560 bytes after 216-byte region</code>, allocated by <code>calloc</code> in <code>new_node</code> under <code>trie_new</code>: the root, first letter of the first word. 97 × 8 = 776; 776 - 216 = 560.</td></tr>
+    <tr><td><code>trie_contains</code> returns <code>n != NULL</code></td><td>No report from any tool; <code>make check</code> is clean. Output line <code>contains "ap": yes</code> where <code>no</code> was expected. Only the expected output catches a path mistaken for a word.</td></tr>
+    <tr><td><code>free(n)</code> before the loop over <code>child[i]</code></td><td>gcc 13: <code>pointer ‘n’ may be used after ‘free’ [-Wuse-after-free]</code>. ASan: <code>heap-use-after-free</code>, READ of size 8, <code>0 bytes inside of 216-byte region</code> in <code>free_nodes</code>; the freed-by column holds one <code>free_nodes</code> frame, because the root died on the first call. Offset 0 is <code>child[0]</code>.</td></tr>
+    <tr><td><code>malloc</code> instead of <code>calloc</code> in <code>new_node</code></td><td>The first insert follows a slot full of old bytes as if it were a child. Sanitizer build: UBSan <code>member access within misaligned address 0xbebebebebebebebe for type 'struct node'</code> (ASan fills fresh <code>malloc</code> bytes with <code>0xbe</code>), then ASan <code>SEGV on unknown address</code> in <code>trie_insert</code>. Plain build under valgrind: <code>Conditional jump or move depends on uninitialised value(s)</code> in <code>trie_insert</code>. The fix is one word.</td></tr>
+    <tr><td>no range check before <code>c - 'a'</code></td><td><code>'A'</code> gives -32, <code>'{'</code> gives 26: an address before the array or one slot past its end. UBSan reports the out-of-bounds index; ASan reports the read. Check first, return -1.</td></tr>
+  </table>
+
+  <p class="foot">Sources: <a href="https://video.cs50.io/MC-iQHFdEDI">CS50 Shorts, Doug Lloyd, Tries</a> (C-based hand trace; <a href="https://cs50.harvard.edu/x/2025/shorts/tries/">transcript on the CS50x page</a>) · <a href="https://beej.us/guide/bgc/html/split/types-ii-way-more-types.html#character-types">Beej 14.2 Character Types</a> (a <code>char</code> is a small <code>int</code>) · <a href="https://beej.us/guide/bgc/html/split/strings.html#string-termination">Beej 7.6 String Termination</a> · <a href="https://en.cppreference.com/w/c/memory/calloc">cppreference: calloc</a> (all bytes zero) · <a href="https://algs4.cs.princeton.edu/52trie/TrieST.java.html">algs4 TrieST.java</a> (Java; cited only for the 256-way node and the cost sentence). Weiss's DSAA-in-C files and Skiena's ADM programs page have no trie source (checked 2026-09-12).</p>
+</article>
+</body>
+</html>
