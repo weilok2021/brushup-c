@@ -99,3 +99,17 @@ _Avoid_: duplicate cleanup
 **`realloc`**:
 An operation that changes an owned heap block's size. Success returns the only pointer to continue using; failure returns `NULL` and leaves the original block owned and unchanged.
 _Avoid_: resize in place
+
+## Reasoning about code
+
+**Precondition**:
+What must be true when a function is called, stated in its header comment. `search_range` requires the array to be sorted; `max_range` requires at least one element. A proof starts from it, so a test that breaks it proves nothing.
+_Avoid_: assumption, requirement, input contract
+
+**Invariant**:
+One sentence that is true at the start of every call (or every loop pass) and is kept true by every step. For binary search: if the target is anywhere in the array, it is in `[lo, hi)`.
+_Avoid_: loop condition, property, assertion
+
+**Postcondition**:
+What is true when a function returns, given its precondition. A checker such as `is_sorted` or a cross-check against a linear scan tests it at run time.
+_Avoid_: output contract, result guarantee

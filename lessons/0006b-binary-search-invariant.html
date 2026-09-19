@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6b · Proving binary search · Say Where It Must Be</title>
+<style>
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
+article{max-width:1180px;margin:0 auto;padding:3rem 1.5rem 5rem}
+header,section,footer{width:60%;position:relative}
+@media(max-width:900px){header,section,footer{width:100%}}
+.kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
+h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+.subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
+.meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
+p{margin:0 0 1rem}
+a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
+code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
+pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
+pre code{background:none;padding:0;font-size:inherit}
+.tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
+.filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
+.sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
+.sn-ref::after{content:counter(sidenote)}
+.sidenote{float:right;clear:right;margin-right:-60%;width:52%;font-size:.84rem;line-height:1.42;color:var(--muted);margin-top:.15rem;margin-bottom:.7rem}
+.sidenote::before{content:counter(sidenote) " ";color:var(--accent);font-size:.8em;vertical-align:super}
+@media(max-width:900px){.sidenote{float:none;width:100%;margin:.4rem 0 1rem;display:block;padding-left:.9rem;border-left:2px solid var(--rule)}}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:0 0 1.25rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child code{white-space:nowrap}
+.win{border-left:3px solid var(--accent);padding:.7rem 1rem;background:#fbf3ea;margin:0 0 1.5rem}
+.paste{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.25rem .25rem;background:#f9f8f2;margin:0 0 1.5rem}
+.paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
+ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
+.ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.steps{list-style:none;padding:0;margin:0;counter-reset:step}
+.steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
+.steps>li.done::before{background:var(--ink);color:var(--bg)}
+.steps>li.done>.check{color:var(--ok)}
+.check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{accent-color:var(--ok)}
+.quiz{border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem .6rem;margin:0 0 1.1rem;background:#fffefa}
+.quiz .q{font-weight:600;margin:0 0 .7rem}
+.quiz .opts{display:grid;gap:.4rem;margin:0 0 .7rem}
+.quiz button{font:inherit;font-size:.95rem;text-align:left;background:transparent;border:1px solid var(--rule);border-radius:4px;padding:.45rem .75rem;cursor:pointer;color:var(--ink)}
+.quiz button:hover{border-color:var(--ink)}
+.quiz.locked button{cursor:default}
+.quiz.locked button:hover{border-color:var(--rule)}
+.quiz button.right{border-color:var(--ok);background:var(--ok-bg)}
+.quiz button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.quiz .why{font-size:.9rem;color:var(--muted);min-height:1.3em;margin:0 0 .5rem}
+.quiz .print-answer{display:none;font-size:.9rem}
+#score{font-style:italic;color:var(--muted)}
+.next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+@media print{
+  @page{margin:1.6cm}
+  html{font-size:11pt}body{background:#fff}article{padding:0}
+  header,section,footer{width:100%}
+  .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
+  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  a{text-decoration:none}pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<article>
+<header>
+  <p class="kicker">Lesson 6b · Proving binary search · DSA in C</p>
+  <h1>Say Where It Must Be</h1>
+  <p class="subtitle">Common sense cannot check a binary search. One sentence can. Write the sentence, check three things against it, then let the machine try every small case.</p>
+  <div class="meta">
+    <span>About 35 minutes</span>
+    <span>Where: WSL, <code>exercises/06-recursion/</code></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursion.html#promise">Cheat sheet</a> · <a href="0006-recursion-basics.html">Lesson 6</a></span>
+  </div>
+  <div class="win"><strong>Your win today.</strong> State the invariant of <code>search_range</code> in one sentence, use it to find the two bugs in your own draft, rewrite the function so that every line obeys the sentence, and add a check that compares it with a linear scan over 306 cases.</div>
+</header>
+
+<section>
+  <h2>You are in good company</h2>
+  <p>You said it feels impossible to be sure a binary search is right by common sense. That is not a gap in you. It is the most documented fact about this function. Jon Bentley gave the problem to professional programmers with two hours and any language they liked. His count: “90 percent of the programmers found bugs in their code”<a class="sn-ref" href="#sn1"></a>. Knuth, on the same function: “the details can be surprisingly tricky”<a class="sn-ref" href="#sn2"></a>. And the program Bentley proved correct in that column carried an overflow bug for twenty years, until Joshua Bloch found it in 2006<a class="sn-ref" href="#sn3"></a>.</p>
+  <span class="sidenote" id="sn1">Bentley, <a href="https://www.cs.tufts.edu/~nr/cs257/archive/jon-bentley/correct-programs.pdf">Programming pearls: Writing correct programs</a>, CACM, December 1983 (PDF). Also: “while the first binary search was published in 1946, the first published binary search without bugs did not appear until 1962.”</span>
+  <span class="sidenote" id="sn2">Quoted in Wikipedia, <a href="https://en.wikipedia.org/wiki/Binary_search#Implementation_issues">Binary search, Implementation issues</a>, which adds that most of Bentley's programmers “made an error in defining the exit conditions”.</span>
+  <span class="sidenote" id="sn3">Bloch, <a href="https://research.google/blog/extra-extra-read-all-about-it-nearly-all-binary-searches-and-mergesorts-are-broken/">Nearly All Binary Searches and Mergesorts are Broken</a> (2006). The bug is <code>(low + high) / 2</code>; the fix is the <code>lo + (hi - lo) / 2</code> you already use.</span>
+  <p>Bentley's cure was not more care. It was a sentence he could check the code against. Lesson 6 gave you two rules and an act of trust. Those prove the calls <em>stop</em>. They say nothing about whether the answer is <em>right</em>. For that you need one more thing.</p>
+</section>
+
+<section>
+  <h2>The sentence</h2>
+  <p>Binary search never knows where the target is. It only ever knows where the target <em>must be</em> if it is anywhere. Bentley wrote that as <code>MustBe(range)</code>: “if T is anywhere in the array, then it must be in range”<a class="sn-ref" href="#sn4"></a>. For your function the range is <code>[lo, hi)</code>, so the sentence is:</p>
+  <span class="sidenote" id="sn4">Bentley 1983, “Writing The Program”. His loop keeps <code>MustBe(range)</code> as a loop invariant; your recursion keeps it as a promise on every call. The CMU notes<a class="sn-ref" href="#sn5"></a> write the same promise as contract comments in C syntax.</span>
+  <div class="win"><strong>The promise.</strong> On every call to <code>search_range(a, lo, hi, target)</code>: <code>a[0..n)</code> is sorted, and if <code>target</code> is anywhere in <code>a[0..n)</code>, then it is in <code>a[lo..hi)</code>.</div>
+  <span class="sidenote" id="sn5">Pfenning, <a href="https://www.cs.cmu.edu/~15122-archive/n17/lec/06-binsearch.pdf">15-122 Lecture 6: Binary Search</a> (CMU, 2017). Their code says <code>//@requires is_sorted(A, 0, n);</code> and keeps <code>0 &lt;= lo &amp;&amp; lo &lt;= hi &amp;&amp; hi &lt;= n</code> as a loop invariant. This is the <a href="../GLOSSARY.md">glossary</a>'s <em>invariant</em>.</span>
+  <p>Write it above the function before you write the function. Then every line has a judge:</p>
+  <pre><code>/* Promise on every call: a[0..n) is sorted, and if target is anywhere
+   in it, then target is in a[lo..hi). */
+const int* search_range(const int* a, size_t lo, size_t hi, int target) {
+    if (lo == hi) {
+        return NULL;                  /* empty range + promise: nowhere */
+    }
+    size_t mid = lo + (hi - lo) / 2;  /* lo &lt;= mid &lt; hi */
+    if (a[mid] == target) {
+        return &amp;a[mid];
+    }
+    if (target &lt; a[mid]) {
+        return search_range(a, lo, mid, target);      /* [lo, mid) */
+    }
+    return search_range(a, mid + 1, hi, target);      /* [mid + 1, hi) */
+}</code></pre>
+</section>
+
+<section>
+  <h2>Three checks</h2>
+  <p>Bentley argues a loop in three parts: initialization, preservation, termination<a class="sn-ref" href="#sn6"></a>. For a recursive function the same three parts read like this.</p>
+  <span class="sidenote" id="sn6">Bentley 1983: “Initialization. The loop invariant is true when execution of the loop begins. Preservation. If the invariant holds at the beginning of an iteration and the loop body is executed again, then the invariant will still be true. Termination. Upon termination of the loop, the desired result will hold.” Cornell's CS 2112 notes state the same three obligations for Java.</span>
+  <table>
+    <tr><th>Check</th><th>Question</th><th>For <code>search_range</code></th></tr>
+    <tr><td>1. First call</td><td>Does the caller keep the promise?</td><td><code>main</code> passes <code>[0, n)</code>. Everything is inside it. Kept.</td></tr>
+    <tr><td>2. Every call</td><td>Does each recursive call keep the promise?</td><td>Two calls to check, below.</td></tr>
+    <tr><td>3. Every return</td><td>Given the promise, is each return right?</td><td>Two returns to check, below.</td></tr>
+  </table>
+  <p><strong>Check 2, the left call.</strong> We are in the branch <code>target &lt; a[mid]</code>. The array is sorted, so every index <code>i &gt;= mid</code> has <code>a[i] &gt;= a[mid] &gt; target</code>. The target is at none of them. If it is anywhere, it is in <code>[lo, mid)</code>. The promise is kept. Note that <code>a[mid]</code> itself is dropped, and dropping it needs no subtraction: half-open ranges exclude their right end for free.</p>
+  <p><strong>Check 2, the right call.</strong> Now <code>target &gt; a[mid]</code> (equality already returned). Sorted, so every <code>i &lt;= mid</code> has <code>a[i] &lt;= a[mid] &lt; target</code>. If anywhere, it is in <code>[mid + 1, hi)</code>. Kept. Both arguments used the word <em>sorted</em>. Take that word away and neither line follows; that is what the precondition in the header is for.</p>
+  <p><strong>Check 3, the empty return.</strong> <code>lo == hi</code> means the range holds nothing. The promise says: if the target is anywhere, it is in this empty range. So it is nowhere. <code>NULL</code> is the right answer, not a guess.</p>
+  <p><strong>Check 3, the found return.</strong> <code>a[mid] == target</code>, and <code>&amp;a[mid]</code> points at it. Right by inspection. The header promises <em>a</em> matching element, not the first one, so with duplicates any match is correct.</p>
+  <p>Three checks, four short arguments, and no trace of any particular input. That is the whole proof. Lesson 6's shrink rule supplies the last piece: the calls stop.</p>
+</section>
+
+<section>
+  <h2>Why the halves are always smaller</h2>
+  <p>Your other worry was the split. Does “halve” really give two strictly smaller ranges every time, including at size one and size two? This is arithmetic, not intuition. Call the size <code>k = hi - lo</code>, and we are past the base case, so <code>k &gt;= 1</code>. Then <code>mid = lo + k / 2</code> with integer division:</p>
+  <pre><code>k / 2 &gt;= 0          so   mid &gt;= lo
+k / 2 &lt;  k          so   mid &lt;  hi      (true for every k &gt;= 1)
+therefore           lo &lt;= mid &lt; hi</code></pre>
+  <p>From <code>mid &lt; hi &lt;= n</code>, reading <code>a[mid]</code> is in bounds. From <code>lo &lt;= mid</code>, the left half <code>[lo, mid)</code> has <code>k / 2</code> elements, fewer than <code>k</code>. From <code>mid &lt; hi</code>, the right half <code>[mid + 1, hi)</code> has <code>k - k / 2 - 1</code> elements, also fewer than <code>k</code>. The CMU notes put exactly this fact into the code as <code>//@assert lo &lt;= mid &amp;&amp; mid &lt; hi;</code><a class="sn-ref" href="#sn7"></a>. The small sizes, the ones that worry you, look like this:</p>
+  <span class="sidenote" id="sn7">Pfenning, Lecture 6, section 4 Termination: “the intervals from lo to mid and from mid+1 to hi are both strictly smaller than the original interval.” You can write the same line in C with <code>assert(lo &lt;= mid &amp;&amp; mid &lt; hi);</code> from <code>&lt;assert.h&gt;</code>.</span>
+  <table>
+    <tr><th><code>k = hi - lo</code></th><th><code>mid</code></th><th>left <code>[lo, mid)</code></th><th>right <code>[mid + 1, hi)</code></th><th>both smaller than <code>k</code>?</th></tr>
+    <tr><td>1</td><td><code>lo</code></td><td>0 elements</td><td>0 elements</td><td>yes</td></tr>
+    <tr><td>2</td><td><code>lo + 1</code></td><td>1 element</td><td>0 elements</td><td>yes</td></tr>
+    <tr><td>3</td><td><code>lo + 1</code></td><td>1 element</td><td>1 element</td><td>yes</td></tr>
+    <tr><td>4</td><td><code>lo + 2</code></td><td>2 elements</td><td>1 element</td><td>yes</td></tr>
+    <tr><td>8</td><td><code>lo + 4</code></td><td>4 elements</td><td>3 elements</td><td>yes</td></tr>
+  </table>
+  <p>Size one is the case to stare at: <code>mid = lo</code>, one comparison, and both halves are empty. The next call hits the base case and answers from the promise. Nothing special was needed for it.</p>
+</section>
+
+<section>
+  <h2>Your draft, checked</h2>
+  <p>This is the <code>search_range</code> in your <code>recur.c</code> today, under a header that promises the half-open range <code>a[low..high)</code>:</p>
+  <pre><code>if (low &gt; high) {
+    return NULL;
+}
+int mid = (low + high) / 2;
+if (a[mid] == target) {
+    return &amp;a[mid];
+}
+if (target &gt; a[mid]) {
+    return search_range(a, mid+1, high, target);
+}
+return search_range(a, low, mid-1, target);</code></pre>
+  <p><strong>Check 3 fails at the base case.</strong> For a half-open range, empty means <code>low == high</code>. The test <code>low &gt; high</code> lets <code>[3, 3)</code> through as if it held something. The code then reads <code>a[3]</code>, which is not in the range, and calls itself with <code>[3, 3)</code> again. That is lesson 6's report 3: a stack overflow, one column of the same line.</p>
+  <p><strong>Check 2 fails at the left call.</strong> <code>[low, mid - 1]</code> is closed-range arithmetic. The half-open left half is <code>[low, mid)</code>, with no subtraction at all. Under <code>size_t</code>, <code>mid - 1</code> at <code>mid == 0</code> wraps to the largest value, and your <code>int mid</code> then turns that into <code>-1</code>. That is the report you got when I ran it: <code>stack-buffer-underflow</code> at <code>recur.c:44</code>, a read of 4 bytes just before the array.</p>
+  <p><strong>The precondition fails in <code>main</code>.</strong> <code>{5, 2, 3, 4, 0}</code> is not sorted. Both halves of check 2 used the word <em>sorted</em>. On this input the function keeps no promise, so no result it gives means anything, right or wrong. A test that breaks the precondition tests nothing.</p>
+  <p>None of this says the closed form is wrong. Lesson 5's <code>[low, high]</code> has its own sentence, “if anywhere, then in <code>[low, high]</code>”, and passes the same three checks, at the price of two guards under <code>size_t</code><a class="sn-ref" href="#sn8"></a>. The mistake is mixing: a half-open header over a closed body. Pick one convention, write it in the header, and make every line obey it.</p>
+  <span class="sidenote" id="sn8">Learning record 0006 (2026-09-13): your closed search needed explicit <code>n == 0</code> and <code>mid == 0</code> checks before <code>n - 1</code> and <code>mid - 1</code>. The half-open form needs neither, which is why lessons 6 to 12 use it.</span>
+</section>
+
+<section>
+  <h2>Let the machine bombard it</h2>
+  <p>A proof on paper can still miss a slip in the typing, as Bentley's overflow shows. His answer was to test every small size exhaustively: “Testing N from 0 to 10 covers the empty array, common sizes for bugs (one, two and three), several powers of two, and many numbers one away from a power of two … it used an insignificant amount of computer time”<a class="sn-ref" href="#sn9"></a>. You have a slow function that is obviously right, the linear scan. Make the fast one agree with it on every prefix of the sorted array and every target from 3 to 36:</p>
+  <span class="sidenote" id="sn9">Bentley 1983, the testing paragraph before “Principles of Program Verification”: “I let a computer do what it's good at and bombard the program with test cases.”</span>
+  <pre><code>/* Slow and obviously right: is target anywhere in a[0..n)? */
+static int linear_has(const int* a, size_t n, int target) { ... }
+
+/* Every prefix length of the sorted array, every target from 3 to 36:
+   the search must agree with the linear scan. Returns the failure count. */
+static int check_search(const int* sorted, size_t n, int* cases) {
+    int failures = 0;
+    *cases = 0;
+    for (size_t len = 0; len &lt;= n; len++) {
+        for (int t = 3; t &lt;= 36; t++) {
+            const int* p = search_range(sorted, 0, len, t);
+            int expect = linear_has(sorted, len, t);
+            (*cases)++;
+            if ((p != NULL) != expect || (p != NULL &amp;&amp; *p != t)) {
+                printf("FAIL: n = %zu, target %d, %s\n", len, t,
+                       p == NULL ? "not found" : "wrong element");
+                failures++;
+            }
+        }
+    }
+    return failures;
+}</code></pre>
+  <p>Nine sizes, 0 to 8, cover empty, one, two, three, the powers of two and their neighbours. Thirty-four targets cover below the first element, every present value, every gap, the duplicates and above the last: 306 cases. The check compares the outcome and the value found, never the index, because the header promises a matching element and <code>4 4</code> has two. Hand tests reach a handful of ranges. This reaches every one that eight elements can produce.</p>
+</section>
+
+<section>
+  <h2>Do it, from memory</h2>
+  <ol class="steps" id="steps">
+    <li><p>In <code>recur.c</code>, write the promise as a comment above <code>search_range</code>, in your own words, in at most two lines. It must name the precondition (sorted) and the range the target must be in.</p>
+      <label class="check"><input type="checkbox" data-step="1"> done</label></li>
+    <li><p>With this page closed, rewrite <code>search_range</code> so that every line obeys the sentence: a <code>size_t</code> midpoint, a base case for the empty half-open range, halves <code>[lo, mid)</code> and <code>[mid + 1, hi)</code>. For each of the four lines (base return, found return, left call, right call), say out loud which check it passes and why.</p>
+      <label class="check"><input type="checkbox" data-step="2"> done</label></li>
+    <li><p>Finish <code>main.c</code> as lesson 6 step 4 specified: the data <code>9 4 15 9 26 5 35 4</code> and its sorted form as named constant arrays, a <code>copy_of</code> helper, the six output lines, <code>%ld</code> for the sum. The search runs on the sorted copy only.</p>
+      <label class="check"><input type="checkbox" data-step="3"> done</label></li>
+    <li><p>Write <code>linear_has</code> and <code>check_search</code> from the shape above, call the check after the six lines, print <code>search check: 306 cases, 0 failures</code>, and return <code>failures != 0</code> from <code>main</code>. Expected, exactly:</p>
+      <pre><code>sum: 107
+backwards: 4 35 5 26 9 15 4 9
+max: 35
+max of [0, 4): 15
+found 26 at index 6
+found 7: no
+search check: 306 cases, 0 failures</code></pre>
+      <label class="check"><input type="checkbox" data-step="4"> done</label></li>
+    <li><p>Run <code>make</code>, <code>./recursion</code>, <code>echo $?</code> and <code>make check</code>. Require no warnings, the seven lines, exit status 0, and Valgrind with 0 errors, 3 allocations and 3 frees.</p>
+      <label class="check"><input type="checkbox" data-step="5"> done</label></li>
+    <li><p>Break it twice, one at a time, restoring after each. Before each run, say which of the three checks the change breaks.</p>
+      <ol>
+        <li>Change the base case to <code>if (lo &gt; hi)</code>, your draft's version. Build and run. Note which output line was reached last and read the report against lesson 6's report 3.</li>
+        <li>Change the base case to <code>if (hi - lo &lt;= 1)</code>, so a one-element range answers <code>NULL</code> without looking. Build and run. Read the six lines, then the check, then <code>echo $?</code>. For the first two <code>FAIL</code> lines, trace on paper which range the search died in.</li>
+      </ol>
+      <label class="check"><input type="checkbox" data-step="6"> done</label></li>
+    <li><p>Restore the correct program, run the three commands once more, and tell me: lesson 6b done.</p>
+      <label class="check"><input type="checkbox" data-step="7"> done</label></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reading the reports</h2>
+  <p><strong>1. Base case <code>lo &gt; hi</code>.</strong> The first five lines print. The search for 7 walks <code>[0, 8)</code>, <code>[0, 4)</code>, <code>[3, 4)</code>, then <code>[3, 3)</code>, which the base case does not recognise as empty. It reads <code>a[3] = 9</code>, takes the left half <code>[3, 3)</code>, and repeats:</p>
+  <pre><code>ERROR: AddressSanitizer: stack-overflow ...
+    #0 ... in search_range recur.c:40
+    #1 ... in search_range recur.c:40
+    #2 ... in search_range recur.c:40</code></pre>
+  <p>Check 3 was broken, and it shows up as lesson 6's shrink failure, because an empty range that is not answered is a range that never shrinks. Your draft had the same base case; it only failed differently because <code>mid - 1</code> wrapped first.</p>
+  <p><strong>2. Base case <code>hi - lo &lt;= 1</code>.</strong> All six hand-test lines are right. The search for 26 never reached a one-element range. The search for 7 did, <code>[3, 4)</code>, and returned <code>NULL</code> without comparing: the right answer for the wrong reason. Then:</p>
+  <pre><code>FAIL: n = 1, target 4, not found
+FAIL: n = 3, target 5, not found
+FAIL: n = 4, target 9, not found
+FAIL: n = 6, target 5, not found
+FAIL: n = 7, target 5, not found
+FAIL: n = 7, target 26, not found
+FAIL: n = 8, target 15, not found
+FAIL: n = 8, target 35, not found
+search check: 306 cases, 8 failures</code></pre>
+  <p>Exit status 1. Every failure is a present value whose search ended in a one-element range. The size-one row of the table above is exactly the row this base case refuses to handle. Hand tests passed; the machine found eight cases in a few microseconds. Keep this checker. Lesson 8's sorts get <code>is_sorted</code>, lesson 7's partition gets <code>is_partitioned</code>, and for the same reason.</p>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p>Answer from memory.</p>
+  <div id="quiz"></div>
+  <p id="score"></p>
+</section>
+
+<section>
+  <h2>Read next</h2>
+  <p>Everything here is C, C-like with contracts, or language-free. Read in this order.</p>
+  <ol class="reading">
+    <li><p><strong>The same function, with its contracts written in the code.</strong> Frank Pfenning, <a href="https://www.cs.cmu.edu/~15122-archive/n17/lec/06-binsearch.pdf">15-122 Lecture 6: Binary Search</a> (CMU, 2017, PDF). C syntax plus <code>//@requires</code>, <code>//@ensures</code> and <code>//@loop_invariant</code> comments, half-open <code>[lo, hi)</code> like yours. Read sections 3 to 5. Their invariant says what has been ruled out (<code>A[lo - 1] &lt; x</code> and <code>A[hi] &gt; x</code>) where yours says what remains; check that the two are the same promise.</p></li>
+    <li><p><strong>The classic.</strong> Jon Bentley, <a href="https://www.cs.tufts.edu/~nr/cs257/archive/jon-bentley/correct-programs.pdf">Programming pearls: Writing correct programs</a> (CACM, 1983, PDF, six pages). Read from “The Challenge of Binary Search” to “Principles of Program Verification”. His code is closed-range pseudocode with 1-based indices; follow the argument, not the indices.</p></li>
+    <li><p><strong>Back to the C you read for lesson 6.</strong> Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#binarySearch">5.3.3.1 Binary search</a>. His recursive version takes a length and a pointer instead of two indices. Run the three checks on it: what is his promise, and what is his empty return?</p></li>
+    <li><p><strong>Five minutes, Java, for the story.</strong> Joshua Bloch, <a href="https://research.google/blog/extra-extra-read-all-about-it-nearly-all-binary-searches-and-mergesorts-are-broken/">Nearly All Binary Searches and Mergesorts are Broken</a> (2006). The overflow that a proof missed and why the midpoint is written <code>lo + (hi - lo) / 2</code>.</p></li>
+  </ol>
+  <p><strong>Where this goes next.</strong> Lesson 7's partition has a postcondition checker, <code>is_partitioned</code>, for exactly this reason; lesson 8's sorts have <code>is_sorted</code>; lesson 12's BST search keeps the promise “if the key is anywhere, it is in this subtree”. Every one of them is the same three checks. Keep the <a href="../reference/recursion.html#promise">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If you cannot write the promise for a function in one sentence, or a line passes none of the three checks and you are not sure why, paste the function and the sentence you tried. Both questions take a minute to answer and save an hour of tracing.</div>
+</section>
+
+<footer>
+  <div class="next">
+    <span><a href="0006-recursion-basics.html">Previous: Lesson 6, Shrink, Then Trust</a> · <a href="../reference/recursion.html#promise">Reference: the promise and the three checks</a></span>
+    <span><a href="0007-partition-and-merge.html">Next: Lesson 7, Scan, Stop, Swap</a></span>
+  </div>
+</footer>
+</article>
+<script>
+(function(){
+  var KEY='brushup-c-lesson-0006b-steps';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+  document.querySelectorAll('#steps input[type=checkbox]').forEach(function(cb){
+    var li=cb.closest('li');
+    if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
+    cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
+  });
+  var QUIZ=[
+    {q:"search_range is called with lo == hi. What does the promise say?",opts:["target is nowhere in the array","target is at index lo exactly","the caller passed a bad range","the array is not sorted yet"],a:0,why:"The promise says: if the target is anywhere, it is in [lo, hi). That range is empty, so the target is nowhere, and NULL is the proven answer, not a guess."},
+    {q:"Which fact lets the left call drop a[mid] and everything after it?",opts:["sorted, and a[mid] is above target","mid lies strictly below hi always","the left half is the smaller one","a[mid] was compared on a prior call"],a:0,why:"Sorted means every a[i] with i >= mid is at least a[mid], which is greater than target. None of them can be the target, so if it is anywhere it is in [lo, mid)."},
+    {q:"lo < hi and mid = lo + (hi - lo) / 2. What always holds?",opts:["lo <= mid and mid < hi","lo < mid and mid < hi","lo <= mid and mid <= hi","lo < mid and mid <= hi"],a:0,why:"With k = hi - lo >= 1, k / 2 is at least 0 and less than k. So mid is at least lo, and strictly less than hi. Size one gives mid == lo, so lo < mid is false there."},
+    {q:"main searches an unsorted array and gets NULL for a present value. Which part broke?",opts:["the precondition, so no check applies","the base case, returning too early","the midpoint, landing off the range","the right half, skipping one element"],a:0,why:"Both halves of check 2 rest on the word sorted. Without the precondition the promise is never kept, so the function proves nothing about its answer on that input."},
+    {q:"Base case hi - lo <= 1 returns NULL. The six hand-test lines still print correctly. Why?",opts:["one wrong return happened to be right","no search reached a one-element range","the check printed before the lines","duplicates masked the missing compare"],a:0,why:"The search for 7 reached [3, 4), a one-element range holding 9, and returned NULL without comparing. 7 is absent, so the wrong reasoning gave the right line. Only the 306-case check saw the eight present values that die the same way."}
+  ];
+  var root=document.getElementById('quiz'),score=0,answered=0;
+  QUIZ.forEach(function(item,i){
+    var box=document.createElement('div');box.className='quiz';
+    var q=document.createElement('p');q.className='q';q.textContent=(i+1)+'. '+item.q;box.appendChild(q);
+    var opts=document.createElement('div');opts.className='opts';
+    var order=item.opts.map(function(_,k){return k;});
+    for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
+    var why=document.createElement('p');why.className='why';
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-run the three checks on anything you missed.';}});opts.appendChild(b);});
+    var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
+  });
+})();
+</script>
+</body>
+</html>

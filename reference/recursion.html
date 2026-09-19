@@ -76,6 +76,32 @@ const int* search_range(const int* a, size_t lo, size_t hi, int t) { /* halve, k
     return t &lt; a[mid] ? search_range(a, lo, mid, t) : search_range(a, mid + 1, hi, t);
 }</code></pre>
 
+  <h2 id="promise">The promise: proving the answer</h2>
+  <p>The two rules prove that a recursion stops. They say nothing about whether its answer is right. For that, write one sentence that is true on every call (the <em>invariant</em>) above the function, then run three checks. From lesson 6b.</p>
+  <div class="rule"><strong>Promise for <code>search_range</code>.</strong> <code>a[0..n)</code> is sorted, and if <code>target</code> is anywhere in <code>a[0..n)</code>, then it is in <code>a[lo..hi)</code>.</div>
+  <table>
+    <tr><th>Check</th><th>Question</th><th>For <code>search_range</code></th></tr>
+    <tr><td>1. First call</td><td>Does the caller keep the promise?</td><td><code>[0, n)</code> holds everything. Kept.</td></tr>
+    <tr><td>2. Every call</td><td>Does each recursive call keep it?</td><td><code>target &lt; a[mid]</code>: sorted, so nothing at or after <code>mid</code> matches; <code>[lo, mid)</code>. <code>target &gt; a[mid]</code>: nothing at or before <code>mid</code>; <code>[mid + 1, hi)</code>.</td></tr>
+    <tr><td>3. Every return</td><td>Given the promise, is each return right?</td><td><code>lo == hi</code>: the target is in an empty range, so nowhere; <code>NULL</code>. <code>a[mid] == target</code>: <code>&amp;a[mid]</code>.</td></tr>
+  </table>
+  <p>Both halves are strictly smaller because of one arithmetic fact. With <code>k = hi - lo &gt;= 1</code> and <code>mid = lo + k / 2</code>: <code>k / 2 &gt;= 0</code> gives <code>lo &lt;= mid</code>, and <code>k / 2 &lt; k</code> gives <code>mid &lt; hi</code>. So <code>a[mid]</code> is in bounds, <code>[lo, mid)</code> has <code>k / 2</code> elements and <code>[mid + 1, hi)</code> has <code>k - k / 2 - 1</code>. Write it in the code as <code>assert(lo &lt;= mid &amp;&amp; mid &lt; hi);</code> if in doubt.</p>
+  <table>
+    <tr><th><code>k</code></th><th><code>mid</code></th><th>left</th><th>right</th></tr>
+    <tr><td>1</td><td><code>lo</code></td><td>0</td><td>0</td></tr>
+    <tr><td>2</td><td><code>lo + 1</code></td><td>1</td><td>0</td></tr>
+    <tr><td>3</td><td><code>lo + 1</code></td><td>1</td><td>1</td></tr>
+    <tr><td>8</td><td><code>lo + 4</code></td><td>4</td><td>3</td></tr>
+  </table>
+  <p>Then let the machine try every small case (Bentley): compare the fast function with a slow, obviously right one on every prefix length from 0 and every target from below the first value to above the last. Compare outcomes and values, not indices, when duplicates are legal.</p>
+  <pre><code>for (size_t len = 0; len &lt;= n; len++)
+    for (int t = 3; t &lt;= 36; t++) {
+        const int* p = search_range(sorted, 0, len, t);
+        int expect = linear_has(sorted, len, t);
+        if ((p != NULL) != expect || (p != NULL &amp;&amp; *p != t)) failures++;
+    }</code></pre>
+  <p>Pick one range convention, write it in the header, and make every line obey it. A half-open header over a closed body (<code>lo &gt; hi</code>, <code>mid - 1</code>) is the mixing that broke the lesson 6 draft.</p>
+
   <h2>Frames</h2>
   <p>Every call is a new frame with its own copies of every parameter. Pointer copies share the block; index copies are private. Work placed after the call runs when the deeper frame returns, so the deepest frame acts first.</p>
   <pre><code>(gdb) break sum_range if lo == 3      stop when a condition holds
@@ -103,9 +129,10 @@ const int* search_range(const int* a, size_t lo, size_t hi, int t) { /* halve, k
     <tr><td>gcc <code>infinite recursion detected [-Winfinite-recursion]</code></td><td>No path through the function returns without calling. The base case is missing.</td></tr>
     <tr><td>heap-buffer-overflow under a column of frames</td><td>The range kept shrinking past the block because no base case stopped it at <code>hi</code>.</td></tr>
     <tr><td>Output in the wrong order, no report</td><td>The work sits on the wrong side of the recursive call.</td></tr>
+    <tr><td>Hand tests pass, the exhaustive check reports failures</td><td>A return is wrong on a range the hand tests never reached, often size one. Read the sizes in the <code>FAIL</code> lines and re-run check 3 on that base case.</td></tr>
   </table>
 
-  <p class="foot">C readings: <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#recursion">Aspnes, CPSC 223 notes, 5.3 Recursion</a> (5.3.1 examples, 5.3.2 common problems, 5.3.3.1 binary search) · <a href="https://cs50.harvard.edu/x/notes/3/#recursion">CS50x Week 3 notes, Recursion</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">CS107 GDB Guide</a> (backtrace, up, down) · <a href="https://beej.us/guide/bgc/html/split/functions.html">Beej 4.1 Passing by Value</a></p>
+  <p class="foot">C readings: <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#recursion">Aspnes, CPSC 223 notes, 5.3 Recursion</a> (5.3.1 examples, 5.3.2 common problems, 5.3.3.1 binary search) · <a href="https://www.cs.cmu.edu/~15122-archive/n17/lec/06-binsearch.pdf">Pfenning, CMU 15-122 Lecture 6, Binary Search</a> (contracts, half-open) · <a href="https://www.cs.tufts.edu/~nr/cs257/archive/jon-bentley/correct-programs.pdf">Bentley, Writing Correct Programs</a> (1983) · <a href="https://cs50.harvard.edu/x/notes/3/#recursion">CS50x Week 3 notes, Recursion</a> · <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">CS107 GDB Guide</a> (backtrace, up, down) · <a href="https://beej.us/guide/bgc/html/split/functions.html">Beej 4.1 Passing by Value</a></p>
 </article>
 </body>
 </html>
