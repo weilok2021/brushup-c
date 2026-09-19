@@ -38,6 +38,9 @@ td:first-child code{white-space:nowrap}
   <h1>Partition and Merge</h1>
   <p class="subtitle">The two loops under the recursive sorts: Hoare's two-scan partition with its one guard and its equal-key stops, and the merge that takes the smaller head. Paired with <a href="../lessons/0007-partition-and-merge.html">Lesson 7</a>.</p>
 
+  <h2>Hoare's rules, in CS61B's words</h2>
+  <p>Create <b>L</b> and <b>G</b> pointers at the left and right ends; L starts just right of the pivot. L is a friend to small items and hates large or equal items. G is a friend to large items and hates small or equal items. Walk them toward each other, stopping on a hated item. When both have stopped, swap and move both by one. When they cross, you are done walking: swap the pivot with G. In C, L is <code>i</code> and G is <code>j</code>. Click-through demos: <a href="../lessons/0007-partition-and-merge.html#pdemo">lesson 7</a>, or Josh Hug's <a href="https://docs.google.com/presentation/d/1DOnWS59PJOa-LaBfttPRseIpwLGefZkn450TMSSUiQY/pub?start=false&amp;loop=false&amp;delayms=3000">original slides</a>.</p>
+
   <h2>Partition: the promise</h2>
   <p>Precondition: <code>hi - lo &gt;= 1</code>. Postcondition: returns <code>p</code> with <code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code>. The pivot <code>a[p]</code> is in its final sorted place. Neither side is sorted.</p>
   <pre><code>lo        lo+1 .. i-1        i .. j        j+1 .. hi-1
@@ -76,6 +79,7 @@ td:first-child code{white-space:nowrap}
 [0, 3)  pivot 5   -&gt; 4 4 [5]                p = 2      lesson 8 recurses on [lo, p) and [p + 1, hi)</code></pre>
 
   <h2>Merge: take the smaller head</h2>
+  <p>The smallest item of both runs is at the front of one of them: compare the two fronts, copy the smaller into <code>scratch</code>, repeat until one run is empty, then copy the rest of the other (<a href="../lessons/0007-partition-and-merge.html#mdemo">demo</a>).</p>
   <p>Precondition: <code>a[lo..mid)</code> and <code>a[mid..hi)</code> each sorted; <code>scratch</code> has room for index <code>hi - 1</code>. Invariant: <code>scratch[lo..k)</code> holds the <code>k - lo</code> smallest values of both runs, in order. Ties take the left run (stable).</p>
   <pre><code>void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
     size_t i = lo, j = mid, k = lo;
@@ -89,6 +93,18 @@ td:first-child code{white-space:nowrap}
 }</code></pre>
   <p><code>merge</code> borrows <code>scratch</code>. The owner is whoever called <code>malloc</code>: <code>main</code> in lesson 7, the <code>merge_sort</code> wrapper in lesson 8.</p>
 
+  <h2 id="closed">Closed range: the lines that differ</h2>
+  <p>Counts: half-open <code>[0, 8)</code> holds <code>hi - lo</code> = 8; closed <code>[0, 7]</code> holds <code>high - low + 1</code> = 8. One convention per function, header included.</p>
+  <table>
+    <tr><th>Place</th><th>Half-open <code>[lo, hi)</code></th><th>Closed <code>[low, high]</code></th></tr>
+    <tr><td>partition postcondition</td><td><code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code></td><td><code>a[low..p-1] &lt;= a[p] &lt;= a[p+1..high]</code></td></tr>
+    <tr><td><code>j</code> start, <code>i</code> guard</td><td><code>hi - 1</code>, <code>i &lt; hi</code></td><td><code>high</code>, <code>i &lt;= high</code></td></tr>
+    <tr><td>checker right loop</td><td><code>k &lt; hi</code></td><td><code>k &lt;= high</code></td></tr>
+    <tr><td>merge runs</td><td><code>[lo, mid)</code> and <code>[mid, hi)</code>: <code>mid</code> starts the right run</td><td><code>[low, mid]</code> and <code>[mid+1, high]</code>: <code>mid</code> ends the left run</td></tr>
+    <tr><td>merge loops</td><td><code>j = mid</code>; <code>i &lt; mid</code>, <code>j &lt; hi</code>, <code>k &lt; hi</code></td><td><code>j = mid + 1</code>; <code>i &lt;= mid</code>, <code>j &lt;= high</code>, <code>k &lt;= high</code></td></tr>
+    <tr><td>lesson 8 quicksort calls</td><td><code>[lo, p)</code> and <code>[p + 1, hi)</code></td><td><code>[low, p - 1]</code> only <code>if (p &gt; low)</code>, and <code>[p + 1, high]</code></td></tr>
+  </table>
+
   <h2>Reports and symptoms</h2>
   <table>
     <tr><th>Symptom</th><th>Likely mistake</th></tr>
@@ -99,7 +115,7 @@ td:first-child code{white-space:nowrap}
     <tr><td>heap-buffer-overflow in <code>merge</code> on <code>scratch</code></td><td>Copy-back bound <code>k &lt;= hi</code>, or <code>scratch</code> smaller than <code>hi</code> ints.</td></tr>
   </table>
 
-  <p class="foot">C readings: <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">Weiss, DSAA in C, sort.c (Qsort, Median3, Merge)</a> · <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">Aspnes, CPSC 223 notes, 5.3.4 Mergesort (merge)</a>. Language-free: <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia, Hoare and Lomuto partition schemes</a>. Evidence: <a href="https://algs4.cs.princeton.edu/23quicksort/">Sedgewick &amp; Wayne 2.3</a> · <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2</a></p>
+  <p class="foot">Pictures: <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.1-partitioning">CS61B textbook 30.1</a> · <a href="https://cs61b-2.gitbook.io/cs61b-textbook/32.-more-quick-sort-sorting-summary/32.1-quicksort-flavors-vs.-mergesort">32.1</a> · <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">15.4</a>. C readings: <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">Weiss, DSAA in C, sort.c (Qsort, Median3, Merge)</a> · <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">Aspnes, CPSC 223 notes, 5.3.4 Mergesort (merge)</a>. Language-free: <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia, Hoare and Lomuto partition schemes</a>. Evidence: <a href="https://algs4.cs.princeton.edu/23quicksort/">Sedgewick &amp; Wayne 2.3</a> · <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2</a></p>
 </article>
 </body>
 </html>

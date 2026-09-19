@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lesson 7 · Partition and merge · Scan, Stop, Swap</title>
 <style>
-:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8}
+:root{--bg:#fffff8;--ink:#141414;--muted:#5a5a5a;--rule:#dcd9cf;--accent:#8a3b12;--code-bg:#f3f0e6;--ok:#2d6a3e;--ok-bg:#e9f3eb;--bad:#a12a2a;--bad-bg:#f9e8e8;--g:#2b4c8c;--g-bg:#e8eef7;--pivot-bg:#ffe6a3}
 *{box-sizing:border-box}
 html{font-size:17px}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;line-height:1.55;counter-reset:sidenote}
@@ -15,15 +15,18 @@ header,section,footer{width:60%;position:relative}
 .kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
 h1{font-size:2.5rem;font-weight:400;font-style:italic;margin:0 0 .3rem;line-height:1.1}
 h2{font-size:1.65rem;font-weight:400;font-style:italic;margin:3rem 0 .75rem}
+h3{font-size:1.1rem;font-weight:600;margin:1.6rem 0 .5rem}
 .subtitle{font-size:1.25rem;font-style:italic;color:var(--muted);margin:0 0 1rem}
 .meta{font-size:.9rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1rem 0 1.5rem}
 p{margin:0 0 1rem}
+ul.rules{margin:0 0 1rem;padding-left:1.3rem}ul.rules li{margin:0 0 .35rem}
 a{color:inherit;text-decoration:underline;text-decoration-color:#bdb7a8;text-underline-offset:3px}
 a:hover{text-decoration-color:var(--accent)}
 code,pre,kbd{font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace}
 code{font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:3px}
 pre{background:var(--code-bg);padding:.9rem 1.1rem;border-radius:4px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:0 0 1rem}
 pre code{background:none;padding:0;font-size:inherit}
+pre .c{color:var(--accent)}
 .tab{background:#ffe6a3;color:#6b4d00;border-radius:2px;padding:0 .2em;font-style:normal}
 .filename{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 .3rem}
 .sn-ref{counter-increment:sidenote;vertical-align:super;font-size:.7em;color:var(--accent);margin-left:.1em}
@@ -40,6 +43,8 @@ td:first-child code{white-space:nowrap}
 .paste .label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem}
 ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margin:0}
 .ask{border:1px dashed var(--accent);padding:1rem 1.25rem;border-radius:6px;margin:2rem 0 0}
+.qa{border-left:3px solid var(--rule);padding:.2rem 1rem .1rem;margin:0 0 1.2rem}
+.qa .q{font-weight:600;margin:0 0 .4rem}
 .steps{list-style:none;padding:0;margin:0;counter-reset:step}
 .steps>li{position:relative;padding:0 0 1.4rem 2.7rem;counter-increment:step}
 .steps>li::before{content:counter(step);position:absolute;left:0;top:.05rem;width:1.8rem;height:1.8rem;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--bg)}
@@ -60,13 +65,62 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 .quiz .print-answer{display:none;font-size:.9rem}
 #score{font-style:italic;color:var(--muted)}
 .next{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem;font-size:.95rem}
+
+/* array pictures */
+.row{margin:.4rem 0 1rem}
+.row .name{font-size:.78rem;color:var(--muted);margin:0 0 1.15rem;letter-spacing:.04em}
+.cells{display:flex;gap:4px;align-items:flex-end}
+.cell{position:relative;width:2.5rem;height:2.5rem;border:1px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;font-size:.95rem;background:#fff;flex:0 0 2.5rem}
+.cell .idx{position:absolute;top:-1.05rem;left:0;right:0;text-align:center;font-size:.62rem;color:var(--muted);font-family:inherit}
+.cell.pivot{background:var(--pivot-bg);border-width:2px}
+.cell.le{background:var(--ok-bg)}
+.cell.ge{background:var(--g-bg)}
+.cell.out{opacity:.35;border-style:dotted}
+.cell.ghost{border-style:dashed;color:var(--muted);background:transparent}
+.cell.hl{outline:3px solid var(--accent);outline-offset:-1px}
+.cell.gone{color:#bbb;background:#f7f6f1}
+.cell.empty{color:#bbb}
+.ptrs{display:flex;gap:4px;height:1.5rem;margin-top:.2rem}
+.ptr{width:2.5rem;flex:0 0 2.5rem;text-align:center;font-weight:700;font-size:.85rem;line-height:1.5rem;font-family:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace}
+.ptr.L{color:var(--ok)}.ptr.G{color:var(--g)}.ptr.k{color:var(--accent)}.ptr.LG{color:var(--accent)}
+.legend{font-size:.8rem;color:var(--muted);margin:.2rem 0 0}
+.legend span{display:inline-block;width:.9em;height:.9em;border:1px solid var(--ink);vertical-align:-.1em;margin-right:.25em}
+.legend .p{background:var(--pivot-bg)}.legend .l{background:var(--ok-bg)}.legend .g{background:var(--g-bg)}
+@media(max-width:520px){.cell,.ptr{width:2.05rem;flex-basis:2.05rem}.cell{height:2.2rem;font-size:.85rem}}
+
+/* demos */
+.demo{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.1rem .8rem;background:#fdfcf7;margin:0 0 1.5rem}
+.demo:focus{outline:2px solid var(--accent);outline-offset:2px}
+.demo .sets{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 .8rem}
+.demo .sets button,.demo .controls button{font:inherit;font-size:.82rem;border:1px solid var(--rule);background:#fff;border-radius:4px;padding:.25rem .6rem;cursor:pointer;color:var(--ink)}
+.demo .sets button.on{border-color:var(--ink);background:var(--code-bg)}
+.demo .controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.6rem 0 0}
+.demo .controls button:disabled{opacity:.4;cursor:default}
+.demo .controls .n{font-size:.82rem;color:var(--muted);margin-left:auto}
+.demo .caption{min-height:2.6em;font-style:italic;font-size:1.02rem;margin:.5rem 0 0}
+.demo .caption b{font-style:normal;font-weight:700}
+.demo .caption .L{color:var(--ok)}.demo .caption .G{color:var(--g)}
+.demo .opt{font-size:.85rem;color:var(--muted);margin:.6rem 0 0;display:flex;gap:.4rem;align-items:center}
+.demo details{margin:.8rem 0 0;font-size:.85rem}
+.demo details summary{cursor:pointer;color:var(--muted)}
+.demo .list{margin:.6rem 0 0}
+.demo .list .step{display:grid;grid-template-columns:2rem 1fr;gap:.5rem;align-items:start;padding:.4rem 0;border-top:1px solid var(--rule)}
+.demo .list .step .k{color:var(--muted);font-size:.8rem;padding-top:.2rem}
+.demo .list .cell,.demo .list .ptr{width:1.75rem;flex-basis:1.75rem;height:1.75rem;font-size:.75rem;line-height:1.75rem}
+.demo .list .cell .idx{display:none}
+.demo .list .ptrs{height:1.1rem;margin-top:.1rem}.demo .list .ptr{line-height:1.1rem;font-size:.7rem}
+.demo .list .cap{font-size:.85rem;margin:.25rem 0 0;font-style:italic}
+.demo .list .cap .L{color:var(--ok)}.demo .list .cap .G{color:var(--g)}
+details.answer{margin:0 0 1.2rem}details.answer summary{cursor:pointer;font-style:italic;color:var(--muted)}
 @media print{
   @page{margin:1.6cm}
   html{font-size:11pt}body{background:#fff}article{padding:0}
   header,section,footer{width:100%}
   .sidenote{float:none;width:100%;margin:.3rem 0 .8rem;display:block;padding-left:.9rem;border-left:1px solid #999}
-  .check,.quiz .opts,#score{display:none}.quiz .print-answer{display:block}
+  .check,.quiz .opts,#score,.demo .controls,.demo .sets,.demo .opt{display:none}.quiz .print-answer{display:block}
+  .demo details summary{display:none}
   a{text-decoration:none}pre{white-space:pre-wrap}
+  .cell.pivot{outline:2px solid #000}
 }
 </style>
 </head>
@@ -75,13 +129,13 @@ ol.reading{padding-left:1.4rem}ol.reading>li{margin:0 0 .9rem}ol.reading p{margi
 <header>
   <p class="kicker">Lesson 7 · Partition and merge · DSA in C</p>
   <h1>Scan, Stop, Swap</h1>
-  <p class="subtitle">Quicksort's partition and merge sort's merge are plain loops with one invariant each. Write both, prove each with a checker, and run one level of quicksort by hand. Lesson 8 only adds the recursion.</p>
+  <p class="subtitle">Quicksort's partition and merge sort's merge, taught the CS61B way: one concrete array, two pointers that say what they think of each item, a demo you click through, then the C with one comment per rule. Lesson 8 adds the recursion.</p>
   <div class="meta">
     <span>About 45 minutes</span>
     <span>Where: WSL, <code>exercises/07-partition/</code></span>
-    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/partition-and-merge.html">Cheat sheet</a> · <a href="0006-recursion-basics.html">Lesson 6</a></span>
+    <span><a href="../MISSION.md">Mission</a> · <a href="../reference/partition-and-merge.html">Cheat sheet</a> · <a href="0006-recursion-basics.html">Lesson 6</a> · <a href="0006b-binary-search-invariant.html">Lesson 6b</a></span>
   </div>
-  <div class="win"><strong>Your win today.</strong> Write <code>partition</code> and <code>merge</code> from a blank file, without recursion, each proved by a postcondition checker you also write, and see for yourself why the scans must stop on equal keys and where the one bounds guard has to sit.</div>
+  <div class="win"><strong>Your win today.</strong> Click through Hoare's partition until you can predict every caption before it appears. Then write <code>partition</code> and <code>merge</code> from a blank file, each proved by a checker you also write. Written half-open, <code>[lo, hi)</code>; the closed form <code>[low, high]</code> has <a href="#closed">its own section</a> and changes nothing else.</div>
 </header>
 
 <section>
@@ -108,127 +162,166 @@ clean:
 </section>
 
 <section>
-  <h2>The promise a partition makes</h2>
-  <p>Take <code>9 4 15 9 26 5 35 4</code> and call the first value, 9, the pivot. A partition rearranges the range so that every value left of the pivot is no larger than it, and every value right of it is no smaller. One correct result is <code>5 4 4 9 26 9 35 15</code>, with the pivot at index 3. Neither side is sorted. But look where 9 sits in the fully sorted array, <code>4 4 5 <strong>9</strong> 9 15 26 35</code>: index 3. The pivot is already in its final place and never moves again<a class="sn-ref" href="#sn1"></a>. That is the promise, and it is exactly what a sort needs: put one value where it belongs, then deal with the two sides separately.</p>
-  <span class="sidenote" id="sn1">Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a>: after partitioning, “the entry a[j] is in its final place in the array, for some j”. Cited as evidence; the reading list below is C.</span>
-  <p>Write the promise down as a postcondition and it becomes a function you can test: <code>partition(a, lo, hi)</code> returns the pivot's final index <code>p</code>, with <code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code>. A checker is two loops:</p>
+  <h2>What a partition is</h2>
+  <p>Take this array. Pick the leftmost item, 9, and call it the <strong>pivot</strong>.</p>
+  <div class="row" data-cells="9 4 15 9 26 5 35 4" data-pivot="0"></div>
+  <p>To <strong>partition</strong> on 9 means to rearrange the array so that three things hold<a class="sn-ref" href="#sn1"></a>:</p>
+  <span class="sidenote" id="sn1">The definition and the four-arrays question are from the <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.1-partitioning">CS61B textbook, 30.1 Partitioning</a>: “x moves to some position j”, “All array elements to the left of x are less than or equal to x”, “All array elements to the right of x are greater than or equal to x”.</span>
+  <ul class="rules">
+    <li>9 moves to some index <code>p</code>.</li>
+    <li>Every item left of <code>p</code> is <code>&lt;= 9</code>.</li>
+    <li>Every item right of <code>p</code> is <code>&gt;= 9</code>.</li>
+  </ul>
+  <p>Neither side has to be sorted. Four arrangements of the same numbers, pivot shaded. Three are valid partitions on 9. One is not. Find it before you open the answer.</p>
+  <div class="row" data-name="A" data-cells="5 4 4 9 26 9 35 15" data-pivot="3"></div>
+  <div class="row" data-name="B" data-cells="4 4 5 9 9 15 26 35" data-pivot="3"></div>
+  <div class="row" data-name="C" data-cells="4 5 4 9 35 9 26 15" data-pivot="3"></div>
+  <div class="row" data-name="D" data-cells="4 5 9 4 26 9 35 15" data-pivot="2"></div>
+  <details class="answer"><summary>Answer</summary><p>D. The 4 at index 3 is smaller than 9 and sits to the pivot's right. A, B and C each have nothing larger than 9 on the left and nothing smaller on the right. The second 9 may sit on either side.</p></details>
+  <p>Why do this? Sorted, the array is <code>4 4 5 9 9 15 26 35</code>. Every valid partition lands the pivot at index 3 or 4, exactly where a 9 sits in the sorted array. <strong>The pivot is in its final place and never moves again.</strong></p>
+  <p>Quicksort is three lines<a class="sn-ref" href="#sn2"></a>: partition on the leftmost item, quicksort the left half, quicksort the right half. Today you write the partition only. Lesson 8 adds the two recursive calls.</p>
+  <span class="sidenote" id="sn2"><a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.2-quicksort-algorithm">CS61B textbook, 30.2 Quicksort Algorithm</a>: “To quicksort N items: Partition on the leftmost item as the pivot. Recursively quicksort the left half. Recursively quicksort the right half.”</span>
+</section>
+
+<section>
+  <h2>Hoare's partition: L and G</h2>
+  <p>Tony Hoare's scheme: two pointers walk toward each other. CS61B states it in six rules, and the demo follows them exactly<a class="sn-ref" href="#sn3"></a>:</p>
+  <span class="sidenote" id="sn3">Josh Hug's <a href="https://docs.google.com/presentation/d/1DOnWS59PJOa-LaBfttPRseIpwLGefZkn450TMSSUiQY/pub?start=false&amp;loop=false&amp;delayms=3000">Hoare partitioning demo</a> (Google Slides, 18 slides): “L pointer is a friend to small items, and hates large or equal items. G pointer is a friend to large items, and hates small or equal items. Walk pointers towards each other, stopping on a hated item. When both pointers have stopped, swap and move pointers by one. When pointers cross, you are done walking. Swap pivot with G.” The captions in the demo below borrow its voice. Same rules in prose: <a href="https://cs61b-2.gitbook.io/cs61b-textbook/32.-more-quick-sort-sorting-summary/32.1-quicksort-flavors-vs.-mergesort">CS61B textbook, 32.1, Tony Hoare's Partitioning</a>.</span>
+  <ul class="rules">
+    <li>Create <b class="Lc">L</b> and <b class="Gc">G</b> pointers at the left and right ends. L starts just right of the pivot.</li>
+    <li>L is a friend to small items, and hates large or equal items.</li>
+    <li>G is a friend to large items, and hates small or equal items.</li>
+    <li>Walk the pointers toward each other, stopping on a hated item.</li>
+    <li>When both have stopped, swap, and move both pointers by one.</li>
+    <li>When the pointers cross, you are done walking. Swap the pivot with G.</li>
+  </ul>
+  <p><em>Small</em> means smaller than the pivot; <em>large</em> means larger. In C, L is <code>i</code> and G is <code>j</code>. Click <b>Next</b> and read what each pointer says about the item under it.</p>
+
+  <div class="demo" id="pdemo" tabindex="0" aria-label="Partition demo. Use the left and right arrow keys to step.">
+    <div class="sets" id="psets"></div>
+    <div class="row" id="pview"></div>
+    <p class="legend"><span class="p"></span>pivot &nbsp; <span class="l"></span>L walked past it: <code>&lt;= pivot</code> &nbsp; <span class="g"></span>G walked past it: <code>&gt;= pivot</code></p>
+    <p class="caption" id="pcap"></p>
+    <div class="controls">
+      <button type="button" id="pprev">◀ Back</button>
+      <button type="button" id="pnext">Next ▶</button>
+      <button type="button" id="preset">Restart</button>
+      <span class="n" id="pn"></span>
+    </div>
+    <label class="opt"><input type="checkbox" id="pbug"> planted bug 1: L also loves equal items (<code>a[i] &lt;= pivot</code>)</label>
+    <details><summary>Every step of this run, as a list</summary><div class="list" id="plist"></div></details>
+  </div>
+
+  <p>Try all six arrays. On <code>9 1 2 3</code>, watch L when nothing ahead of it is large or equal. On the six 7s, watch both pointers stop at every item and meet in the middle. Then tick the planted bug and run the 7s again.</p>
+</section>
+
+<section>
+  <h2>The same rules, in C</h2>
+  <pre><code>/* Partition a[lo..hi) around the pivot a[lo]. hi - lo must be at least 1.
+   Returns the pivot's final index p: a[lo..p) &lt;= a[p] &lt;= a[p+1..hi). */
+size_t partition(int* a, size_t lo, size_t hi) {
+    int pivot = a[lo];
+    size_t i = lo + 1;              <span class="c">/* L: starts just right of the pivot */</span>
+    size_t j = hi - 1;              <span class="c">/* G: starts at the right end */</span>
+    for (;;) {
+        while (i &lt; hi &amp;&amp; a[i] &lt; pivot) {
+            i++;                    <span class="c">/* L walks while it loves what it sees */</span>
+        }
+        while (a[j] &gt; pivot) {
+            j--;                    <span class="c">/* G walks while it loves what it sees */</span>
+        }
+        if (i &gt;= j) {
+            break;                  <span class="c">/* crossed: done walking */</span>
+        }
+        swap_ints(&amp;a[i], &amp;a[j]);   <span class="c">/* both stopped: swap ... */</span>
+        i++;
+        j--;                        <span class="c">/* ... and move both by one */</span>
+    }
+    swap_ints(&amp;a[lo], &amp;a[j]);       <span class="c">/* swap the pivot with G */</span>
+    return j;
+}</code></pre>
+  <p>Each rule is one line. “Hates large or equal” is the strict <code>&lt;</code> in L's loop. Three questions the demo has already answered.</p>
+  <div class="qa">
+    <p class="q">Why does L need <code>i &lt; hi</code> and G no guard at all?</p>
+    <p>On <code>9 1 2 3</code>, L never meets a large or equal item. It walks to <code>hi</code> and stops there only because of the guard. G always meets one: the pivot itself sits at <code>a[lo]</code>, and G hates equal items. Pick the pivot from anywhere else and G needs a guard too.</p>
+  </div>
+  <div class="qa">
+    <p class="q">Why “or equal”?</p>
+    <p>Six 7s. Equal counted as hated: both pointers stop at every item, swap sevens with sevens, and meet in the middle. The pivot lands at 3. With the planted bug, L walks to the end and the pivot lands at 5. Quicksort then gets a side of five and a side of none, at every level: about <code>n²/2</code> compares for <code>n</code> equal keys<a class="sn-ref" href="#sn4"></a>.</p>
+  </div>
+  <span class="sidenote" id="sn4">Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a>: “It is best to stop the left scan for items with keys greater than or equal to the partitioning item's key and the right scan for items less than or equal to the partitioning item's key.” Hoare's scheme with these stops stays balanced on all-equal keys (<a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia</a>).</span>
+  <div class="qa">
+    <p class="q">Why move both pointers by one after a swap?</p>
+    <p>After the swap, L stands on a small item and G on a large one. Each loves what it now sees, so stepping past it skips one comparison and changes nothing.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The promise, and a checker</h2>
+  <p>Write the definition down as a postcondition and it becomes something a program can test: <code>partition(a, lo, hi)</code> returns <code>p</code> with <code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code>. That is <a href="0006b-binary-search-invariant.html">lesson 6b</a>'s habit: say what must be true, then check it.</p>
   <pre><code>int is_partitioned(const int* a, size_t lo, size_t hi, size_t p) {
     for (size_t k = lo; k &lt; p; k++) {
         if (a[k] &gt; a[p]) {
-            return 0;
+            return 0;               <span class="c">/* something large on the left */</span>
         }
     }
     for (size_t k = p + 1; k &lt; hi; k++) {
         if (a[k] &lt; a[p]) {
-            return 0;
+            return 0;               <span class="c">/* something small on the right */</span>
         }
     }
     return 1;
 }</code></pre>
-  <p>Lesson 5's <code>is_sorted</code> played the same role. Every exercise prints at least one line a function computed about the result, not one you read off the screen.</p>
-</section>
-
-<section>
-  <h2>Two scans that stop</h2>
-  <p>The pivot stays parked at <code>a[lo]</code> while two indices scan the rest of the range towards each other. At every moment the range looks like this:</p>
-  <pre><code>lo        lo+1 .. i-1        i .. j        j+1 .. hi-1
-[ pivot ] [ known &lt;= pivot ] [ unknown ] [ known &gt;= pivot ]</code></pre>
-  <p><code>i</code> walks right and <strong>stops</strong> on a value that is not smaller than the pivot. <code>j</code> walks left and stops on a value that is not larger. Everything <code>i</code> has walked past is <code>&lt;= pivot</code>; everything <code>j</code> has walked past is <code>&gt;= pivot</code>. That is the invariant. When both have stopped and <code>i &lt; j</code>, the two stopped values are each on the wrong side, so <strong>swap</strong> them and step both indices inward. When <code>i &gt;= j</code>, the unknown region is empty: the scans have crossed. Then <code>a[j]</code> is <code>&lt;= pivot</code>, so swapping the pivot into slot <code>j</code> keeps both sides honest, and <code>j</code> is the answer.</p>
-  <pre><code>pivot 9      9  4  15  9  26  5  35  4
-i=1 j=7      i stops at a[2]=15; j stops at a[7]=4          swap
-             9  4  4  9  26  5  35  15
-i=3 j=6      i stops at a[3]=9  (equal to pivot: stop!)
-             j stops at a[5]=5                              swap
-             9  4  4  5  26  9  35  15
-i=4 j=4      i stops at a[4]=26; j walks 35, 26, stops at a[3]=5
-             i=4 &gt;= j=3: crossed, stop
-swap a[lo] with a[j]:
-             5  4  4  9  26  9  35  15
-             ^ &lt;= 9 ^  [9]  ^ &gt;= 9 ^          return 3</code></pre>
-  <pre><code>/* Partition a[lo..hi) around the pivot a[lo]. hi - lo must be at least 1.
-   Returns the pivot's final index p: a[lo..p) &lt;= pivot &lt;= a[p+1..hi). */
-size_t partition(int* a, size_t lo, size_t hi) {
-    int pivot = a[lo];
-    size_t i = lo + 1;              /* scans right, stops on &gt;= pivot */
-    size_t j = hi - 1;              /* scans left, stops on &lt;= pivot */
-    for (;;) {
-        while (i &lt; hi &amp;&amp; a[i] &lt; pivot) {
-            i++;
-        }
-        while (a[j] &gt; pivot) {
-            j--;                    /* a[lo] == pivot stops this at lo */
-        }
-        if (i &gt;= j) {
-            break;
-        }
-        swap_ints(&amp;a[i], &amp;a[j]);
-        i++;
-        j--;
-    }
-    swap_ints(&amp;a[lo], &amp;a[j]);       /* pivot into its final slot */
-    return j;
-}</code></pre>
-  <p>This is Hoare's scheme, the two-scan form. The language-free pseudocode reads <code>do i := i + 1 while A[i] &lt; pivot</code>, <code>do j := j - 1 while A[j] &gt; pivot</code>, <code>if i &gt;= j then return j</code><a class="sn-ref" href="#sn2"></a>. The one-scan form, Lomuto's, walks <code>j</code> once and keeps a boundary <code>i</code>; it is easier to write and does about three times as many swaps. This course uses Hoare's because lesson 8 and Weiss's <code>sort.c</code> do.</p>
-  <span class="sidenote" id="sn2">Wikipedia, <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Quicksort, Hoare partition scheme</a>: “When eventually the pointers cross (the first points after the second), no exchange is performed; a valid partition is found.” Hoare's scheme “does three times fewer swaps on average” than <a href="https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme">Lomuto's</a>.</span>
-</section>
-
-<section>
-  <h2>Stop on equal keys</h2>
-  <p>The line marked <em>stop!</em> in the trace is the one people get wrong. It looks harmless to let <code>i</code> skip a value equal to the pivot: it is not out of place. Run six equal values and watch where the pivot lands:</p>
-  <pre><code>7 7 7 7 7 7   scans stop on equal keys     pivot lands at 3   (the middle)
-7 7 7 7 7 7   i skips equal keys           pivot lands at 5   (the end)</code></pre>
-  <p>With the stops, <code>i</code> and <code>j</code> halt at every element, swap sevens with sevens, and meet in the middle. Without them, <code>i</code> runs to the end of the range and the pivot is placed there, leaving a range of five on one side and none on the other. Do that at every level and a sort of <code>n</code> equal keys does about <code>n²/2</code> compares. Sedgewick and Wayne: “It is best to stop the left scan for items with keys greater than or equal to the partitioning item's key and the right scan for items less than or equal to the partitioning item's key”<a class="sn-ref" href="#sn3"></a>. The test data has two 9s and two 4s, and a block of six 7s, so that you can see both stops happen.</p>
-  <span class="sidenote" id="sn3">Sedgewick and Wayne, <a href="https://algs4.cs.princeton.edu/23quicksort/">2.3 Quicksort</a>. Hoare's scheme with these stops gives a balanced split even when every key is equal (<a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia</a>).</span>
-</section>
-
-<section>
-  <h2>One guard, one free pass</h2>
-  <p>Two <code>size_t</code> details, and they are not symmetric. The <code>i</code> scan needs <code>i &lt; hi</code>: when the pivot is the largest value in the range, as in <code>9 1 2 3</code>, every value after it is smaller and nothing stops the scan before the end of the block. The <code>j</code> scan needs no <code>j &gt; lo</code> guard because the pivot itself sits at <code>a[lo]</code>, and a scan that stops on values <code>&lt;= pivot</code> cannot walk past it. Choose the pivot from anywhere else and that free pass is gone. Weiss avoids both guards by parking chosen stoppers at each end first; you will read how below.</p>
-  <p>Also from <code>size_t</code>: <code>j = hi - 1</code> is only meaningful when the range holds at least one element, which is why the header says so. Lesson 8's recursion will never call <code>partition</code> on a range shorter than two.</p>
+  <p>One limit. The checker says yes to a pivot at index 5 on six 7s, because equal keys may sit on either side. Only the landing index tells a correct partition from a bad one.</p>
 </section>
 
 <section>
   <h2>You are the recursion</h2>
-  <p>Quicksort is: partition, then sort the left side, then sort the right side, by the same method. Do one level of it by hand in <code>main</code>, with no recursion at all. Partition the whole range; the pivot 9 lands at 3. Partition the right side <code>[4, 8)</code>; the pivot 26 lands at 6. Partition the left side <code>[0, 3)</code>; the pivot 5 lands at 2:</p>
-  <pre><code>[0, 8)   9 4 15 9 26 5 35 4     pivot 9   ->  5 4 4 [9] 26 9 35 15    p = 3
-[4, 8)   26 9 35 15             pivot 26  ->  15 9 [26] 35             p = 6
-[0, 3)   5 4 4                  pivot 5   ->  4 4 [5]                  p = 2
-                                              4 4 5 9 15 9 26 35</code></pre>
-  <p>Three values are in their final places and the array is nearly sorted. Two ranges are still unsorted, <code>[4, 6)</code> holding <code>15 9</code> and the single-element ranges that need nothing. Lesson 8's <code>quick_sort_range</code> is the function that keeps going: it calls <code>partition</code> and then calls itself on <code>[lo, p)</code> and <code>[p + 1, hi)</code>, both strictly smaller, until every range has fewer than two elements. That is lesson 6's rule 2 with <code>p</code> excluded from both sides.</p>
+  <p>Quicksort would now partition each side by the same method. Do one level of it by hand in <code>main</code>, with no recursion. Three calls, three pivots in their final places:</p>
+  <div class="row" data-name="partition [0, 8), pivot 9 lands at 3" data-cells="5 4 4 9 26 9 35 15" data-pivot="3" data-lo="0" data-hi="8"></div>
+  <div class="row" data-name="partition [4, 8), pivot 26 lands at 6" data-cells="5 4 4 9 15 9 26 35" data-pivot="6" data-lo="4" data-hi="8" data-fixed="3"></div>
+  <div class="row" data-name="partition [0, 3), pivot 5 lands at 2" data-cells="4 4 5 9 15 9 26 35" data-pivot="2" data-lo="0" data-hi="3" data-fixed="3 6"></div>
+  <p>The demo above has these three calls as its first three arrays. Lesson 8's <code>quick_sort_range</code> keeps going: partition, then call itself on <code>[lo, p)</code> and <code>[p + 1, hi)</code>, until a range holds fewer than two items.</p>
 </section>
 
 <section>
-  <h2>Merge: take the smaller head</h2>
-  <p>Merge sort's step is the other way round: the two halves are already sorted, and one pass combines them. Walk both runs with one index each, always copying the smaller head into a scratch area; ties take the left run, which keeps equal keys in their original order. When one run is used up, copy the rest of the other:</p>
-  <pre><code>left  a[0..4) = 4 9 9 15      right  a[4..8) = 4 5 26 35
-i=0 j=4   4 &lt; 4 ? no   take left   scratch[0] = 4     i=1
-i=1 j=4   4 &lt; 9 ? yes  take right  scratch[1] = 4     j=5
-i=1 j=5   5 &lt; 9 ? yes  take right  scratch[2] = 5     j=6
-i=1 j=6   26 &lt; 9 ? no  take left   scratch[3] = 9     i=2
-i=2 j=6   26 &lt; 9 ? no  take left   scratch[4] = 9     i=3
-i=3 j=6   26 &lt; 15 ? no take left   scratch[5] = 15    i=4   left run empty
-          copy the rest of right   scratch[6] = 26  scratch[7] = 35
-          copy scratch[0..8) back into a[0..8)</code></pre>
-  <p>The invariant: <code>scratch[lo..k)</code> holds the <code>k - lo</code> smallest values of both runs, in order. Each step extends it by one, because the smaller of the two heads is the smallest value not yet taken.</p>
+  <h2>Merge: the smallest item is at the front of one run</h2>
+  <p>Merge sort's step is the reverse problem. The two halves are already sorted, and one pass combines them. The smallest item of both runs must be at the front of one of them. Compare the two fronts, copy the smaller one into <code>scratch</code>, and repeat until one run is empty. Then copy the rest of the other run<a class="sn-ref" href="#sn5"></a>.</p>
+  <span class="sidenote" id="sn5"><a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>: “The smallest element must be at the start of one of the two lists. So let's compare those, and put the smallest element at the start of our new list. … We can continue comparing the first two elements and moving the smallest into place until one list is empty, then copy the rest of the other list over into the end of the new list.” Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> draws it with an <code>Aux</code> row, as here.</span>
+
+  <div class="demo" id="mdemo" tabindex="0" aria-label="Merge demo. Use the left and right arrow keys to step.">
+    <div class="sets" id="msets"></div>
+    <div class="row" id="mview"></div>
+    <p class="caption" id="mcap"></p>
+    <div class="controls">
+      <button type="button" id="mprev">◀ Back</button>
+      <button type="button" id="mnext">Next ▶</button>
+      <button type="button" id="mreset">Restart</button>
+      <span class="n" id="mn"></span>
+    </div>
+    <details><summary>Every step of this run, as a list</summary><div class="list" id="mlist"></div></details>
+  </div>
+
+  <p>Ties take the left run. That keeps equal keys in their original order, which lesson 8 will call <em>stable</em>.</p>
   <pre><code>/* Merge the sorted runs a[lo..mid) and a[mid..hi) via scratch[lo..hi). */
 void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
-    size_t i = lo;                  /* next unused in the left run */
-    size_t j = mid;                 /* next unused in the right run */
-    size_t k = lo;                  /* next free slot in scratch */
+    size_t i = lo;                  <span class="c">/* front of the left run */</span>
+    size_t j = mid;                 <span class="c">/* front of the right run */</span>
+    size_t k = lo;                  <span class="c">/* next free slot in scratch */</span>
     while (i &lt; mid &amp;&amp; j &lt; hi) {
         if (a[j] &lt; a[i]) {
-            scratch[k++] = a[j++];
+            scratch[k++] = a[j++];  <span class="c">/* right front is smaller */</span>
         } else {
-            scratch[k++] = a[i++];  /* ties take the left run */
+            scratch[k++] = a[i++];  <span class="c">/* left front is smaller, or a tie */</span>
         }
     }
-    while (i &lt; mid) { scratch[k++] = a[i++]; }
-    while (j &lt; hi)  { scratch[k++] = a[j++]; }
+    while (i &lt; mid) { scratch[k++] = a[i++]; }   <span class="c">/* one of these two loops */</span>
+    while (j &lt; hi)  { scratch[k++] = a[j++]; }   <span class="c">/* copies the leftover run */</span>
     for (k = lo; k &lt; hi; k++) {
-        a[k] = scratch[k];          /* copy back exactly [lo, hi) */
+        a[k] = scratch[k];          <span class="c">/* copy back exactly [lo, hi) */</span>
     }
 }</code></pre>
-  <p>Who owns <code>scratch</code>? Not <code>merge</code>: it receives the pointer, writes through it and never frees it, a borrower in lesson 3's terms. In this exercise <code>main</code> allocates one block of eight ints and frees it. Lesson 8 moves that owner into a <code>merge_sort</code> wrapper so that <code>main</code> never learns the block exists; the <code>merge</code> function itself does not change.</p>
+  <p><code>merge</code> borrows <code>scratch</code>: it writes through the pointer and never frees it. Today <code>main</code> owns the block. In lesson 8 a <code>merge_sort</code> wrapper owns it, and <code>merge</code> does not change.</p>
 </section>
 
 <section>
@@ -255,7 +348,35 @@ int is_partitioned(const int* a, size_t lo, size_t hi, size_t p);
 /* Merge the sorted runs a[lo..mid) and a[mid..hi) into ascending order,
    using scratch[lo..hi) as workspace. scratch is borrowed, never freed. */
 void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch);</code></pre>
-  <p>Five functions, all public here because <code>main</code> drives them directly. In lesson 8 <code>partition</code> and <code>merge</code> become <code>static</code> helpers behind <code>quick_sort</code> and <code>merge_sort</code>; the code inside them is the code you write today.</p>
+  <p>Five functions, all public because <code>main</code> drives them directly. In lesson 8, <code>partition</code> and <code>merge</code> become <code>static</code> helpers behind <code>quick_sort</code> and <code>merge_sort</code>. The code inside them is the code you write today.</p>
+</section>
+
+<section id="closed">
+  <h2>Closed range, if you prefer it</h2>
+  <p>Everything above is half-open: <code>hi</code> is one past the last item. You chose the closed form <code>[low, high]</code> in lessons 5 and 6, where <code>high</code> is the last item itself. Both work here. Pick one, write the header in it, and keep every line of the body in it. The count is the check:</p>
+  <table>
+    <tr><th>The whole test array</th><th>Range</th><th>Count</th></tr>
+    <tr><td>half-open</td><td><code>[0, 8)</code></td><td><code>hi - lo</code> = 8 - 0 = 8</td></tr>
+    <tr><td>closed</td><td><code>[0, 7]</code></td><td><code>high - low + 1</code> = 7 - 0 + 1 = 8</td></tr>
+  </table>
+  <p>Every line that changes, and nothing else does. L, G, the stops and the merge rule are identical.</p>
+  <table>
+    <tr><th>Place</th><th>Half-open <code>[lo, hi)</code></th><th>Closed <code>[low, high]</code></th></tr>
+    <tr><td>partition header</td><td><code>a[lo..p) &lt;= a[p] &lt;= a[p+1..hi)</code></td><td><code>a[low..p-1] &lt;= a[p] &lt;= a[p+1..high]</code></td></tr>
+    <tr><td>G starts at</td><td><code>j = hi - 1</code></td><td><code>j = high</code></td></tr>
+    <tr><td>L's guard</td><td><code>i &lt; hi &amp;&amp; a[i] &lt; pivot</code></td><td><code>i &lt;= high &amp;&amp; a[i] &lt; pivot</code></td></tr>
+    <tr><td>G's guard</td><td>none: the pivot at <code>a[lo]</code> stops it</td><td>none: same free pass</td></tr>
+    <tr><td><code>is_partitioned</code> right loop</td><td><code>k = p + 1; k &lt; hi</code></td><td><code>k = p + 1; k &lt;= high</code></td></tr>
+    <tr><td>merge: the two runs</td><td><code>a[lo..mid)</code> and <code>a[mid..hi)</code></td><td><code>a[low..mid]</code> and <code>a[mid+1..high]</code></td></tr>
+    <tr><td>merge: <code>mid</code> means</td><td>first index of the right run</td><td>last index of the left run</td></tr>
+    <tr><td>merge: <code>j</code> starts at</td><td><code>mid</code></td><td><code>mid + 1</code></td></tr>
+    <tr><td>merge loops</td><td><code>i &lt; mid</code>, <code>j &lt; hi</code>, copy back <code>k &lt; hi</code></td><td><code>i &lt;= mid</code>, <code>j &lt;= high</code>, copy back <code>k &lt;= high</code></td></tr>
+    <tr><td>main: the five calls</td><td><code>[0, 8) [4, 8) [0, 3) [0, 4) [0, 6)</code></td><td><code>[0, 7] [4, 7] [0, 2] [0, 3] [0, 5]</code></td></tr>
+    <tr><td>main: the merge call</td><td><code>merge(r, 0, 4, 8, scratch)</code></td><td><code>merge(r, 0, 3, 7, scratch)</code></td></tr>
+  </table>
+  <p>The <code>mid</code> row is the trap. Half-open, <code>mid</code> ends the left run and starts the right. Closed, the left run ends at <code>mid</code> and the right starts at <code>mid + 1</code>. Your runs are <code>4 9 9 15</code> and <code>4 5 26 35</code>, so the closed call is <code>merge(r, 0, 3, 7, scratch)</code>. Write 4 there and <code>4 9 9 15 4</code> is treated as one sorted run: no crash, and <code>sorted: no</code>.</p>
+  <p>No guard is needed here: neither function ever gets an empty range. Lesson 8's quicksort does. Its left call is <code>[low, p - 1]</code>, and <code>p - 1</code> wraps under <code>size_t</code> when the pivot lands at index 0. Guard it with <code>if (p &gt; low)</code>, as you guarded <code>mid - 1</code> in lesson 6.</p>
+  <p>Same landing indices and the same three reports in both forms; closed, the missing guard is <code>i &lt;= high</code> and the deleted line is <code>while (j &lt;= high)</code>. Verified: the closed version builds warning-free with <code>-Wconversion</code> added and passes <code>make check</code> with 6 allocations and 6 frees.</p>
 </section>
 
 <section>
@@ -267,9 +388,9 @@ mkdir -p exercises/07-partition &amp;&amp; cd exercises/07-partition</code></pre
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>partition.h</code> exactly as shown and paste the setup <code>Makefile</code>. Copy <code>swap_ints</code> and <code>is_sorted</code> from lesson 5 into a new <code>partition.c</code>.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
-    <li><p>Write <code>is_partitioned</code>, then <code>partition</code>, with this page closed. Before <code>partition</code>, draw the four-region picture on paper and redo the eight-value trace with pivot 9; check that you stop on the second 9.</p>
+    <li><p>Run the partition demo once more on the first array, but say each caption out loud <em>before</em> you click. When you get every one right, close this page and write <code>is_partitioned</code>, then <code>partition</code>. One comment per rule, in L and G's words if you like.</p>
       <label class="check"><input type="checkbox" data-step="3"> done</label></li>
-    <li><p>Write <code>merge</code> from the trace, not the listing. Say out loud what <code>scratch[lo..k)</code> holds after each step.</p>
+    <li><p>Do the same with the merge demo, then write <code>merge</code>. Say what <code>scratch[lo..k)</code> holds after each step: the <code>k - lo</code> smallest items of both runs, in order.</p>
       <label class="check"><input type="checkbox" data-step="4"> done</label></li>
     <li><p>Write <code>main.c</code>. Declare four named constant arrays: the data <code>9 4 15 9 26 5 35 4</code>, <code>9 1 2 3</code>, six 7s, and the two runs <code>4 9 9 15 4 5 26 35</code>. Write a static helper that returns a fresh heap copy (caller owns it), a print helper, and a static <code>run_partition(a, n, lo, hi)</code> that partitions <code>a[lo..hi)</code>, prints the range, the pivot value and where it landed, the whole array of <code>n</code> ints, and the <code>is_partitioned</code> verdict. Partition the data over <code>[0, 8)</code>, then <code>[4, 8)</code>, then <code>[0, 3)</code>; then <code>9 1 2 3</code> over <code>[0, 4)</code>; then the 7s over <code>[0, 6)</code>. Allocate a scratch block of eight ints, merge the two runs with <code>mid = 4</code>, print the result and <code>is_sorted</code>. Free all five blocks, return 0. Expected, exactly:</p>
       <pre><code>before: 9 4 15 9 26 5 35 4
@@ -285,14 +406,15 @@ partitioned: yes
 partitioned: yes
 merged: 4 4 5 9 9 15 26 35
 sorted: yes</code></pre>
+      <p>Closed form: the same thirteen lines with the labels <code>[0, 7]</code>, <code>[4, 7]</code>, <code>[0, 2]</code>, <code>[0, 3]</code>, <code>[0, 5]</code>; every landing index is the same. See <a href="#closed">closed range</a>.</p>
       <label class="check"><input type="checkbox" data-step="5"> done</label></li>
     <li><p>Run <code>make</code>, <code>./partition</code>, and <code>make check</code>. Require no warnings, the exact thirteen lines, and Valgrind with 0 errors and no leaks: 6 allocations, 6 frees (four copies, the scratch block, and the block the C library takes for <code>stdout</code>).</p>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
     <li><p><strong>Break it three ways, one at a time.</strong> Restore the program after each.</p>
       <ol>
-        <li>In the <code>i</code> scan, change <code>a[i] &lt; pivot</code> to <code>a[i] &lt;= pivot</code>. Build and run. Every line still says <code>partitioned: yes</code>. Read where the pivot lands on the first line and on the six-7s line, and say what changed.</li>
-        <li>Remove the <code>i &lt; hi</code> guard. Build and run. Read which call died, which block the report names, and its size.</li>
-        <li>In <code>merge</code>, delete the line <code>while (j &lt; hi) ...</code>. Build, run <code>./partition</code>, then run <code>make check</code>. Read the last two numbers on the merged line and what Valgrind says about them.</li>
+        <li>In L's loop, change <code>a[i] &lt; pivot</code> to <code>a[i] &lt;= pivot</code>. Build and run. Every line still says <code>partitioned: yes</code>. Read where the pivot lands on the first line and on the six-7s line, and say what changed. The demo's planted-bug box shows the same thing.</li>
+        <li>Remove the <code>i &lt; hi</code> guard (closed: <code>i &lt;= high</code>). Build and run. Read which call died, which block the report names, and its size.</li>
+        <li>In <code>merge</code>, delete the line <code>while (j &lt; hi) ...</code> (closed: <code>while (j &lt;= high) ...</code>). Build, run <code>./partition</code>, then run <code>make check</code>. Read the last two numbers on the merged line and what Valgrind says about them.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
     <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 7 done</em>.</p>
@@ -302,9 +424,8 @@ sorted: yes</code></pre>
 
 <section>
   <h2>Reading the three reports</h2>
-  <p><strong>1. Skipping equal keys.</strong> No report, and every checker still says yes: the postcondition allows equal keys on either side. What moved is the pivot's landing spot. The first line becomes <code>pivot 9 lands at 4</code>, and the six 7s give <code>pivot 7 lands at 5</code>: the end of the range, a five-and-zero split instead of three-and-two. A correct partition can still be a bad one. The checker cannot see that; only the landing index can.</p>
-
-  <p><strong>2. The missing guard.</strong> The <code>9 1 2 3</code> call walks <code>i</code> past 1, 2 and 3 and reads the int after the block:</p>
+  <p><strong>1. L loves equal items.</strong> No report, and every checker still says yes. Only the landing spot moved: the first line says <code>pivot 9 lands at 4</code>, the six 7s say <code>pivot 7 lands at 5</code>, a five-and-zero split. A correct partition can still be a bad one, and only the index shows it.</p>
+  <p><strong>2. The missing guard.</strong> The <code>9 1 2 3</code> call walks L past 1, 2 and 3 and reads the int after the block:</p>
   <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x502000000020 ...
 READ of size 4 ...
     #0 ... in <strong>partition partition.c:23</strong>
@@ -314,12 +435,11 @@ READ of size 4 ...
 allocated by thread T0 here:
     #0 ... in malloc
     #1 ... in copy_of main.c:14</code></pre>
-  <p>Sixteen bytes is four ints: the small block, not the eight-int data. The same shape as lesson 1's off-by-one, reached by a scan with no stopper instead of a loop bound. The first three partition lines printed fine before it; their ranges all had a value <code>&gt;= pivot</code> somewhere after the pivot.</p>
-
+  <p>Sixteen bytes is four ints: the <code>9 1 2 3</code> block. It is lesson 1's off-by-one, reached by a pointer with nothing to stop it. The first three lines printed fine because each of those ranges had a large or equal item after the pivot.</p>
   <p><strong>3. The right run's tail never copied.</strong> Under the sanitizer build:</p>
   <pre><code>merged: 4 4 5 9 9 15 -1094795586 -1094795586
 sorted: no</code></pre>
-  <p>The loop copied the six values it compared, then stopped when the left run emptied. <code>scratch[6]</code> and <code>scratch[7]</code> were never written, and the copy-back moved whatever <code>malloc</code> left there into <code>a</code>. Under ASan that is the byte <code>0xbe</code> repeated, which reads as <code>-1094795586</code>; on the plain build it is anything. Valgrind names the problem, not the fix: “Conditional jump or move depends on uninitialised value(s)” inside <code>printf</code>, called from your print helper. When Valgrind blames <code>printf</code>, ask which value you handed it and where that value should have been written.</p>
+  <p>The loop stopped when the left run emptied, so <code>scratch[6]</code> and <code>scratch[7]</code> were never written, and the copy-back moved whatever <code>malloc</code> left there into <code>a</code>. Under ASan that is the byte <code>0xbe</code> repeated, which reads as <code>-1094795586</code>; on the plain build it is anything. Valgrind names the symptom, not the fix: “Conditional jump or move depends on uninitialised value(s)” inside <code>printf</code>. When Valgrind blames <code>printf</code>, ask which value you handed it and where it should have been written.</p>
 </section>
 
 <section>
@@ -331,25 +451,104 @@ sorted: no</code></pre>
 
 <section>
   <h2>Read next</h2>
-  <p>Everything here is C or language-free. Read in this order.</p>
+  <p>The CS61B items are language-free (slides and prose; the course's code is Java, and you write the C here). The rest is C.</p>
   <ol class="reading">
-    <li><p><strong>Partition in C, without guards.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>, the functions <code>Median3</code> and <code>Qsort</code> (free from the author's <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/files.html">source files</a> page). His scans are <code>while (A[++i] &lt; Pivot)</code> and <code>while (A[--j] &gt; Pivot)</code> with no bounds test at all, because <code>Median3</code> has already parked a value <code>&lt;=</code> pivot at <code>Left</code> and the pivot itself at <code>Right - 1</code>. Compare that with your one guard and one free pass. The file also keeps a broken scan under <code>#if 0</code>, labelled as code that does not work; start both scans on a value equal to the pivot and see why.</p></li>
-    <li><p><strong>Merge in C, a different shape.</strong> Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">5.3.4 Mergesort</a>, the <code>merge</code> function only. It merges two separate arrays <code>a1</code> and <code>a2</code> into <code>out</code> with one loop and a compound test, where yours merges two runs of one array through <code>scratch</code> with three loops. Same invariant. Leave the recursive part for lesson 8.</p></li>
-    <li><p><strong>The two schemes, language-free.</strong> Wikipedia, <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Quicksort, Hoare partition scheme</a> and the <a href="https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme">Lomuto partition scheme</a> just above it. Pseudocode plus the sentences on crossing pointers and equal keys. Ten minutes, and enough to recognise either scheme when you meet it in someone else's C.</p></li>
-    <li><p><strong>If you prefer to watch first.</strong> CS50 Short, <a href="https://video.cs50.io/Ns7tGNbtvV4">Merge Sort</a> (Doug Lloyd), for the merge step traced by hand.</p></li>
+    <li><p><strong>Click first.</strong> Josh Hug's <a href="https://docs.google.com/presentation/d/1DOnWS59PJOa-LaBfttPRseIpwLGefZkn450TMSSUiQY/pub?start=false&amp;loop=false&amp;delayms=3000">Hoare partitioning demo</a> (Google Slides, 18 slides). Its array is the sixth one in this page's demo, so run both side by side. Then the <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.1-partitioning">CS61B textbook, 30.1 Partitioning</a> and <a href="https://cs61b-2.gitbook.io/cs61b-textbook/32.-more-quick-sort-sorting-summary/32.1-quicksort-flavors-vs.-mergesort">32.1, Tony Hoare's Partitioning</a>, with its “police for two territories” analogy.</p></li>
+    <li><p><strong>Watch, if you want the lecture.</strong> Josh Hug, <a href="https://www.youtube.com/watch?v=Yecyv1olgiE">61B Lecture 32, More Quick Sort, Sorting Summary</a> (YouTube, 2019), the Hoare partitioning part near the start.</p></li>
+    <li><p><strong>Partition in C, without guards.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>, <code>Median3</code> and <code>Qsort</code>. His scans are <code>while (A[++i] &lt; Pivot)</code> and <code>while (A[--j] &gt; Pivot)</code> with no bounds test, because <code>Median3</code> has already parked a value <code>&lt;=</code> pivot at <code>Left</code> and the pivot at <code>Right - 1</code>. Compare with your one guard and one free pass. The broken scan under <code>#if 0</code> starts both scans on a value equal to the pivot; see why.</p></li>
+    <li><p><strong>Merge, two more pictures.</strong> <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>, the merging part, and Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> slides. In C: Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">5.3.4 Mergesort</a>, the <code>merge</code> function only: two separate arrays merged into <code>out</code> with one loop and a compound test, where yours merges two runs of one array through <code>scratch</code> with three loops. Same rule.</p></li>
+    <li><p><strong>The two schemes, language-free.</strong> Wikipedia, <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Quicksort, Hoare partition scheme</a> and the <a href="https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme">Lomuto partition scheme</a> just above it. Lomuto walks one pointer and does about three times as many swaps.</p></li>
   </ol>
-  <p><strong>Where this lands in CS107.</strong> Lecture 8 (Generic Operations) assigns the library <code>qsort</code>, which needs a comparison function but no partition from you<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. Writing one yourself once is what makes its <code>size_t nmemb, size_t size</code> interface readable later. The cost and equal-key claims above cite Sedgewick and Wayne (<a href="https://algs4.cs.princeton.edu/23quicksort/">2.3</a>); treat those links as evidence for a sentence, not as reading. Keep the <a href="../reference/partition-and-merge.html">cheat sheet</a> for lookup.</p>
-  <div class="ask"><strong>Ask your teacher.</strong> If your partition passes every checker but lands the pivot somewhere the trace did not predict, bring the trace and the code. That difference is a scan condition, and it is worth finding before lesson 8 stacks a recursion on top of it.</div>
+  <p><strong>Where this lands in CS107.</strong> Lecture 8 (Generic Operations) assigns the library <code>qsort</code>, which needs a comparison function but no partition from you<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. Writing one yourself once is what makes its <code>size_t nmemb, size_t size</code> interface readable later. Keep the <a href="../reference/partition-and-merge.html">cheat sheet</a> for lookup.</p>
+  <div class="ask"><strong>Ask your teacher.</strong> If your partition passes every checker but lands the pivot somewhere the demo did not predict, bring the code and the array. That difference is one scan condition, and it is worth finding before lesson 8 stacks a recursion on top of it.</div>
 </section>
 
 <footer>
   <div class="next">
-    <span><a href="0006-recursion-basics.html">Previous: Lesson 6, Shrink, Then Trust</a> · <a href="../reference/partition-and-merge.html">Reference: partition and merge cheat sheet</a></span>
+    <span><a href="0006b-binary-search-invariant.html">Previous: Lesson 6b, Say Where It Must Be</a> · <a href="../reference/partition-and-merge.html">Reference: partition and merge cheat sheet</a></span>
     <span><a href="0008-merge-sort-and-quicksort.html">Next: Lesson 8, Halve, Then Merge</a></span>
   </div>
 </footer>
 </article>
 <script>
+/* TRACE-BEGIN: pure functions, mirrored line for line on the C above */
+function partitionTrace(input, lo, hi, opts) {
+  var a = input.slice(), pivot = a[lo], steps = [];
+  var i = lo + 1, j = hi - 1;
+  var lLovesEqual = !!(opts && opts.lLovesEqual);
+  function snap(caption, extra) {
+    var s = { a: a.slice(), i: i, j: j, caption: caption, phase: 'walk' };
+    if (extra) for (var k in extra) s[k] = extra[k];
+    steps.push(s);
+  }
+  snap('Pivot is <b>' + pivot + '</b>. <span class="L">L</span> starts just right of it, <span class="G">G</span> at the right end of the range.', { phase: 'init' });
+  for (;;) {
+    for (;;) {
+      if (i >= hi) {
+        snap('<span class="L">L</span>: nothing here was large or equal. I have walked off the end of the range. Only <code>i &lt; hi</code> stops me.', { phase: 'L-end' });
+        break;
+      }
+      var loves = lLovesEqual ? a[i] <= pivot : a[i] < pivot;
+      if (loves) {
+        snap('<span class="L">L</span>: Hello, lovely ' + a[i] + '.' + (a[i] === pivot ? ' (Planted bug: equal counts as loved.)' : ''));
+        i++;
+      } else {
+        snap('<span class="L">L</span>: Grrr… ' + a[i] + '. ' + (a[i] === pivot ? 'Equal counts as hated.' : 'Too large.') + ' I stop.');
+        break;
+      }
+    }
+    for (;;) {
+      if (a[j] > pivot) {
+        snap('<span class="G">G</span>: ' + a[j] + ' is fine.');
+        j--;
+      } else {
+        snap('<span class="G">G</span>: I dislike ' + a[j] + '. ' + (a[j] === pivot ? 'Equal counts as hated.' : 'Too small.') + ' I stop.' + (j <= i ? ' … also hi <span class="L">L</span>!' : ''));
+        break;
+      }
+    }
+    if (i >= j) {
+      snap('The pointers have crossed (or met). Done walking. The unknown region between them is empty.', { phase: 'crossed' });
+      break;
+    }
+    snap('Both stopped. Time to swap ' + a[i] + ' and ' + a[j] + '.', { hl: [i, j] });
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+    snap('Swapped. Now move both pointers by one.', { hl: [i, j] });
+    i++; j--;
+  }
+  snap('Swap the pivot with <span class="G">G</span>: ' + a[lo] + ' and ' + a[j] + '.', { phase: 'final', hl: [lo, j] });
+  var u = a[lo]; a[lo] = a[j]; a[j] = u;
+  snap('Swapped. <b>' + pivot + ' is in its final place, index ' + j + '.</b> Everything left of it is <code>&lt;= ' + pivot + '</code>, everything right of it is <code>&gt;= ' + pivot + '</code>. Return ' + j + '.', { phase: 'done', p: j });
+  return { steps: steps, p: j, result: a.slice() };
+}
+function mergeTrace(input, lo, mid, hi) {
+  var a = input.slice(), n = a.length, scratch = [], steps = [];
+  for (var q = 0; q < n; q++) scratch.push(null);
+  var i = lo, j = mid, k = lo;
+  function snap(caption, extra) {
+    var s = { a: a.slice(), s: scratch.slice(), i: i, j: j, k: k, caption: caption, phase: 'cmp' };
+    if (extra) for (var key in extra) s[key] = extra[key];
+    steps.push(s);
+  }
+  snap('Left run is <code>a[' + lo + '..' + mid + ')</code>, right run is <code>a[' + mid + '..' + hi + ')</code>. Both sorted. <code>scratch</code> is empty. Compare the two fronts.', { phase: 'init' });
+  while (i < mid && j < hi) {
+    if (a[j] < a[i]) {
+      var cap = a[i] + ' vs ' + a[j] + ': ' + a[j] + ' is smaller. Take it from the right run. <code>scratch[' + k + '] = ' + a[j] + '</code>.';
+      scratch[k++] = a[j++];
+      snap(cap, { took: k - 1 });
+    } else {
+      var tie = a[i] === a[j];
+      var cap2 = a[i] + ' vs ' + a[j] + ': ' + (tie ? 'a tie, so take the left one and equal keys keep their order.' : a[i] + ' is smaller. Take it from the left run.') + ' <code>scratch[' + k + '] = ' + a[i] + '</code>.';
+      scratch[k++] = a[i++];
+      snap(cap2, { took: k - 1 });
+    }
+  }
+  while (i < mid) { var c1 = 'Right run is empty. Copy ' + a[i] + ' from the left run. <code>scratch[' + k + '] = ' + a[i] + '</code>.'; scratch[k++] = a[i++]; snap(c1, { phase: 'tail', took: k - 1 }); }
+  while (j < hi)  { var c2 = 'Left run is empty. Copy ' + a[j] + ' from the right run. <code>scratch[' + k + '] = ' + a[j] + '</code>.'; scratch[k++] = a[j++]; snap(c2, { phase: 'tail', took: k - 1 }); }
+  for (k = lo; k < hi; k++) a[k] = scratch[k];
+  snap('Copy <code>scratch[' + lo + '..' + hi + ')</code> back into <code>a[' + lo + '..' + hi + ')</code>. <b>Sorted.</b>', { phase: 'done' });
+  return { steps: steps, result: a.slice() };
+}
+/* TRACE-END */
 (function(){
   var KEY='brushup-c-lesson-0007-steps';
   var saved={};
@@ -359,12 +558,177 @@ sorted: no</code></pre>
     if(saved[cb.dataset.step]){cb.checked=true;li.classList.add('done');}
     cb.addEventListener('change',function(){li.classList.toggle('done',cb.checked);saved[cb.dataset.step]=cb.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});
   });
+
+  /* ---------- array pictures ---------- */
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+  function cellsRow(values, opt){
+    /* opt: {pivot, lo, hi, i, j, p, hl:[], ghost:bool, gone:[], empty:bool, classes:fn(k)} */
+    opt=opt||{};
+    var wrap=el('div','cells'), n=values.length;
+    for(var k=0;k<n;k++){
+      var c=el('div','cell'); var v=values[k];
+      c.appendChild(el('span','idx',String(k)));
+      if(v===null||v===undefined){c.appendChild(document.createTextNode('·'));c.classList.add('empty');}
+      else c.appendChild(document.createTextNode(String(v)));
+      if(opt.classes){var extra=opt.classes(k);if(extra)c.className+=' '+extra;}
+      if(opt.hl&&opt.hl.indexOf(k)>=0)c.classList.add('hl');
+      wrap.appendChild(c);
+    }
+    if(opt.ghost){var g=el('div','cell ghost');g.appendChild(el('span','idx',String(n)));g.appendChild(document.createTextNode('end'));wrap.appendChild(g);}
+    return wrap;
+  }
+  function ptrRow(n, marks, ghost){
+    /* marks: {index: 'L'|'G'|'K'|'LG'} */
+    var r=el('div','ptrs');
+    for(var k=0;k<n+(ghost?1:0);k++){var p=el('div','ptr');var m=marks[k];if(m){p.textContent=m==='LG'?'L G':m;p.classList.add(m);}r.appendChild(p);}
+    return r;
+  }
+  document.querySelectorAll('.row[data-cells]').forEach(function(row){
+    var vals=row.dataset.cells.trim().split(/\s+/).map(Number);
+    var pivot=row.dataset.pivot!=null?Number(row.dataset.pivot):-1;
+    var lo=row.dataset.lo!=null?Number(row.dataset.lo):0, hi=row.dataset.hi!=null?Number(row.dataset.hi):vals.length;
+    var fixed=(row.dataset.fixed||'').trim()?row.dataset.fixed.trim().split(/\s+/).map(Number):[];
+    if(row.dataset.name)row.appendChild(el('div','name',row.dataset.name));
+    row.appendChild(cellsRow(vals,{classes:function(k){
+      if(k===pivot)return 'pivot';
+      if(fixed.indexOf(k)>=0)return 'pivot';
+      if(row.dataset.lo==null)return '';
+      if(k<lo||k>=hi)return 'out';
+      return k<pivot?'le':'ge';
+    }}));
+  });
+
+  /* ---------- partition demo ---------- */
+  var PSETS=[
+    {label:'9 4 15 9 26 5 35 4 over [0, 8)', a:[9,4,15,9,26,5,35,4], lo:0, hi:8},
+    {label:'then [4, 8)', a:[5,4,4,9,26,9,35,15], lo:4, hi:8},
+    {label:'then [0, 3)', a:[5,4,4,9,15,9,26,35], lo:0, hi:3},
+    {label:'9 1 2 3', a:[9,1,2,3], lo:0, hi:4},
+    {label:'7 7 7 7 7 7', a:[7,7,7,7,7,7], lo:0, hi:6},
+    {label:"CS61B's 17 15 19 32 2 26 41 17 17", a:[17,15,19,32,2,26,41,17,17], lo:0, hi:9}
+  ];
+  var pset=0, ptrace=null, pstep=0;
+  var pview=document.getElementById('pview'), pcap=document.getElementById('pcap'), pn=document.getElementById('pn'), plist=document.getElementById('plist');
+  var pbug=document.getElementById('pbug');
+  function pClasses(set, st){
+    return function(k){
+      if(k<set.lo||k>=set.hi)return 'out';
+      if(st.phase==='done'){ if(k===st.p)return 'pivot'; return k<st.p?'le':'ge'; }
+      if(k===set.lo)return 'pivot';
+      if(k<st.i)return 'le';
+      if(k>st.j)return 'ge';
+      return '';
+    };
+  }
+  function pMarks(set, st){
+    var m={};
+    if(st.phase==='done'){return m;}
+    if(st.i===st.j)m[st.i]='LG'; else {m[st.i]='L';m[st.j]='G';}
+    return m;
+  }
+  function pRender(){
+    var set=PSETS[pset], st=ptrace.steps[pstep], n=set.a.length, ghost=(set.hi===n);
+    pview.innerHTML='';
+    pview.appendChild(cellsRow(st.a,{classes:pClasses(set,st),hl:st.hl,ghost:ghost}));
+    pview.appendChild(ptrRow(n,pMarks(set,st),ghost));
+    pcap.innerHTML=st.caption;
+    pn.textContent='step '+(pstep+1)+' of '+ptrace.steps.length;
+    document.getElementById('pprev').disabled=pstep===0;
+    document.getElementById('pnext').disabled=pstep===ptrace.steps.length-1;
+  }
+  function pBuild(){
+    var set=PSETS[pset];
+    ptrace=partitionTrace(set.a,set.lo,set.hi,{lLovesEqual:pbug.checked});
+    pstep=0; pRender();
+    plist.innerHTML='';
+    var n=set.a.length, ghost=(set.hi===n);
+    ptrace.steps.forEach(function(st,idx){
+      var d=el('div','step'); d.appendChild(el('div','k',String(idx+1)));
+      var body=el('div');
+      body.appendChild(cellsRow(st.a,{classes:pClasses(set,st),hl:st.hl,ghost:ghost}));
+      body.appendChild(ptrRow(n,pMarks(set,st),ghost));
+      var cap=el('p','cap');cap.innerHTML=st.caption;body.appendChild(cap);
+      d.appendChild(body); plist.appendChild(d);
+    });
+    document.querySelectorAll('#psets button').forEach(function(b,idx){b.classList.toggle('on',idx===pset);});
+  }
+  var psets=document.getElementById('psets');
+  PSETS.forEach(function(s,idx){var b=el('button',null,s.label);b.type='button';b.addEventListener('click',function(){pset=idx;pBuild();});psets.appendChild(b);});
+  document.getElementById('pprev').addEventListener('click',function(){if(pstep>0){pstep--;pRender();}});
+  document.getElementById('pnext').addEventListener('click',function(){if(pstep<ptrace.steps.length-1){pstep++;pRender();}});
+  document.getElementById('preset').addEventListener('click',function(){pstep=0;pRender();});
+  pbug.addEventListener('change',pBuild);
+  document.getElementById('pdemo').addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){e.preventDefault();document.getElementById('pnext').click();}
+    if(e.key==='ArrowLeft'){e.preventDefault();document.getElementById('pprev').click();}
+  });
+  pBuild();
+
+  /* ---------- merge demo ---------- */
+  var MSETS=[
+    {label:'4 9 9 15 | 4 5 26 35', a:[4,9,9,15,4,5,26,35], lo:0, mid:4, hi:8},
+    {label:"CS61B's 2 15 17 32 | 17 17 19 26 41", a:[2,15,17,32,17,17,19,26,41], lo:0, mid:4, hi:9}
+  ];
+  var mset=0, mtrace=null, mstep=0;
+  var mview=document.getElementById('mview'), mcap=document.getElementById('mcap'), mn=document.getElementById('mn'), mlist=document.getElementById('mlist');
+  function mPicture(set, st){
+    var frag=document.createDocumentFragment(), n=set.a.length;
+    var top=el('div','row'); top.appendChild(el('div','name','a: left run then right run'));
+    top.appendChild(cellsRow(st.a,{classes:function(k){
+      if(st.phase==='done')return 'le';
+      if(k<set.mid)return k<st.i?'gone':'le';
+      return k<st.j?'gone':'ge';
+    }}));
+    var marks={}; if(st.phase!=='done'){ if(st.i<set.mid)marks[st.i]='L'; if(st.j<set.hi)marks[st.j]='G'; }
+    top.appendChild(ptrRow(n,marks,false));
+    frag.appendChild(top);
+    var bot=el('div','row'); bot.appendChild(el('div','name','scratch'));
+    bot.appendChild(cellsRow(st.s,{hl:(st.took!=null)?[st.took]:null}));
+    var km={}; if(st.phase!=='done'&&st.k<set.hi)km[st.k]='k';
+    bot.appendChild(ptrRow(n,km,false));
+    frag.appendChild(bot);
+    return frag;
+  }
+  function mRender(){
+    var set=MSETS[mset], st=mtrace.steps[mstep];
+    mview.innerHTML=''; mview.appendChild(mPicture(set,st));
+    mcap.innerHTML=st.caption;
+    mn.textContent='step '+(mstep+1)+' of '+mtrace.steps.length;
+    document.getElementById('mprev').disabled=mstep===0;
+    document.getElementById('mnext').disabled=mstep===mtrace.steps.length-1;
+  }
+  function mBuild(){
+    var set=MSETS[mset];
+    mtrace=mergeTrace(set.a,set.lo,set.mid,set.hi);
+    mstep=0; mRender();
+    mlist.innerHTML='';
+    mtrace.steps.forEach(function(st,idx){
+      var d=el('div','step'); d.appendChild(el('div','k',String(idx+1)));
+      var body=el('div'); body.appendChild(mPicture(set,st));
+      var cap=el('p','cap');cap.innerHTML=st.caption;body.appendChild(cap);
+      d.appendChild(body); mlist.appendChild(d);
+    });
+    document.querySelectorAll('#msets button').forEach(function(b,idx){b.classList.toggle('on',idx===mset);});
+  }
+  var msets=document.getElementById('msets');
+  MSETS.forEach(function(s,idx){var b=el('button',null,s.label);b.type='button';b.addEventListener('click',function(){mset=idx;mBuild();});msets.appendChild(b);});
+  document.getElementById('mprev').addEventListener('click',function(){if(mstep>0){mstep--;mRender();}});
+  document.getElementById('mnext').addEventListener('click',function(){if(mstep<mtrace.steps.length-1){mstep++;mRender();}});
+  document.getElementById('mreset').addEventListener('click',function(){mstep=0;mRender();});
+  document.getElementById('mdemo').addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){e.preventDefault();document.getElementById('mnext').click();}
+    if(e.key==='ArrowLeft'){e.preventDefault();document.getElementById('mprev').click();}
+  });
+  mBuild();
+  window.addEventListener('beforeprint',function(){document.querySelectorAll('.demo details').forEach(function(d){d.open=true;});});
+
+  /* ---------- quiz ---------- */
   var QUIZ=[
-    {q:"partition(a, 0, 8) on 9 4 15 9 26 5 35 4 returns 3. What does 3 mean?",opts:["the index where 9 finally sits","the number of swaps that happened","the midpoint of the whole range","the index where scanning i stopped"],a:0,why:"The return value is the pivot's final index: a[0..3) <= 9 and a[4..8) >= 9, and 9 is at index 3 in the sorted array too. It is the value lesson 8 excludes from both recursive calls."},
-    {q:"The i scan stops on a[i] >= pivot, not > pivot. Why include equal keys?",opts:["equal keys keep the split balanced","equal keys would otherwise be lost","size_t needs a stopper at hi","the pivot must move every time"],a:0,why:"Stopping on equal keys makes both scans halt at every element of an all-equal range, so they meet in the middle. Skipping them sends the pivot to the end and the split is n-1 to 0."},
-    {q:"Why does the j scan need no j > lo guard?",opts:["a[lo] is the pivot and stops it","j starts at hi so cannot wrap","the i scan always reaches j first","size_t stops at zero on its own"],a:0,why:"The scan stops on any value <= pivot, and a[lo] is the pivot itself, so it stops at lo at the latest. Pick the pivot from elsewhere and the guard becomes necessary."},
-    {q:"Both scans have stopped and i >= j. What happens next?",opts:["swap pivot with a[j], return j","swap a[i] with a[j], then continue","return i as the pivot index","scan again from lo and hi"],a:0,why:"Crossed scans mean the unknown region is empty. a[j] is <= pivot, so the pivot can take slot j without breaking either side, and j is its final index."},
-    {q:"merge has copied 4 4 5 9 9 15 and the left run is empty. What remains?",opts:["copy the rest of the right run","compare the two runs one more time","copy scratch back to a and return","swap the last two values in place"],a:0,why:"26 and 35 are still in the right run and larger than everything copied so far. The tail loop copies them, then the copy-back writes scratch[lo..hi) into a. Skip the tail and the last slots hold whatever malloc left there."}
+    {q:"In the demo, L stops on the second 9 while the pivot is 9. Which rule made it stop?",opts:["L hates large or equal items.","L must stop after one swap.","G had already stopped at nine.","Guard i < hi fired right there."],a:0,why:"L is a friend to small items only. An item equal to the pivot is not small, so L stops on it. That is the strict < in L's loop."},
+    {q:"Both pointers have stopped and L is left of G. What happens next?",opts:["Swap them and move by one.","Swap the pivot with G now.","Move L only, G waits there.","Restart both pointers from the ends."],a:0,why:"Both stopped items are on the wrong side. Swap them, then step each pointer past the item it now loves. The pivot swap waits until the pointers cross."},
+    {q:"On 9 1 2 3, why does L stop at the end of the range?",opts:["Nothing there is large or equal.","G has already crossed past it.","Three is equal to the pivot.","The pivot moved to the end."],a:0,why:"Every item after the pivot is smaller, so L loves all of them and keeps walking. Only the i < hi guard stops it, one past the last item."},
+    {q:"Why does G need no bounds guard?",opts:["The pivot at a[lo] stops it.","G starts at hi, never wraps.","L always reaches G before lo.","size_t cannot go below zero, ever."],a:0,why:"G hates small or equal items, and the pivot at a[lo] is equal to itself. G can never walk past lo. Pick the pivot from elsewhere and that free pass is gone."},
+    {q:"merge has copied 4 4 5 9 9 15 and the left run is empty. What remains?",opts:["Copy the right run's remaining items.","Compare the two runs once more.","Copy scratch back and return now.","Swap the last two items over."],a:0,why:"26 and 35 are still in the right run and larger than everything copied so far. The tail loop copies them, then the copy-back writes scratch[lo..hi) into a. Skip the tail and the last slots hold whatever malloc left there."}
   ];
   var root=document.getElementById('quiz'),score=0,answered=0;
   QUIZ.forEach(function(item,i){
@@ -374,7 +738,7 @@ sorted: no</code></pre>
     var order=item.opts.map(function(_,k){return k;});
     for(var k=order.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=order[k];order[k]=order[j];order[j]=t;}
     var why=document.createElement('p');why.className='why';
-    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-trace the partition for anything you missed.';}});opts.appendChild(b);});
+    order.forEach(function(idx){var b=document.createElement('button');b.type='button';b.textContent=item.opts[idx];b.addEventListener('click',function(){if(box.classList.contains('locked'))return;box.classList.add('locked');answered++;if(idx===item.a){b.classList.add('right');score++;why.textContent='Right. '+item.why;}else{b.classList.add('wrong');opts.querySelectorAll('button').forEach(function(x){if(x.textContent===item.opts[item.a])x.classList.add('right');});why.textContent='Not quite. '+item.why;}if(answered===QUIZ.length){document.getElementById('score').textContent=score+' of '+QUIZ.length+' from memory. Re-run the demo for anything you missed.';}});opts.appendChild(b);});
     var pa=document.createElement('p');pa.className='print-answer';pa.textContent='Answer: '+item.opts[item.a]+'. '+item.why;box.appendChild(opts);box.appendChild(why);box.appendChild(pa);root.appendChild(box);
   });
 })();
