@@ -286,8 +286,8 @@ size_t partition(int* a, size_t lo, size_t hi) {
 
 <section>
   <h2>Merge: the smallest item is at the front of one run</h2>
-  <p>Merge sort's step is the reverse problem. The two halves are already sorted, and one pass combines them. The smallest item of both runs must be at the front of one of them. Compare the two fronts, copy the smaller one into <code>scratch</code>, and repeat until one run is empty. Then copy the rest of the other run<a class="sn-ref" href="#sn5"></a>.</p>
-  <span class="sidenote" id="sn5"><a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>: “The smallest element must be at the start of one of the two lists. So let's compare those, and put the smallest element at the start of our new list. … We can continue comparing the first two elements and moving the smallest into place until one list is empty, then copy the rest of the other list over into the end of the new list.” Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> draws it with an <code>Aux</code> row, as here.</span>
+  <p>Merge sort's step is the reverse problem. The two halves are already sorted, and one pass combines them. The smallest item of both runs must be at the front of one of them. First copy each run into its own small array, <code>left</code> and <code>right</code>. Then compare the two fronts, put the smaller one back into <code>a</code>, and repeat until one run is empty. Then copy the rest of the other run<a class="sn-ref" href="#sn5"></a>.</p>
+  <span class="sidenote" id="sn5"><a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>: “The smallest element must be at the start of one of the two lists. So let's compare those, and put the smallest element at the start of our new list. … We can continue comparing the first two elements and moving the smallest into place until one list is empty, then copy the rest of the other list over into the end of the new list.” Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> draws it with two source rows and one result row, as here.</span>
 
   <div class="demo" id="mdemo" tabindex="0" aria-label="Merge demo. Use the left and right arrow keys to step.">
     <div class="sets" id="msets"></div>
@@ -303,25 +303,30 @@ size_t partition(int* a, size_t lo, size_t hi) {
   </div>
 
   <p>Ties take the left run. That keeps equal keys in their original order, which lesson 8 will call <em>stable</em>.</p>
-  <pre><code>/* Merge the sorted runs a[lo..mid) and a[mid..hi) via scratch[lo..hi). */
-void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
-    size_t i = lo;                  <span class="c">/* front of the left run */</span>
-    size_t j = mid;                 <span class="c">/* front of the right run */</span>
-    size_t k = lo;                  <span class="c">/* next free slot in scratch */</span>
-    while (i &lt; mid &amp;&amp; j &lt; hi) {
-        if (a[j] &lt; a[i]) {
-            scratch[k++] = a[j++];  <span class="c">/* right front is smaller */</span>
+  <pre><code>/* Merge the sorted runs a[lo..mid) and a[mid..hi) into ascending order. */
+void merge(int* a, size_t lo, size_t mid, size_t hi) {
+    size_t nl = mid - lo;           <span class="c">/* how many in the left run */</span>
+    size_t nr = hi - mid;           <span class="c">/* how many in the right run */</span>
+    int* left  = malloc(nl * sizeof *left);
+    int* right = malloc(nr * sizeof *right);
+    for (size_t x = 0; x &lt; nl; x++) { left[x]  = a[lo + x]; }    <span class="c">/* copy the left run out */</span>
+    for (size_t x = 0; x &lt; nr; x++) { right[x] = a[mid + x]; }   <span class="c">/* copy the right run out */</span>
+    size_t i = 0;                   <span class="c">/* front of left */</span>
+    size_t j = 0;                   <span class="c">/* front of right */</span>
+    size_t k = lo;                  <span class="c">/* next slot to fill in a */</span>
+    while (i &lt; nl &amp;&amp; j &lt; nr) {
+        if (right[j] &lt; left[i]) {
+            a[k++] = right[j++];    <span class="c">/* right front is smaller */</span>
         } else {
-            scratch[k++] = a[i++];  <span class="c">/* left front is smaller, or a tie */</span>
+            a[k++] = left[i++];     <span class="c">/* left front is smaller, or a tie */</span>
         }
     }
-    while (i &lt; mid) { scratch[k++] = a[i++]; }   <span class="c">/* one of these two loops */</span>
-    while (j &lt; hi)  { scratch[k++] = a[j++]; }   <span class="c">/* copies the leftover run */</span>
-    for (k = lo; k &lt; hi; k++) {
-        a[k] = scratch[k];          <span class="c">/* copy back exactly [lo, hi) */</span>
-    }
+    while (i &lt; nl) { a[k++] = left[i++]; }     <span class="c">/* one of these two loops */</span>
+    while (j &lt; nr) { a[k++] = right[j++]; }    <span class="c">/* copies the leftover run */</span>
+    free(left);
+    free(right);
 }</code></pre>
-  <p><code>merge</code> borrows <code>scratch</code>: it writes through the pointer and never frees it. Today <code>main</code> owns the block. In lesson 8 a <code>merge_sort</code> wrapper owns it, and <code>merge</code> does not change.</p>
+  <p>Why copy the runs out first? Because <code>merge</code> writes into <code>a[lo..hi)</code>, the same slots the runs live in. Writing at <code>a[k]</code> would overwrite an item the loop has not read yet. Once the runs sit in <code>left</code> and <code>right</code>, <code>a[lo..hi)</code> is free to fill. <code>merge</code> owns both copies: it allocates them and frees them before it returns, lesson 3's rule. (One shared workspace passed in from outside saves the two mallocs. Lesson 8 shows that version as an option; this one is the one to know.)</p>
 </section>
 
 <section>
@@ -345,9 +350,9 @@ size_t partition(int* a, size_t lo, size_t hi);
 /* Return 1 if a[lo..p) &lt;= a[p] &lt;= a[p+1..hi), else 0. */
 int is_partitioned(const int* a, size_t lo, size_t hi, size_t p);
 
-/* Merge the sorted runs a[lo..mid) and a[mid..hi) into ascending order,
-   using scratch[lo..hi) as workspace. scratch is borrowed, never freed. */
-void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch);</code></pre>
+/* Merge the sorted runs a[lo..mid) and a[mid..hi) into ascending order.
+   Copies each run to a heap buffer it frees before returning. */
+void merge(int* a, size_t lo, size_t mid, size_t hi);</code></pre>
   <p>Five functions, all public because <code>main</code> drives them directly. In lesson 8, <code>partition</code> and <code>merge</code> become <code>static</code> helpers behind <code>quick_sort</code> and <code>merge_sort</code>. The code inside them is the code you write today.</p>
 </section>
 
@@ -369,14 +374,15 @@ void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch);</code></pre>
     <tr><td><code>is_partitioned</code> right loop</td><td><code>k = p + 1; k &lt; hi</code></td><td><code>k = p + 1; k &lt;= high</code></td></tr>
     <tr><td>merge: the two runs</td><td><code>a[lo..mid)</code> and <code>a[mid..hi)</code></td><td><code>a[low..mid]</code> and <code>a[mid+1..high]</code></td></tr>
     <tr><td>merge: <code>mid</code> means</td><td>first index of the right run</td><td>last index of the left run</td></tr>
-    <tr><td>merge: <code>j</code> starts at</td><td><code>mid</code></td><td><code>mid + 1</code></td></tr>
-    <tr><td>merge loops</td><td><code>i &lt; mid</code>, <code>j &lt; hi</code>, copy back <code>k &lt; hi</code></td><td><code>i &lt;= mid</code>, <code>j &lt;= high</code>, copy back <code>k &lt;= high</code></td></tr>
+    <tr><td>merge: run sizes</td><td><code>nl = mid - lo</code>, <code>nr = hi - mid</code></td><td><code>nl = mid - low + 1</code>, <code>nr = high - mid</code></td></tr>
+    <tr><td>merge: right copy reads from</td><td><code>a[mid + x]</code></td><td><code>a[mid + 1 + x]</code></td></tr>
+    <tr><td>merge loops</td><td><code>i &lt; nl</code>, <code>j &lt; nr</code>: same in both</td><td><code>i &lt; nl</code>, <code>j &lt; nr</code>: same in both</td></tr>
     <tr><td>main: the five calls</td><td><code>[0, 8) [4, 8) [0, 3) [0, 4) [0, 6)</code></td><td><code>[0, 7] [4, 7] [0, 2] [0, 3] [0, 5]</code></td></tr>
-    <tr><td>main: the merge call</td><td><code>merge(r, 0, 4, 8, scratch)</code></td><td><code>merge(r, 0, 3, 7, scratch)</code></td></tr>
+    <tr><td>main: the merge call</td><td><code>merge(r, 0, 4, 8)</code></td><td><code>merge(r, 0, 3, 7)</code></td></tr>
   </table>
-  <p>The <code>mid</code> row is the trap. Half-open, <code>mid</code> ends the left run and starts the right. Closed, the left run ends at <code>mid</code> and the right starts at <code>mid + 1</code>. Your runs are <code>4 9 9 15</code> and <code>4 5 26 35</code>, so the closed call is <code>merge(r, 0, 3, 7, scratch)</code>. Write 4 there and <code>4 9 9 15 4</code> is treated as one sorted run: no crash, and <code>sorted: no</code>.</p>
+  <p>The <code>mid</code> row is the trap. Half-open, <code>mid</code> ends the left run and starts the right. Closed, the left run ends at <code>mid</code> and the right starts at <code>mid + 1</code>. Your runs are <code>4 9 9 15</code> and <code>4 5 26 35</code>, so the closed call is <code>merge(r, 0, 3, 7)</code>. Write 4 there and <code>4 9 9 15 4</code> is treated as one sorted run: no crash, and <code>sorted: no</code>.</p>
   <p>No guard is needed here: neither function ever gets an empty range. Lesson 8's quicksort does. Its left call is <code>[low, p - 1]</code>, and <code>p - 1</code> wraps under <code>size_t</code> when the pivot lands at index 0. Guard it with <code>if (p &gt; low)</code>, as you guarded <code>mid - 1</code> in lesson 6.</p>
-  <p>Same landing indices and the same three reports in both forms; closed, the missing guard is <code>i &lt;= high</code> and the deleted line is <code>while (j &lt;= high)</code>. Verified: the closed version builds warning-free with <code>-Wconversion</code> added and passes <code>make check</code> with 6 allocations and 6 frees.</p>
+  <p>Same landing indices and the same three reports in both forms; closed, the missing guard is <code>i &lt;= high</code> and the deleted line is <code>while (j &lt;= high)</code>. Verified: the closed version builds warning-free with <code>-Wconversion</code> added and passes <code>make check</code> with 7 allocations and 7 frees.</p>
 </section>
 
 <section>
@@ -390,9 +396,9 @@ mkdir -p exercises/07-partition &amp;&amp; cd exercises/07-partition</code></pre
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
     <li><p>Run the partition demo once more on the first array, but say each caption out loud <em>before</em> you click. When you get every one right, close this page and write <code>is_partitioned</code>, then <code>partition</code>. One comment per rule, in L and G's words if you like.</p>
       <label class="check"><input type="checkbox" data-step="3"> done</label></li>
-    <li><p>Do the same with the merge demo, then write <code>merge</code>. Say what <code>scratch[lo..k)</code> holds after each step: the <code>k - lo</code> smallest items of both runs, in order.</p>
+    <li><p>Do the same with the merge demo, then write <code>merge</code>. Say what <code>a[lo..k)</code> holds after each step: the <code>k - lo</code> smallest items of both runs, in order.</p>
       <label class="check"><input type="checkbox" data-step="4"> done</label></li>
-    <li><p>Write <code>main.c</code>. Declare four named constant arrays: the data <code>9 4 15 9 26 5 35 4</code>, <code>9 1 2 3</code>, six 7s, and the two runs <code>4 9 9 15 4 5 26 35</code>. Write a static helper that returns a fresh heap copy (caller owns it), a print helper, and a static <code>run_partition(a, n, lo, hi)</code> that partitions <code>a[lo..hi)</code>, prints the range, the pivot value and where it landed, the whole array of <code>n</code> ints, and the <code>is_partitioned</code> verdict. Partition the data over <code>[0, 8)</code>, then <code>[4, 8)</code>, then <code>[0, 3)</code>; then <code>9 1 2 3</code> over <code>[0, 4)</code>; then the 7s over <code>[0, 6)</code>. Allocate a scratch block of eight ints, merge the two runs with <code>mid = 4</code>, print the result and <code>is_sorted</code>. Free all five blocks, return 0. Expected, exactly:</p>
+    <li><p>Write <code>main.c</code>. Declare four named constant arrays: the data <code>9 4 15 9 26 5 35 4</code>, <code>9 1 2 3</code>, six 7s, and the two runs <code>4 9 9 15 4 5 26 35</code>. Write a static helper that returns a fresh heap copy (caller owns it), a print helper, and a static <code>run_partition(a, n, lo, hi)</code> that partitions <code>a[lo..hi)</code>, prints the range, the pivot value and where it landed, the whole array of <code>n</code> ints, and the <code>is_partitioned</code> verdict. Partition the data over <code>[0, 8)</code>, then <code>[4, 8)</code>, then <code>[0, 3)</code>; then <code>9 1 2 3</code> over <code>[0, 4)</code>; then the 7s over <code>[0, 6)</code>. Merge the two runs with <code>mid = 4</code>, print the result and <code>is_sorted</code>. Free all four blocks, return 0. Expected, exactly:</p>
       <pre><code>before: 9 4 15 9 26 5 35 4
 [0, 8) pivot 9 lands at 3: 5 4 4 9 26 9 35 15
 partitioned: yes
@@ -408,13 +414,13 @@ merged: 4 4 5 9 9 15 26 35
 sorted: yes</code></pre>
       <p>Closed form: the same thirteen lines with the labels <code>[0, 7]</code>, <code>[4, 7]</code>, <code>[0, 2]</code>, <code>[0, 3]</code>, <code>[0, 5]</code>; every landing index is the same. See <a href="#closed">closed range</a>.</p>
       <label class="check"><input type="checkbox" data-step="5"> done</label></li>
-    <li><p>Run <code>make</code>, <code>./partition</code>, and <code>make check</code>. Require no warnings, the exact thirteen lines, and Valgrind with 0 errors and no leaks: 6 allocations, 6 frees (four copies, the scratch block, and the block the C library takes for <code>stdout</code>).</p>
+    <li><p>Run <code>make</code>, <code>./partition</code>, and <code>make check</code>. Require no warnings, the exact thirteen lines, and Valgrind with 0 errors and no leaks: 7 allocations, 7 frees (four copies, <code>left</code> and <code>right</code> inside <code>merge</code>, and the block the C library takes for <code>stdout</code>).</p>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
     <li><p><strong>Break it three ways, one at a time.</strong> Restore the program after each.</p>
       <ol>
         <li>In L's loop, change <code>a[i] &lt; pivot</code> to <code>a[i] &lt;= pivot</code>. Build and run. Every line still says <code>partitioned: yes</code>. Read where the pivot lands on the first line and on the six-7s line, and say what changed. The demo's planted-bug box shows the same thing.</li>
         <li>Remove the <code>i &lt; hi</code> guard (closed: <code>i &lt;= high</code>). Build and run. Read which call died, which block the report names, and its size.</li>
-        <li>In <code>merge</code>, delete the line <code>while (j &lt; hi) ...</code> (closed: <code>while (j &lt;= high) ...</code>). Build, run <code>./partition</code>, then run <code>make check</code>. Read the last two numbers on the merged line and what Valgrind says about them.</li>
+        <li>In <code>merge</code>, delete the line <code>free(right);</code>. Build, run <code>./partition</code>, then run <code>make check</code>. The merged line is still right. Read what the sanitizer and Valgrind say instead, and which line they name.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
     <li><p>Restore the correct program and run all three commands once more. Then tell me: <em>lesson 7 done</em>.</p>
@@ -436,10 +442,23 @@ allocated by thread T0 here:
     #0 ... in malloc
     #1 ... in copy_of main.c:14</code></pre>
   <p>Sixteen bytes is four ints: the <code>9 1 2 3</code> block. It is lesson 1's off-by-one, reached by a pointer with nothing to stop it. The first three lines printed fine because each of those ranges had a large or equal item after the pivot.</p>
-  <p><strong>3. The right run's tail never copied.</strong> Under the sanitizer build:</p>
-  <pre><code>merged: 4 4 5 9 9 15 -1094795586 -1094795586
-sorted: no</code></pre>
-  <p>The loop stopped when the left run emptied, so <code>scratch[6]</code> and <code>scratch[7]</code> were never written, and the copy-back moved whatever <code>malloc</code> left there into <code>a</code>. Under ASan that is the byte <code>0xbe</code> repeated, which reads as <code>-1094795586</code>; on the plain build it is anything. Valgrind names the symptom, not the fix: “Conditional jump or move depends on uninitialised value(s)” inside <code>printf</code>. When Valgrind blames <code>printf</code>, ask which value you handed it and where it should have been written.</p>
+  <p><strong>3. One free missing.</strong> The output is correct: <code>merged: 4 4 5 9 9 15 26 35</code>, <code>sorted: yes</code>. The sanitizer build complains at exit:</p>
+  <pre><code>ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of <strong>16 byte(s) in 1 object(s)</strong> allocated from:
+    #0 ... in malloc
+    #1 ... in <strong>merge partition.c:NN</strong>
+    #2 ... in main main.c:MM</code></pre>
+  <p>Sixteen bytes is four ints: the <code>right</code> copy. The report names the <code>malloc</code> line, not the missing <code>free</code>, because the leak is a block nobody freed and the only line it knows is where the block was born. Under <code>make check</code>, Valgrind says the same in its own words, and fails the run:</p>
+  <pre><code>HEAP SUMMARY:
+    in use at exit: 16 bytes in 1 blocks
+  total heap usage: <strong>7 allocs, 6 frees</strong>, ...
+16 bytes in 1 blocks are <strong>definitely lost</strong> in loss record 1 of 1
+   at ... malloc
+   by ... <strong>merge (partition.c:NN)</strong>
+   by ... main (main.c:MM)
+ERROR SUMMARY: 1 errors from 0 contexts</code></pre>
+  <p>Seven allocs, six frees: count them against step 6. This is lesson 3's rule in one function: whoever calls <code>malloc</code> frees, on every path out.</p>
 </section>
 
 <section>
@@ -456,7 +475,7 @@ sorted: no</code></pre>
     <li><p><strong>Click first.</strong> Josh Hug's <a href="https://docs.google.com/presentation/d/1DOnWS59PJOa-LaBfttPRseIpwLGefZkn450TMSSUiQY/pub?start=false&amp;loop=false&amp;delayms=3000">Hoare partitioning demo</a> (Google Slides, 18 slides). Its array is the sixth one in this page's demo, so run both side by side. Then the <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.1-partitioning">CS61B textbook, 30.1 Partitioning</a> and <a href="https://cs61b-2.gitbook.io/cs61b-textbook/32.-more-quick-sort-sorting-summary/32.1-quicksort-flavors-vs.-mergesort">32.1, Tony Hoare's Partitioning</a>, with its “police for two territories” analogy.</p></li>
     <li><p><strong>Watch, if you want the lecture.</strong> Josh Hug, <a href="https://www.youtube.com/watch?v=Yecyv1olgiE">61B Lecture 32, More Quick Sort, Sorting Summary</a> (YouTube, 2019), the Hoare partitioning part near the start.</p></li>
     <li><p><strong>Partition in C, without guards.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>, <code>Median3</code> and <code>Qsort</code>. His scans are <code>while (A[++i] &lt; Pivot)</code> and <code>while (A[--j] &gt; Pivot)</code> with no bounds test, because <code>Median3</code> has already parked a value <code>&lt;=</code> pivot at <code>Left</code> and the pivot at <code>Right - 1</code>. Compare with your one guard and one free pass. The broken scan under <code>#if 0</code> starts both scans on a value equal to the pivot; see why.</p></li>
-    <li><p><strong>Merge, two more pictures.</strong> <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>, the merging part, and Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> slides. In C: Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">5.3.4 Mergesort</a>, the <code>merge</code> function only: two separate arrays merged into <code>out</code> with one loop and a compound test, where yours merges two runs of one array through <code>scratch</code> with three loops. Same rule.</p></li>
+    <li><p><strong>Merge, two more pictures.</strong> <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>, the merging part, and Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> slides. In C: Aspnes, <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">5.3.4 Mergesort</a>, the <code>merge</code> function only: two separate arrays merged into <code>out</code> with one loop and a compound test, where yours first copies the two runs out of one array, then merges them back into it with three loops. Same rule.</p></li>
     <li><p><strong>The two schemes, language-free.</strong> Wikipedia, <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Quicksort, Hoare partition scheme</a> and the <a href="https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme">Lomuto partition scheme</a> just above it. Lomuto walks one pointer and does about three times as many swaps.</p></li>
   </ol>
   <p><strong>Where this lands in CS107.</strong> Lecture 8 (Generic Operations) assigns the library <code>qsort</code>, which needs a comparison function but no partition from you<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. Writing one yourself once is what makes its <code>size_t nmemb, size_t size</code> interface readable later. Keep the <a href="../reference/partition-and-merge.html">cheat sheet</a> for lookup.</p>
@@ -521,31 +540,32 @@ function partitionTrace(input, lo, hi, opts) {
   return { steps: steps, p: j, result: a.slice() };
 }
 function mergeTrace(input, lo, mid, hi) {
-  var a = input.slice(), n = a.length, scratch = [], steps = [];
-  for (var q = 0; q < n; q++) scratch.push(null);
-  var i = lo, j = mid, k = lo;
+  var a = input.slice(), steps = [];
+  var left = a.slice(lo, mid), right = a.slice(mid, hi);
+  var nl = left.length, nr = right.length;
+  for (var q = lo; q < hi; q++) a[q] = null;
+  var i = 0, j = 0, k = lo;
   function snap(caption, extra) {
-    var s = { a: a.slice(), s: scratch.slice(), i: i, j: j, k: k, caption: caption, phase: 'cmp' };
+    var s = { a: a.slice(), left: left.slice(), right: right.slice(), i: i, j: j, k: k, caption: caption, phase: 'cmp' };
     if (extra) for (var key in extra) s[key] = extra[key];
     steps.push(s);
   }
-  snap('Left run is <code>a[' + lo + '..' + mid + ')</code>, right run is <code>a[' + mid + '..' + hi + ')</code>. Both sorted. <code>scratch</code> is empty. Compare the two fronts.', { phase: 'init' });
-  while (i < mid && j < hi) {
-    if (a[j] < a[i]) {
-      var cap = a[i] + ' vs ' + a[j] + ': ' + a[j] + ' is smaller. Take it from the right run. <code>scratch[' + k + '] = ' + a[j] + '</code>.';
-      scratch[k++] = a[j++];
+  snap('Copy <code>a[' + lo + '..' + mid + ')</code> into <code>left</code> and <code>a[' + mid + '..' + hi + ')</code> into <code>right</code>. Both sorted. <code>a[' + lo + '..' + hi + ')</code> is now free to fill. Compare the two fronts.', { phase: 'init' });
+  while (i < nl && j < nr) {
+    if (right[j] < left[i]) {
+      var cap = left[i] + ' vs ' + right[j] + ': ' + right[j] + ' is smaller. Take it from <code>right</code>. <code>a[' + k + '] = ' + right[j] + '</code>.';
+      a[k++] = right[j++];
       snap(cap, { took: k - 1 });
     } else {
-      var tie = a[i] === a[j];
-      var cap2 = a[i] + ' vs ' + a[j] + ': ' + (tie ? 'a tie, so take the left one and equal keys keep their order.' : a[i] + ' is smaller. Take it from the left run.') + ' <code>scratch[' + k + '] = ' + a[i] + '</code>.';
-      scratch[k++] = a[i++];
+      var tie = left[i] === right[j];
+      var cap2 = left[i] + ' vs ' + right[j] + ': ' + (tie ? 'a tie, so take the left one and equal keys keep their order.' : left[i] + ' is smaller. Take it from <code>left</code>.') + ' <code>a[' + k + '] = ' + left[i] + '</code>.';
+      a[k++] = left[i++];
       snap(cap2, { took: k - 1 });
     }
   }
-  while (i < mid) { var c1 = 'Right run is empty. Copy ' + a[i] + ' from the left run. <code>scratch[' + k + '] = ' + a[i] + '</code>.'; scratch[k++] = a[i++]; snap(c1, { phase: 'tail', took: k - 1 }); }
-  while (j < hi)  { var c2 = 'Left run is empty. Copy ' + a[j] + ' from the right run. <code>scratch[' + k + '] = ' + a[j] + '</code>.'; scratch[k++] = a[j++]; snap(c2, { phase: 'tail', took: k - 1 }); }
-  for (k = lo; k < hi; k++) a[k] = scratch[k];
-  snap('Copy <code>scratch[' + lo + '..' + hi + ')</code> back into <code>a[' + lo + '..' + hi + ')</code>. <b>Sorted.</b>', { phase: 'done' });
+  while (i < nl) { var c1 = '<code>right</code> is empty. Copy ' + left[i] + ' from <code>left</code>. <code>a[' + k + '] = ' + left[i] + '</code>.'; a[k++] = left[i++]; snap(c1, { phase: 'tail', took: k - 1 }); }
+  while (j < nr) { var c2 = '<code>left</code> is empty. Copy ' + right[j] + ' from <code>right</code>. <code>a[' + k + '] = ' + right[j] + '</code>.'; a[k++] = right[j++]; snap(c2, { phase: 'tail', took: k - 1 }); }
+  snap('Free <code>left</code> and <code>right</code>. <code>a[' + lo + '..' + hi + ')</code> is <b>sorted</b>.', { phase: 'done' });
   return { steps: steps, result: a.slice() };
 }
 /* TRACE-END */
@@ -673,18 +693,19 @@ function mergeTrace(input, lo, mid, hi) {
   var mview=document.getElementById('mview'), mcap=document.getElementById('mcap'), mn=document.getElementById('mn'), mlist=document.getElementById('mlist');
   function mPicture(set, st){
     var frag=document.createDocumentFragment(), n=set.a.length;
-    var top=el('div','row'); top.appendChild(el('div','name','a: left run then right run'));
-    top.appendChild(cellsRow(st.a,{classes:function(k){
-      if(st.phase==='done')return 'le';
-      if(k<set.mid)return k<st.i?'gone':'le';
-      return k<st.j?'gone':'ge';
-    }}));
-    var marks={}; if(st.phase!=='done'){ if(st.i<set.mid)marks[st.i]='L'; if(st.j<set.hi)marks[st.j]='G'; }
-    top.appendChild(ptrRow(n,marks,false));
-    frag.appendChild(top);
-    var bot=el('div','row'); bot.appendChild(el('div','name','scratch'));
-    bot.appendChild(cellsRow(st.s,{hl:(st.took!=null)?[st.took]:null}));
-    var km={}; if(st.phase!=='done'&&st.k<set.hi)km[st.k]='k';
+    function runRow(name, vals, front, mark, done){
+      var r=el('div','row'); r.appendChild(el('div','name',name));
+      r.appendChild(cellsRow(vals,{classes:function(k){ return (done||k<front)?'gone':'le'; }}));
+      var m={}; if(!done&&front<vals.length)m[front]=mark;
+      r.appendChild(ptrRow(vals.length,m,false));
+      return r;
+    }
+    var done=st.phase==='done';
+    frag.appendChild(runRow('left', st.left, st.i, 'L', done));
+    frag.appendChild(runRow('right', st.right, st.j, 'G', done));
+    var bot=el('div','row'); bot.appendChild(el('div','name','a'));
+    bot.appendChild(cellsRow(st.a,{hl:(st.took!=null)?[st.took]:null, classes:function(k){ return (k<set.lo||k>=set.hi)?'out':''; }}));
+    var km={}; if(!done&&st.k<set.hi)km[st.k]='k';
     bot.appendChild(ptrRow(n,km,false));
     frag.appendChild(bot);
     return frag;
@@ -728,7 +749,7 @@ function mergeTrace(input, lo, mid, hi) {
     {q:"Both pointers have stopped and L is left of G. What happens next?",opts:["Swap them and move by one.","Swap the pivot with G now.","Move L only, G waits there.","Restart both pointers from the ends."],a:0,why:"Both stopped items are on the wrong side. Swap them, then step each pointer past the item it now loves. The pivot swap waits until the pointers cross."},
     {q:"On 9 1 2 3, why does L stop at the end of the range?",opts:["Nothing there is large or equal.","G has already crossed past it.","Three is equal to the pivot.","The pivot moved to the end."],a:0,why:"Every item after the pivot is smaller, so L loves all of them and keeps walking. Only the i < hi guard stops it, one past the last item."},
     {q:"Why does G need no bounds guard?",opts:["The pivot at a[lo] stops it.","G starts at hi, never wraps.","L always reaches G before lo.","size_t cannot go below zero, ever."],a:0,why:"G hates small or equal items, and the pivot at a[lo] is equal to itself. G can never walk past lo. Pick the pivot from elsewhere and that free pass is gone."},
-    {q:"merge has copied 4 4 5 9 9 15 and the left run is empty. What remains?",opts:["Copy the right run's remaining items.","Compare the two runs once more.","Copy scratch back and return now.","Swap the last two items over."],a:0,why:"26 and 35 are still in the right run and larger than everything copied so far. The tail loop copies them, then the copy-back writes scratch[lo..hi) into a. Skip the tail and the last slots hold whatever malloc left there."}
+    {q:"merge has copied 4 4 5 9 9 15 and the left run is empty. What remains?",opts:["Copy the right run's remaining items.","Compare the two runs once more.","Free left and right and return now.","Swap the last two items over."],a:0,why:"26 and 35 are still in the right run and larger than everything copied so far. The tail loop copies them into a[6] and a[7], then merge frees both copies. Return early and the tail is never written and both copies leak."}
   ];
   var root=document.getElementById('quiz'),score=0,answered=0;
   QUIZ.forEach(function(item,i){

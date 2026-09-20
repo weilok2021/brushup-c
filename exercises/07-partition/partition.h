@@ -18,10 +18,10 @@ size_t partition(int* a, size_t lo, size_t hi);
    Requires lo <= p <= hi. */
 int is_partitioned(const int* a, size_t lo, size_t hi, size_t p);
 
-/* Merge the sorted runs a[lo..mid] and a[mid+1..hi] into ascending order,
-   using scratch[lo..hi] as workspace. Closed range: mid is the last index of
-   the left run. scratch is borrowed, never freed. */
-void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch);
+/* Merge the sorted runs a[lo..mid] and a[mid+1..hi] into ascending order.
+   Closed range: mid is the last index of the left run. Copies each run to
+   a heap buffer it frees before returning. */
+void merge(int* a, size_t lo, size_t mid, size_t hi);
 
 /* Same contract as partition, by a one-pointer scan (exploration, not the
    lesson's scheme). Equal keys all go left, so on equal keys p == hi. */
