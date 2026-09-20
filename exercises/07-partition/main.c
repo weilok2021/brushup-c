@@ -1,5 +1,9 @@
 #include "partition.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static int *copy_array(const int *src, size_t n);
 
 /* Partition a[lo..hi], then print the range, the pivot, where it landed,
    the whole array of n ints, and the checker's verdict. */
@@ -32,5 +36,52 @@ int main(void) {
     run_partition(large, 4, 0, 3);    /* everything goes right */
     run_partition(sevens, 6, 0, 5);   /* equal keys */
     run_partition(one, 1, 0, 0);      /* one element */
+    
+    const int a1[] = {9, 4, 15, 9, 26, 5, 35, 4};
+
+    const int a2[] = {9, 1, 2, 3};
+
+    const int a3[] = {7, 7, 7, 7, 7, 7};
+
+    const int a4[] = {4, 9, 9, 15, 4, 5, 26, 35};
+
+    int* copy1 = copy_array(a1, 8); 
+    int* copy2 = copy_array(a2, 4);
+    int* copy3 = copy_array(a3, 6);
+    int* copy4 = copy_array(a4, 8);
+
+    if (copy1 == NULL || copy2 == NULL || copy3 == NULL || copy4 == NULL) {
+        free(copy1);
+        free(copy2);
+        free(copy3);
+        free(copy4);
+        return 1;
+    }
+
+    merge(copy4, 0, 3, 7);
+    printf("merged: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%d ", copy4[i]);
+    }
+    puts("");
+    if (is_sorted(copy4, 8)) {
+        printf("sorted: yes\n");
+    }
+
+    free(copy1);
+    free(copy2);
+    free(copy3);
+    free(copy4);
     return 0;
+}
+
+static int *copy_array(const int *src, size_t n) {
+    int *copy = malloc(n * sizeof *copy);
+
+    if (copy == NULL) {
+        return NULL;
+    }
+
+    memcpy(copy, src, n * sizeof *copy);
+    return copy;
 }
