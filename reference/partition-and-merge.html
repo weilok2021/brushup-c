@@ -79,19 +79,25 @@ td:first-child code{white-space:nowrap}
 [0, 3)  pivot 5   -&gt; 4 4 [5]                p = 2      lesson 8 recurses on [lo, p) and [p + 1, hi)</code></pre>
 
   <h2>Merge: take the smaller head</h2>
-  <p>The smallest item of both runs is at the front of one of them: compare the two fronts, copy the smaller into <code>scratch</code>, repeat until one run is empty, then copy the rest of the other (<a href="../lessons/0007-partition-and-merge.html#mdemo">demo</a>).</p>
-  <p>Precondition: <code>a[lo..mid)</code> and <code>a[mid..hi)</code> each sorted; <code>scratch</code> has room for index <code>hi - 1</code>. Invariant: <code>scratch[lo..k)</code> holds the <code>k - lo</code> smallest values of both runs, in order. Ties take the left run (stable).</p>
-  <pre><code>void merge(int* a, size_t lo, size_t mid, size_t hi, int* scratch) {
-    size_t i = lo, j = mid, k = lo;
-    while (i &lt; mid &amp;&amp; j &lt; hi) {
-        if (a[j] &lt; a[i]) scratch[k++] = a[j++];
-        else             scratch[k++] = a[i++];   /* ties: left */
+  <p>The smallest item of both runs is at the front of one of them: copy each run into its own small array, compare the two fronts, put the smaller back into <code>a</code>, repeat until one run is empty, then copy the rest of the other (<a href="../lessons/0007-partition-and-merge.html#mdemo">demo</a>).</p>
+  <p>Precondition: <code>a[lo..mid)</code> and <code>a[mid..hi)</code> each sorted. Invariant: <code>a[lo..k)</code> holds the <code>k - lo</code> smallest values of both runs, in order. Ties take the left run (stable).</p>
+  <pre><code>void merge(int* a, size_t lo, size_t mid, size_t hi) {
+    size_t nl = mid - lo, nr = hi - mid;
+    int* left  = malloc(nl * sizeof *left);
+    int* right = malloc(nr * sizeof *right);
+    for (size_t x = 0; x &lt; nl; x++) left[x]  = a[lo + x];    /* copy the runs out ... */
+    for (size_t x = 0; x &lt; nr; x++) right[x] = a[mid + x];   /* ... so a[lo..hi) is free to fill */
+    size_t i = 0, j = 0, k = lo;
+    while (i &lt; nl &amp;&amp; j &lt; nr) {
+        if (right[j] &lt; left[i]) a[k++] = right[j++];
+        else                    a[k++] = left[i++];       /* ties: left */
     }
-    while (i &lt; mid) scratch[k++] = a[i++];        /* one of these two */
-    while (j &lt; hi)  scratch[k++] = a[j++];        /* copies the leftover run */
-    for (k = lo; k &lt; hi; k++) a[k] = scratch[k];  /* copy back exactly [lo, hi) */
+    while (i &lt; nl) a[k++] = left[i++];                    /* one of these two */
+    while (j &lt; nr) a[k++] = right[j++];                   /* copies the leftover run */
+    free(left);
+    free(right);                                          /* merge owns both copies */
 }</code></pre>
-  <p><code>merge</code> borrows <code>scratch</code>. The owner is whoever called <code>malloc</code>: <code>main</code> in lesson 7, the <code>merge_sort</code> wrapper in lesson 8.</p>
+  <p>The copies exist because <code>merge</code> writes into the same slots the runs live in. <code>merge</code> owns them: allocated and freed inside, on every path out.</p>
 
   <h2 id="closed">Closed range: the lines that differ</h2>
   <p>Counts: half-open <code>[0, 8)</code> holds <code>hi - lo</code> = 8; closed <code>[0, 7]</code> holds <code>high - low + 1</code> = 8. One convention per function, header included.</p>
@@ -101,7 +107,7 @@ td:first-child code{white-space:nowrap}
     <tr><td><code>j</code> start, <code>i</code> guard</td><td><code>hi - 1</code>, <code>i &lt; hi</code></td><td><code>high</code>, <code>i &lt;= high</code></td></tr>
     <tr><td>checker right loop</td><td><code>k &lt; hi</code></td><td><code>k &lt;= high</code></td></tr>
     <tr><td>merge runs</td><td><code>[lo, mid)</code> and <code>[mid, hi)</code>: <code>mid</code> starts the right run</td><td><code>[low, mid]</code> and <code>[mid+1, high]</code>: <code>mid</code> ends the left run</td></tr>
-    <tr><td>merge loops</td><td><code>j = mid</code>; <code>i &lt; mid</code>, <code>j &lt; hi</code>, <code>k &lt; hi</code></td><td><code>j = mid + 1</code>; <code>i &lt;= mid</code>, <code>j &lt;= high</code>, <code>k &lt;= high</code></td></tr>
+    <tr><td>merge run sizes</td><td><code>nl = mid - lo</code>, <code>nr = hi - mid</code>; right copy reads <code>a[mid + x]</code></td><td><code>nl = mid - low + 1</code>, <code>nr = high - mid</code>; right copy reads <code>a[mid + 1 + x]</code></td></tr>
     <tr><td>lesson 8 quicksort calls</td><td><code>[lo, p)</code> and <code>[p + 1, hi)</code></td><td><code>[low, p - 1]</code> only <code>if (p &gt; low)</code>, and <code>[p + 1, high]</code></td></tr>
   </table>
 
@@ -111,8 +117,8 @@ td:first-child code{white-space:nowrap}
     <tr><td><code>partitioned: yes</code> everywhere, pivot lands at the end on equal keys</td><td>A scan skips equal keys (<code>&lt;=</code> or <code>&gt;=</code> in a scan condition).</td></tr>
     <tr><td>heap-buffer-overflow READ in <code>partition</code>, 0 bytes after the region</td><td>The <code>i &lt; hi</code> guard is missing and the pivot was the largest value.</td></tr>
     <tr><td>heap-buffer-overflow READ, address <em>before</em> the region</td><td><code>j</code> walked below <code>lo</code>: the pivot is not at <code>a[lo]</code>, or the range was empty.</td></tr>
-    <tr><td>Merged line ends in <code>-1094795586</code> (ASan) or junk, <code>sorted: no</code>; Valgrind “uninitialised value” in <code>printf</code></td><td>A tail-copy loop is missing, so <code>scratch</code> slots were never written.</td></tr>
-    <tr><td>heap-buffer-overflow in <code>merge</code> on <code>scratch</code></td><td>Copy-back bound <code>k &lt;= hi</code>, or <code>scratch</code> smaller than <code>hi</code> ints.</td></tr>
+    <tr><td>Merged line right but LeakSanitizer or Valgrind reports blocks lost from <code>merge</code></td><td>A <code>free</code> is missing in <code>merge</code>. Both copies are freed on every path out.</td></tr>
+    <tr><td>heap-buffer-overflow READ in <code>merge</code>, after the region</td><td>A run copy reads past <code>hi</code>: <code>nr</code> one too many, or the right copy starts one index early.</td></tr>
   </table>
 
   <p class="foot">Pictures: <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.1-partitioning">CS61B textbook 30.1</a> · <a href="https://cs61b-2.gitbook.io/cs61b-textbook/32.-more-quick-sort-sorting-summary/32.1-quicksort-flavors-vs.-mergesort">32.1</a> · <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">15.4</a>. C readings: <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">Weiss, DSAA in C, sort.c (Qsort, Median3, Merge)</a> · <a href="https://www.cs.yale.edu/homes/aspnes/classes/223/notes.html#mergesort">Aspnes, CPSC 223 notes, 5.3.4 Mergesort (merge)</a>. Language-free: <a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Wikipedia, Hoare and Lomuto partition schemes</a>. Evidence: <a href="https://algs4.cs.princeton.edu/23quicksort/">Sedgewick &amp; Wayne 2.3</a> · <a href="https://algs4.cs.princeton.edu/22mergesort/">2.2</a></p>
