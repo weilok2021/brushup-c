@@ -42,35 +42,29 @@ td:first-child code{white-space:nowrap}
   <p class="filename">sort.h</p>
   <pre><code>void swap_ints(int* a, int* b);              /* lesson 5 */
 int  is_sorted(const int* a, size_t n);      /* lesson 5 */
-void merge_sort(int* a, size_t n);           /* stable; merge frees its own copies */
-void quick_sort(int* a, size_t n);           /* in place */</code></pre>
-  <p>The recursive workers take <code>(a, lo, hi)</code> and are <code>static</code> in <code>sort.c</code>. A client sees <code>(a, n)</code> only.</p>
+void merge_sort(int* a, size_t lo, size_t hi);   /* a[lo..hi], stable; merge frees its own copies */
+void quick_sort(int* a, size_t lo, size_t hi);   /* a[lo..hi], in place */</code></pre>
+  <p>Closed range: a whole array of <code>n</code> items is <code>(a, 0, n - 1)</code>, and <code>n</code> must be at least 1 or <code>n - 1</code> wraps. <code>merge</code> and <code>partition</code> are <code>static</code> in <code>sort.c</code>.</p>
 
   <h2>The shape</h2>
-  <div class="rule"><strong>Promise.</strong> After <code>sort_range(a, lo, hi)</code>, <code>a[lo..hi]</code> is ascending. Base case <code>lo &gt;= hi</code>. Shrink into two ranges that leave something out. Trust the promise on each. Do the one piece of work the halves cannot.</div>
+  <div class="rule"><strong>Promise.</strong> After <code>sort(a, lo, hi)</code>, <code>a[lo..hi]</code> is ascending. Base case <code>lo &gt;= hi</code>. Shrink into two ranges that leave something out. Trust the promise on each. Do the one piece of work the halves cannot.</div>
   <pre><code>stack (one frame per call)                  heap
 main               a ────────────────────▶  [ n ints ]   owner: main
-merge_sort         a, n
-merge_sort_range   a, lo=0, hi=7
-merge_sort_range   a, lo=0, hi=3
-merge_sort_range   a, lo=0, hi=1
-merge_sort_range   a, lo=0, hi=0            base case: returns
+merge_sort         a, lo=0, hi=7
+merge_sort         a, lo=0, hi=3
+merge_sort         a, lo=0, hi=1
+merge_sort         a, lo=0, hi=0            base case: returns
 merge (later)      left, right ──────────▶  two small blocks, freed before return</code></pre>
   <p>Arguments are copies. <code>lo</code> and <code>hi</code> are private to each frame; every copy of <code>a</code> is the same address, so every frame writes into the same block.</p>
 
   <h2>Merge sort</h2>
   <p>Work after the calls. <code>merge</code> is lesson 7's: copy the runs out, merge back into <code>a[lo..hi]</code>, free the copies. Ties take the left run (stable).</p>
-  <pre><code>static void merge_sort_range(int* a, size_t lo, size_t hi) {
+  <pre><code>void merge_sort(int* a, size_t lo, size_t hi) {
     if (lo &gt;= hi) return;                          /* 0 or 1 item */
     size_t mid = lo + (hi - lo) / 2;
-    merge_sort_range(a, lo, mid);                  /* trust */
-    merge_sort_range(a, mid + 1, hi);              /* trust: mid + 1, not mid */
+    merge_sort(a, lo, mid);                        /* trust */
+    merge_sort(a, mid + 1, hi);                    /* trust: mid + 1, not mid */
     merge(a, lo, mid, hi);                         /* work */
-}
-
-void merge_sort(int* a, size_t n) {
-    if (n &lt; 2) return;                             /* n - 1 would wrap at 0 */
-    merge_sort_range(a, 0, n - 1);
 }</code></pre>
   <table>
     <tr><th>Fact</th><th>Value</th></tr>
@@ -82,16 +76,11 @@ void merge_sort(int* a, size_t n) {
 
   <h2>Quicksort</h2>
   <p>Work before the calls. <code>partition</code> is lesson 7's: returns <code>p</code> with <code>a[lo..p-1] &lt;= a[p] &lt;= a[p+1..hi]</code>, and <code>a[p]</code> never moves again.</p>
-  <pre><code>static void quick_sort_range(int* a, size_t lo, size_t hi) {
+  <pre><code>void quick_sort(int* a, size_t lo, size_t hi) {
     if (lo &gt;= hi) return;                          /* 0 or 1 item, or lo &gt; hi */
     size_t p = partition(a, lo, hi);               /* work */
-    if (p &gt; lo) quick_sort_range(a, lo, p - 1);    /* trust; guard: p - 1 wraps at 0 */
-    quick_sort_range(a, p + 1, hi);                /* trust; p + 1 &lt;= hi + 1 is safe */
-}
-
-void quick_sort(int* a, size_t n) {
-    if (n &lt; 2) return;
-    quick_sort_range(a, 0, n - 1);
+    if (p &gt; lo) quick_sort(a, lo, p - 1);          /* trust; guard: p - 1 wraps at 0 */
+    quick_sort(a, p + 1, hi);                      /* trust; p + 1 &lt;= hi + 1 is safe */
 }</code></pre>
   <table>
     <tr><th>Fact</th><th>Value</th></tr>
@@ -105,10 +94,10 @@ void quick_sort(int* a, size_t n) {
   <h2>Closed-range recursion rules</h2>
   <table>
     <tr><th>Never write</th><th>Write instead</th><th>Because</th></tr>
-    <tr><td><code>merge_sort_range(a, mid, hi)</code></td><td><code>(a, mid + 1, hi)</code></td><td><code>mid</code> is the last index of the left half. Two items have <code>mid == lo</code>, so the right call is the same range: stack overflow.</td></tr>
-    <tr><td><code>quick_sort_range(a, lo, p - 1)</code> unguarded</td><td><code>if (p &gt; lo) ...</code></td><td><code>p</code> can be 0. <code>0 - 1</code> on <code>size_t</code> is <code>SIZE_MAX</code>; the read lands 4 bytes before the block.</td></tr>
-    <tr><td><code>quick_sort_range(a, lo, p)</code></td><td><code>(a, lo, p - 1)</code> and <code>(a, p + 1, hi)</code></td><td>The pivot is placed. Leaving it out is what makes both sides shorter.</td></tr>
-    <tr><td><code>merge_sort_range(a, 0, n - 1)</code> unguarded</td><td><code>if (n &lt; 2) return;</code> first</td><td><code>n - 1</code> wraps when <code>n</code> is 0.</td></tr>
+    <tr><td><code>merge_sort(a, mid, hi)</code></td><td><code>(a, mid + 1, hi)</code></td><td><code>mid</code> is the last index of the left half. Two items have <code>mid == lo</code>, so the right call is the same range: stack overflow.</td></tr>
+    <tr><td><code>quick_sort(a, lo, p - 1)</code> unguarded</td><td><code>if (p &gt; lo) ...</code></td><td><code>p</code> can be 0. <code>0 - 1</code> on <code>size_t</code> is <code>SIZE_MAX</code>; the read lands 4 bytes before the block.</td></tr>
+    <tr><td><code>quick_sort(a, lo, p)</code></td><td><code>(a, lo, p - 1)</code> and <code>(a, p + 1, hi)</code></td><td>The pivot is placed. Leaving it out is what makes both sides shorter.</td></tr>
+    <tr><td><code>merge_sort(a, 0, n - 1)</code> with <code>n</code> possibly 0</td><td>check <code>n &gt;= 1</code> at the call site</td><td><code>n - 1</code> wraps when <code>n</code> is 0. No wrapper here, so the caller checks.</td></tr>
     <tr><td><code>if (lo == hi)</code></td><td><code>if (lo &gt;= hi)</code></td><td>Quicksort's right call can produce <code>lo == hi + 1</code>. Catch it.</td></tr>
   </table>
 
