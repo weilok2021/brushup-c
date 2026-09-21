@@ -13,7 +13,7 @@ On 2026-09-21 the user finished lesson 8 (`exercises/08-recursive-sorts/`), clos
 
 ## Implications
 
-- Ready for lesson 9 (dynamic-array stack). The user has already started it (`exercises/09-stack/` exists since 2026-09-16); check its state before issuing anything.
-- Lesson 9 onward must be rewritten in the CS61B style before the user reaches each one (record 0011). Lesson 9 is next.
+- Lesson 9 (dynamic-array stack) was already completed on 2026-09-16 (record 0007, commit e758929), before the recursion bridge. Next is lesson 10, the singly linked list.
+- Lesson 10 onward must be rewritten in the CS61B style before the user reaches each one (record 0011). Lesson 10 is next.
 - Preference confirmed twice now: the smallest correct structure. No wrappers, no scratch parameter. Do not add layers a lesson does not need; when a layer is optional, say so and let the user choose.
 - Review style: bugs only, one line each, no repeated cosmetic points.
