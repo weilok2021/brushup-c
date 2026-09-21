@@ -125,3 +125,4 @@ void merge(int* a, size_t lo, size_t mid, size_t hi) {
     free(left_arr);
     free(right_arr);
 }
+
