@@ -149,7 +149,7 @@ section ol:not(.steps):not(.reading)>li{margin:0 0 .4rem}
     <span>Where: WSL, <code>exercises/08-recursive-sorts/</code></span>
     <span><a href="../MISSION.md">Mission</a> · <a href="../reference/recursive-sorts.html">Cheat sheet</a> · <a href="0006-recursion-basics.html">Lesson 6</a> · <a href="0007-partition-and-merge.html">Lesson 7</a></span>
   </div>
-  <div class="win"><strong>Your win today.</strong> Write <code>merge_sort</code> and <code>quick_sort</code> from a blank file, closed range <code>[lo, hi]</code> as you chose in lesson 7, and read three reports: a stack overflow, a <code>size_t</code> wrap, and a leak that recursion multiplies by seven.</div>
+  <div class="win"><strong>Your win today.</strong> Write <code>merge_sort</code> and <code>quick_sort</code> from a blank file, closed range <code>[lo, hi]</code> as you chose in lesson 7, each one function that calls itself, and read three reports: a stack overflow, a <code>size_t</code> wrap, and a leak that recursion multiplies by seven.</div>
 </header>
 
 <section>
@@ -178,7 +178,7 @@ clean:
 <section>
   <h2>One promise, two trusts</h2>
   <p>Both sorts have the same shape. Say the promise first, in one sentence above the function, as in lesson 6b:</p>
-  <div class="rule"><strong>Promise.</strong> After <code>sort_range(a, lo, hi)</code> returns, <code>a[lo..hi]</code> is in ascending order.</div>
+  <div class="rule"><strong>Promise.</strong> After <code>sort(a, lo, hi)</code> returns, <code>a[lo..hi]</code> is in ascending order.</div>
   <p>Then the body is three lines of thought:</p>
   <ol>
     <li><strong>Base case.</strong> Zero or one item is already sorted. In closed form that is <code>lo &gt;= hi</code>. Return.</li>
@@ -210,22 +210,16 @@ clean:
   <p>Count the merges: seven, one per split. Each level of the tree touches all eight items once, and there are three levels, so the cost is about <code>n log n</code>. Hug argues it exactly that way<a class="sn-ref" href="#sn2"></a>.</p>
   <span class="sidenote" id="sn2"><a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a>: “The top level takes ~N AU. Next level takes ~N/2 + ~N/2 = ~N. … split the array until it is length 1, so k = log₂(N). Thus the overall runtime is Θ(N log N).”</span>
   <pre><code>/* Sort a[lo..hi]. Promise on return: a[lo..hi] is ascending. */
-static void merge_sort_range(int* a, size_t lo, size_t hi) {
+void merge_sort(int* a, size_t lo, size_t hi) {
     if (lo &gt;= hi) {
         return;                     <span class="c">/* zero or one item: already sorted */</span>
     }
     size_t mid = lo + (hi - lo) / 2;
-    merge_sort_range(a, lo, mid);       <span class="c">/* trust: left half sorted */</span>
-    merge_sort_range(a, mid + 1, hi);   <span class="c">/* trust: right half sorted */</span>
-    merge(a, lo, mid, hi);              <span class="c">/* the work: combine them */</span>
-}
-
-void merge_sort(int* a, size_t n) {
-    if (n &lt; 2) {
-        return;                     <span class="c">/* n - 1 would wrap when n is 0 */</span>
-    }
-    merge_sort_range(a, 0, n - 1);
+    merge_sort(a, lo, mid);         <span class="c">/* trust: left half sorted */</span>
+    merge_sort(a, mid + 1, hi);     <span class="c">/* trust: right half sorted */</span>
+    merge(a, lo, mid, hi);          <span class="c">/* the work: combine them */</span>
 }</code></pre>
+  <p><code>main</code> calls it as <code>merge_sort(a, 0, n - 1)</code>. That <code>n - 1</code> is the caller's job, and it wraps when <code>n</code> is 0, so the header says <code>n</code> must be at least 1. (The usual C shape hides this behind a <code>merge_sort(a, n)</code> wrapper. You chose the one-function form; keep the rule in the header instead.)</p>
   <p><code>merge</code> is lesson 7's function, unchanged, now <code>static</code>. It copies the two runs out, merges back into <code>a[lo..hi]</code>, and frees its two copies before it returns. Seven merges, fourteen mallocs, fourteen frees, all balanced inside one function<a class="sn-ref" href="#sn3"></a>.</p>
   <span class="sidenote" id="sn3">The textbook alternative is one workspace of <code>n</code> ints allocated once by <code>merge_sort</code> and passed down to every <code>merge</code>: see Sedgewick and Wayne's <a href="https://algs4.cs.princeton.edu/22mergesort/Merge.java.html">Merge.java</a>, where <code>aux</code> is allocated once. It saves twelve mallocs on eight items and costs a borrowed pointer in every signature. You asked for the version you can see; this is it.</span>
   <p><strong>Why <code>mid + 1</code>?</strong> Closed range: <code>mid</code> is the last index of the left half, so the right half starts one past it. Write <code>mid</code> there and a two-item range calls itself on the same two items forever. That is planted bug 1.</p>
@@ -252,22 +246,15 @@ void merge_sort(int* a, size_t n) {
     <details><summary>Every step of this run, as a list</summary><div class="list" id="qslist"></div></details>
   </div>
   <pre><code>/* Sort a[lo..hi]. Promise on return: a[lo..hi] is ascending. */
-static void quick_sort_range(int* a, size_t lo, size_t hi) {
+void quick_sort(int* a, size_t lo, size_t hi) {
     if (lo &gt;= hi) {
         return;                     <span class="c">/* zero or one item: already sorted */</span>
     }
     size_t p = partition(a, lo, hi);    <span class="c">/* the work: pivot lands at p */</span>
     if (p &gt; lo) {
-        quick_sort_range(a, lo, p - 1); <span class="c">/* trust: left side sorted */</span>
+        quick_sort(a, lo, p - 1);       <span class="c">/* trust: left side sorted */</span>
     }
-    quick_sort_range(a, p + 1, hi);     <span class="c">/* trust: right side sorted */</span>
-}
-
-void quick_sort(int* a, size_t n) {
-    if (n &lt; 2) {
-        return;
-    }
-    quick_sort_range(a, 0, n - 1);
+    quick_sort(a, p + 1, hi);           <span class="c">/* trust: right side sorted */</span>
 }</code></pre>
   <p><code>partition</code> is lesson 7's function, now <code>static</code>. Index <code>p</code> is in neither call: <code>[lo, p - 1]</code> and <code>[p + 1, hi]</code> are both shorter than <code>[lo, hi]</code>, which is what makes the recursion finite.</p>
   <p><strong>Why the guard <code>if (p &gt; lo)</code>?</strong> When the pivot is the smallest item it lands at <code>lo</code>. Then <code>p - 1</code> on <code>size_t</code> does not go to <code>-1</code>; it wraps to the largest possible number, and the next call reads <code>a[]</code> four bytes before the block. That is planted bug 2. The right call needs no guard: <code>p + 1</code> is at most <code>hi + 1</code>, and <code>lo &gt;= hi</code> catches that empty range.</p>
@@ -288,13 +275,14 @@ void swap_ints(int* a, int* b);
 /* Return 1 if the n ints at a are in ascending order, else 0. */
 int is_sorted(const int* a, size_t n);
 
-/* Sort the n ints at a into ascending order. Stable. Each merge copies
-   its two runs to heap buffers it frees before returning. */
-void merge_sort(int* a, size_t n);
+/* Sort a[lo..hi] into ascending order. Closed range: hi is the last index,
+   so a whole array of n items is (a, 0, n - 1); n must be at least 1.
+   Stable. Each merge copies its two runs to heap buffers it frees. */
+void merge_sort(int* a, size_t lo, size_t hi);
 
-/* Sort the n ints at a into ascending order, in place. */
-void quick_sort(int* a, size_t n);</code></pre>
-  <p>Four public functions. <code>merge</code>, <code>merge_sort_range</code>, <code>partition</code> and <code>quick_sort_range</code> are <code>static</code> in <code>sort.c</code> and appear nowhere in the header. A client sees <code>(a, n)</code> and nothing about ranges.</p>
+/* Sort a[lo..hi] into ascending order, in place. Same range rule. */
+void quick_sort(int* a, size_t lo, size_t hi);</code></pre>
+  <p>Four public functions. <code>merge</code> and <code>partition</code> are <code>static</code> in <code>sort.c</code> and appear nowhere in the header. The two sorts call themselves directly.</p>
 </section>
 
 <section>
@@ -306,11 +294,11 @@ mkdir -p exercises/08-recursive-sorts &amp;&amp; cd exercises/08-recursive-sorts
       <label class="check"><input type="checkbox" data-step="1"> done</label></li>
     <li><p>Create <code>sort.h</code> exactly as shown and paste the setup <code>Makefile</code>. Copy <code>swap_ints</code> and <code>is_sorted</code> from lesson 7 into a new <code>sort.c</code>. Do not copy <code>partition</code> or <code>merge</code>: rewrite both from memory, and compare with lesson 7 only after the program builds.</p>
       <label class="check"><input type="checkbox" data-step="2"> done</label></li>
-    <li><p>Run the merge sort demo once more and say each caption out loud <em>before</em> you click. Then close this page and write <code>merge</code>, <code>merge_sort_range</code> and <code>merge_sort</code>. Write the promise as a comment above <code>merge_sort_range</code> first.</p>
+    <li><p>Run the merge sort demo once more and say each caption out loud <em>before</em> you click. Then close this page and write <code>merge</code> and <code>merge_sort</code>. Write the promise as a comment above <code>merge_sort</code> first.</p>
       <label class="check"><input type="checkbox" data-step="3"> done</label></li>
-    <li><p>Do the same with the quicksort demo, both arrays, then write <code>partition</code>, <code>quick_sort_range</code> and <code>quick_sort</code>. Before you type the left call, say why <code>p - 1</code> needs a guard.</p>
+    <li><p>Do the same with the quicksort demo, both arrays, then write <code>partition</code> and <code>quick_sort</code>. Before you type the left call, say why <code>p - 1</code> needs a guard.</p>
       <label class="check"><input type="checkbox" data-step="4"> done</label></li>
-    <li><p>Write <code>main.c</code>. Declare the data once, a named constant array of eight ints: <code>9 4 15 9 26 5 35 4</code>. Write a static helper that returns a fresh heap copy (caller owns it) and a print helper. Print <code>before</code>; merge sort a copy, print <code>after merge</code> and <code>sorted</code>, free it; quicksort a second copy, print <code>after quick</code> and <code>sorted</code>, free it; return 0. Expected, exactly:</p>
+    <li><p>Write <code>main.c</code>. Declare the data once, a named constant array of eight ints: <code>9 4 15 9 26 5 35 4</code>. Write a static helper that returns a fresh heap copy (caller owns it) and a print helper. Print <code>before</code>; merge sort a copy over <code>[0, 7]</code>, print <code>after merge</code> and <code>sorted</code>, free it; quicksort a second copy over <code>[0, 7]</code>, print <code>after quick</code> and <code>sorted</code>, free it; return 0. Expected, exactly:</p>
       <pre><code>before: 9 4 15 9 26 5 35 4
 after merge: 4 4 5 9 9 15 26 35
 sorted: yes
@@ -321,8 +309,8 @@ sorted: yes</code></pre>
       <label class="check"><input type="checkbox" data-step="6"> done</label></li>
     <li><p><strong>Break it three ways, one at a time.</strong> Restore the program after each.</p>
       <ol>
-        <li>In <code>merge_sort_range</code>, change the right call to <code>merge_sort_range(a, mid, hi)</code>. Build and run. It takes a second to fail. Read the first four frames and count how many different line numbers appear.</li>
-        <li>In <code>quick_sort_range</code>, delete the <code>if (p &gt; lo)</code> guard so the left call always runs. Build and run. Read where the address is relative to the region, and which function is on the top frame.</li>
+        <li>In <code>merge_sort</code>, change the right call to <code>merge_sort(a, mid, hi)</code>. Build and run. It takes a second to fail. Read the first four frames and count how many different line numbers appear.</li>
+        <li>In <code>quick_sort</code>, delete the <code>if (p &gt; lo)</code> guard so the left call always runs. Build and run. Read where the address is relative to the region, and which function is on the top frame.</li>
         <li>In <code>merge</code>, delete <code>free(left)</code>. Build, run <code>./recursive-sorts</code>, then run <code>make check</code>. Count the blocks Valgrind lists and read the sizes.</li>
       </ol>
       <label class="check"><input type="checkbox" data-step="7"> done</label></li>
@@ -336,45 +324,44 @@ sorted: yes</code></pre>
   <p><strong>1. The half that never shrinks.</strong> With <code>[mid, hi]</code> as the right call, a two-item range has <code>mid == lo</code> and calls itself on the same two items. Each call pushes a frame until the 8 MB stack is gone:</p>
   <pre><code>AddressSanitizer:DEADLYSIGNAL
 ERROR: AddressSanitizer: <strong>stack-overflow</strong> on address 0x7ffcec93afe8 ...
-    #0 ... in merge_sort_range sort.c:42
-    #1 ... in merge_sort_range sort.c:47
-    #2 ... in merge_sort_range <strong>sort.c:48</strong>
-    #3 ... in merge_sort_range <strong>sort.c:48</strong>
-    #4 ... in merge_sort_range <strong>sort.c:48</strong>
+    #0 ... in merge_sort sort.c:42
+    #1 ... in merge_sort sort.c:47
+    #2 ... in merge_sort <strong>sort.c:48</strong>
+    #3 ... in merge_sort <strong>sort.c:48</strong>
+    #4 ... in merge_sort <strong>sort.c:48</strong>
     ... (hundreds more, all line 48)
-SUMMARY: AddressSanitizer: stack-overflow sort.c:42 in merge_sort_range</code></pre>
+SUMMARY: AddressSanitizer: stack-overflow sort.c:42 in merge_sort</code></pre>
   <p>Below the top two frames, every line is the same: the right call. A column of one line number is the signature of a call that does not shrink its range. Walk two items by hand and ask which call gets the same <code>lo</code> and <code>hi</code> it was given.</p>
 
   <p><strong>2. <code>p - 1</code> under zero.</strong> The pivot 4 lands at index 0 inside the range <code>[0, 1]</code>. Without the guard, <code>p - 1</code> wraps to 18446744073709551615 and the next partition reads <code>a[G]</code> with <code>G</code> at that index:</p>
   <pre><code>ERROR: AddressSanitizer: <strong>heap-buffer-overflow</strong> on address 0x50300000006c ...
 READ of size 4 ...
-    #0 ... in <strong>partition sort.c:67</strong>
-    #1 ... in quick_sort_range sort.c:82
-    #2 ... in quick_sort_range sort.c:83
-    #3 ... in quick_sort_range sort.c:83
-    #4 ... in quick_sort_range sort.c:83
-    #5 ... in quick_sort sort.c:91
-    #6 ... in main main.c:44
+    #0 ... in <strong>partition sort.c:58</strong>
+    #1 ... in quick_sort sort.c:73
+    #2 ... in quick_sort sort.c:74
+    #3 ... in quick_sort sort.c:74
+    #4 ... in quick_sort sort.c:74
+    #5 ... in main main.c:43
 0x50300000006c is located <strong>4 bytes before 32-byte region</strong>
 allocated by thread T0 here:
     #0 ... in malloc
-    #1 ... in copy_of_data main.c:10</code></pre>
-  <p>Four bytes <em>before</em> the block: index <code>SIZE_MAX</code> is one int to the left of index 0 once the address wraps around. Lesson 1's off-by-one went one past the end; this one goes one before the start. The three <code>quick_sort_range</code> frames at line 83 are the left calls that got here: <code>[0, 7]</code>, then <code>[0, 2]</code>, then <code>[0, 1]</code>.</p>
+    #1 ... in copy_of_data main.c:9</code></pre>
+  <p>Four bytes <em>before</em> the block: index <code>SIZE_MAX</code> is one int to the left of index 0 once the address wraps around. Lesson 1's off-by-one went one past the end; this one goes one before the start. The three <code>quick_sort</code> frames at line 74 are the left calls that got here: <code>[0, 7]</code>, then <code>[0, 2]</code>, then <code>[0, 1]</code>.</p>
 
   <p><strong>3. One free, missed seven times.</strong> Output correct, then under <code>make check</code>:</p>
   <pre><code>in use at exit: <strong>48 bytes in 7 blocks</strong>
 total heap usage: 17 allocs, <strong>10 frees</strong>, 4,256 bytes allocated
 4 bytes in 1 blocks are definitely lost in loss record 1 of 7
    by ... merge (sort.c:23)
-   by ... merge_sort_range (sort.c:48)
-   by ... merge_sort_range (sort.c:46)
-   by ... merge_sort_range (sort.c:46)
-   by ... merge_sort (sort.c:55)
+   by ... merge_sort (sort.c:48)
+   by ... merge_sort (sort.c:46)
+   by ... merge_sort (sort.c:46)
+   by ... main (main.c:34)
 ...
 16 bytes in 1 blocks are definitely lost in loss record 7 of 7
    by ... merge (sort.c:23)
-   by ... merge_sort_range (sort.c:48)
-   by ... merge_sort (sort.c:55)
+   by ... merge_sort (sort.c:48)
+   by ... main (main.c:34)
 LEAK SUMMARY:
    definitely lost: 48 bytes in 7 blocks</code></pre>
   <p>One deleted line, seven lost blocks: four of 4 bytes, two of 8, one of 16. Those are the seven left runs of the demo, one per merge, and the stack under each one is the path down the tree to that merge. A leak inside a recursive function is never one leak. The sanitizer build reports the same seven under <code>LeakSanitizer</code>.</p>
@@ -392,7 +379,7 @@ LEAK SUMMARY:
   <p>The CS61B items are language-free. The rest is C.</p>
   <ol class="reading">
     <li><p><strong>Click first.</strong> Josh Hug's <a href="https://docs.google.com/presentation/d/1h-gS13kKWSKd_5gt2FPXLYigFY4jf5rBkNFl3qZzRRw/pub?start=false&amp;loop=false&amp;delayms=3000">merge sort demo</a> and <a href="https://docs.google.com/presentation/d/1QjAs-zx1i0_XWlLqsKtexb-iueao9jNLkN-gW9QxAD0/pub?start=false&amp;loop=false&amp;delayms=3000">quicksort demo</a> (Google Slides). Then the <a href="https://cs61b-2.gitbook.io/cs61b-textbook/15.-asymptotics-ii/15.4-mergesort">CS61B textbook, 15.4 Mergesort</a> for the <code>n log n</code> argument in “arbitrary units”, and <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.2-quicksort-algorithm">30.2</a> and <a href="https://cs61b-2.gitbook.io/cs61b-textbook/30.-quicksort/30.3-quicksort-performance-caveats">30.3</a> for quicksort and its worst case.</p></li>
-    <li><p><strong>Both sorts in C.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>. <code>MSort</code> is your <code>merge_sort_range</code> in closed form: <code>if (Left &lt; Right)</code>, <code>Center</code>, calls on <code>[Left, Center]</code> and <code>[Center + 1, Right]</code>. His <code>Merge</code> uses the one-workspace version from the sidenote. <code>Qsort</code> is your <code>quick_sort_range</code> with two extras: a median-of-three pivot, and insertion sort for ranges under <code>Cutoff</code>.</p></li>
+    <li><p><strong>Both sorts in C.</strong> Mark Allen Weiss, <em>Data Structures and Algorithm Analysis in C</em>, 2nd ed., <a href="http://users.cis.fiu.edu/~weiss/dsaa_c2e/sort.c">sort.c</a>. <code>MSort</code> is your <code>merge_sort</code> in closed form: <code>if (Left &lt; Right)</code>, <code>Center</code>, calls on <code>[Left, Center]</code> and <code>[Center + 1, Right]</code>. His <code>Merge</code> uses the one-workspace version from the sidenote. <code>Qsort</code> is your <code>quick_sort</code> with two extras: a median-of-three pivot, and insertion sort for ranges under <code>Cutoff</code>.</p></li>
     <li><p><strong>Frames.</strong> Beej, <a href="https://beej.us/guide/bgc/html/split/functions.html">4.1 Passing by Value</a>: every argument is copied into the callee, which is why each frame in the demo keeps its own <code>lo</code> and <code>hi</code>. Then the CS107 <a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/resources/gdb.html">GDB Guide</a>, Backtrace and Stack Frames: run your sort under <code>gdb</code>, break in <code>merge</code>, type <code>backtrace</code>, and compare with the demo's stack column.</p></li>
   </ol>
   <p><strong>Where this lands in CS107.</strong> Lecture 8 (Generic Operations) assigns <code>qsort</code> from the C library, which is quicksort behind a function pointer. Lecture 14 (x86-64 Runtime Stack) shows the frames above as the machine sees them<a href="https://web.stanford.edu/class/archive/cs/cs107/cs107.1268/calendar.html">*</a>. Keep the <a href="../reference/recursive-sorts.html">cheat sheet</a> for lookup.</p>
@@ -441,7 +428,7 @@ function mergeSortTrace(input) {
     snap('Back in ' + rangeStr(lo, hi) + '. Both halves sorted. <b>Merge</b> <code>' + before.slice(0, before.length) + '</code> with lesson 7\'s loop: ' + rangeStr(lo, hi) + ' is now <code>' + a.slice(lo, hi + 1).join(' ') + '</code>. <b>Return.</b>', { phase: 'merge', lo: lo, hi: hi, mid: mid });
     frames.pop();
   }
-  snap('<code>merge_sort</code> is asked to sort ' + n + ' items. It calls <code>merge_sort_range</code> on ' + rangeStr(0, n - 1) + '.', { phase: 'start', lo: 0, hi: n - 1 });
+  snap('<code>main</code> calls <code>merge_sort</code> on ' + rangeStr(0, n - 1) + ', all ' + n + ' items.', { phase: 'start', lo: 0, hi: n - 1 });
   sort(0, n - 1);
   snap('Every frame has returned. <b>Sorted.</b>', { phase: 'done' });
   return { steps: steps, result: a.slice() };
@@ -486,7 +473,7 @@ function quickSortTrace(input) {
     snap('Back in ' + rangeStr(lo, hi) + '. Both sides sorted and the pivot sits between them. Nothing to merge. <b>Return.</b>', { phase: 'leave', lo: lo, hi: hi, p: p });
     frames.pop();
   }
-  snap('<code>quick_sort</code> is asked to sort ' + n + ' items. It calls <code>quick_sort_range</code> on ' + rangeStr(0, n - 1) + '.', { phase: 'start', lo: 0, hi: n - 1 });
+  snap('<code>main</code> calls <code>quick_sort</code> on ' + rangeStr(0, n - 1) + ', all ' + n + ' items.', { phase: 'start', lo: 0, hi: n - 1 });
   sort(0, n - 1);
   snap('Every frame has returned. <b>Sorted.</b>', { phase: 'done' });
   return { steps: steps, result: a.slice() };
@@ -521,7 +508,6 @@ function quickSortTrace(input) {
     box.appendChild(el('div','name','call stack, newest at the bottom'));
     box.appendChild(el('div','frame','main'));
     if(st.phase!=='done'){
-      box.appendChild(el('div','frame',fnName.replace('_range','')+'  n = '+n));
       st.frames.forEach(function(f,idx){
         var d=el('div','frame'+(idx===st.frames.length-1?' cur':''),fnName+'  ['+f[0]+', '+f[1]+']');
         box.appendChild(d);
@@ -574,16 +560,16 @@ function quickSortTrace(input) {
     });
     build();
   }
-  wire('ms','merge_sort_range',[{label:'9 4 15 9 26 5 35 4',a:[9,4,15,9,26,5,35,4]}],mergeSortTrace,msClass);
-  wire('qs','quick_sort_range',[{label:'9 4 15 9 26 5 35 4',a:[9,4,15,9,26,5,35,4]},{label:'1 5 4 9 (pivot lands at lo)',a:[1,5,4,9]}],quickSortTrace,qsClass);
+  wire('ms','merge_sort',[{label:'9 4 15 9 26 5 35 4',a:[9,4,15,9,26,5,35,4]}],mergeSortTrace,msClass);
+  wire('qs','quick_sort',[{label:'9 4 15 9 26 5 35 4',a:[9,4,15,9,26,5,35,4]},{label:'1 5 4 9 (pivot lands at lo)',a:[1,5,4,9]}],quickSortTrace,qsClass);
   window.addEventListener('beforeprint',function(){document.querySelectorAll('.demo details').forEach(function(d){d.open=true;});});
 
   /* ---------- quiz ---------- */
   var QUIZ=[
-    {q:"merge_sort_range(a, 0, 7) calls merge_sort_range(a, 0, 3). What does the inner call receive?",opts:["Copies of the pointer and both indices.","The caller's own pointer and indices.","A fresh heap copy of the whole array.","A fresh stack copy of the whole array."],a:0,why:"Every argument is copied into the new frame. The pointer copy holds the same address, so writes reach the shared block; lo and hi are private to the frame."},
+    {q:"merge_sort(a, 0, 7) calls merge_sort(a, 0, 3). What does the inner call receive?",opts:["Copies of the pointer and both indices.","The caller's own pointer and indices.","A fresh heap copy of the whole array.","A fresh stack copy of the whole array."],a:0,why:"Every argument is copied into the new frame. The pointer copy holds the same address, so writes reach the shared block; lo and hi are private to the frame."},
     {q:"Closed range [lo, hi] on size_t. Which base case is right?",opts:["lo >= hi","lo == hi","hi - 1 <= lo","hi - lo < 1"],a:0,why:"Zero or one item is sorted. lo == hi misses the empty range quicksort's right call can produce; hi - 1 wraps when hi is 0; hi - lo < 1 is only the empty range."},
     {q:"Merge sort's right call is on [mid, hi] instead of [mid + 1, hi]. What happens?",opts:["Two items call themselves forever.","The merge reads one past the block.","One item is sorted twice, no harm.","The left half is never sorted at all."],a:0,why:"On two items mid == lo, so [mid, hi] is the same range again. Same frame, same line, until the stack is gone: the column of one line number."},
-    {q:"partition returns p == lo. Why is quick_sort_range(a, lo, p - 1) wrong?",opts:["p - 1 wraps to the largest size_t.","p - 1 is lo, the same range again.","The pivot is then sorted twice over.","The right call is skipped by mistake."],a:0,why:"size_t has no negative values. lo - 1 with lo == 0 is SIZE_MAX, and the next partition reads four bytes before the block. Guard with if (p > lo)."},
+    {q:"partition returns p == lo. Why is quick_sort(a, lo, p - 1) wrong?",opts:["p - 1 wraps to the largest size_t.","p - 1 is lo, the same range again.","The pivot is then sorted twice over.","The right call is skipped by mistake."],a:0,why:"size_t has no negative values. lo - 1 with lo == 0 is SIZE_MAX, and the next partition reads four bytes before the block. Guard with if (p > lo)."},
     {q:"merge leaks one block, and merge_sort runs on eight items. How many blocks are lost?",opts:["Seven, one for every merge call.","One, the block from the last call.","Three, one for each tree level.","Eight, one for every array item."],a:0,why:"Eight items split seven times, so merge runs seven times and each run loses one block. A leak in a recursive function is multiplied by the number of calls."}
   ];
   var root=document.getElementById('quiz'),score=0,answered=0;
