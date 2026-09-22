@@ -35,5 +35,17 @@ int main(void) {
     list_print(ll);
     printf("count: %zu\n", list_count(ll));
 
+    printf("remove 0: %s\n", list_remove(ll, 0) ? "yes" : "no");
+    printf("remove 5: %s\n", list_remove(ll, 5) ? "yes" : "no");
+    printf("remove 4: %s\n", list_remove(ll, 4) ? "yes" : "no");
+
+    printf("after: ");
+    list_print(ll);
+    list_reverse(ll);
+    printf("reversed: ");
+    list_print(ll);
+    printf("count: %zu\n", list_count(ll));
+
     list_free(ll);
+    return 0;
 }

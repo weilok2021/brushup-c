@@ -83,30 +83,16 @@ int list_insert_sorted(list_t* ll, int v) {
 
 /* Remove the first node holding v. Returns 1 if removed, 0 if absent. */
 int list_remove(list_t* ll, int v) {
-    node_t* prev = NULL;
-    node_t* curr = ll->head;
-
-    // empty list case, nothing to remove
-    if (curr == NULL) {
-        return 0;
-    }
-
-    if (curr->value == v) {
-        ll->head = curr->next;
-        free(curr); 
-        ll->count--;
-        return 1;
-    }
-
-    while (curr != NULL) {
-        if (curr->value == v) {
-            prev->next = curr->next;
+    node_t** link = &ll->head;
+    while (*link != NULL) {
+        if ((*link)->value == v) {
+            node_t* curr = *link;
+            *link = (*link)->next;
             free(curr);
             ll->count--;
             return 1;
         }
-        prev = curr;
-        curr = curr->next;
+        link = &(*link)->next;
     }
     return 0;
 }
